@@ -16,6 +16,7 @@ export const TIME_OPTIONS = ['dawn', 'day', 'goldenHour', 'dusk', 'night', 'auto
 export const WEATHER_OPTIONS = ['clear', 'cloudy', 'rain', 'storm', 'fog', 'snow', 'afterRain', 'auto'] as const;
 export const SEVERITY_OPTIONS = ['peaceful', 'gentle', 'wild', 'merciless', 'custom'] as const;
 export const ANIMATE_OPTIONS = ['on', 'off', 'system'] as const;
+export const LAYOUT_OPTIONS = ['auto', 'landscape', 'vertical'] as const;
 
 export async function registerSettings(plugin: RNPlugin): Promise<void> {
   // -- Scenery --------------------------------------------------------------
@@ -79,6 +80,14 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
     title: 'Show in the right sidebar',
     defaultValue: true,
   });
+  await plugin.settings.registerDropdownSetting({
+    id: 'forest.layout',
+    title: 'Grove shape',
+    description:
+      '"Auto" fits each placement\'s own space. "Landscape" always draws a wide banner; "Vertical" draws a tall strip, suited to a narrow sidebar.',
+    options: LAYOUT_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    defaultValue: 'auto',
+  });
   await plugin.settings.registerStringSetting({
     id: 'forest.excludedRemIds',
     title: 'Exclude these Rem (comma-separated IDs)',
@@ -114,6 +123,7 @@ export interface GroveSettings {
   breakDays: number;
   showOnFinishedQueue: boolean;
   showSidebar: boolean;
+  layout: 'auto' | 'landscape' | 'vertical';
   excludedRemIds: string[];
   severity: string;
   weatherCity: string;
@@ -135,7 +145,7 @@ async function withOverride<T>(plugin: RNPlugin, settingId: string, overrideKey:
 export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
   const [
     environment, time, weather, animate, region, rolloverHour, breakDays,
-    showOnFinishedQueue, showSidebar, excludedRemIds, severity, weatherCity,
+    showOnFinishedQueue, showSidebar, layout, excludedRemIds, severity, weatherCity,
   ] = await Promise.all([
     withOverride(plugin, 'scenery.environment', 'scenery.environment.override', 'natural'),
     plugin.settings.getSetting<string>('scenery.time'),
@@ -146,6 +156,7 @@ export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
     plugin.settings.getSetting<number>('forest.breakDays'),
     plugin.settings.getSetting<boolean>('forest.showOnFinishedQueue'),
     plugin.settings.getSetting<boolean>('forest.showSidebar'),
+    plugin.settings.getSetting<'auto' | 'landscape' | 'vertical'>('forest.layout'),
     plugin.settings.getSetting<string>('forest.excludedRemIds'),
     plugin.settings.getSetting<string>('nature.severity'),
     plugin.settings.getSetting<string>('weather.city'),
@@ -160,6 +171,7 @@ export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
     breakDays: breakDays ?? 14,
     showOnFinishedQueue: showOnFinishedQueue ?? true,
     showSidebar: showSidebar ?? true,
+    layout: layout ?? 'auto',
     excludedRemIds: (excludedRemIds ?? '').split(',').map((s) => s.trim()).filter(Boolean),
     severity: severity ?? 'gentle',
     weatherCity: weatherCity ?? '',

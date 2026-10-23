@@ -29,6 +29,22 @@ function prefersReducedMotion(): boolean {
   }
 }
 
+/**
+ * The canvas's CSS height, given the "Grove shape" setting.
+ *
+ * `layout.ts`/`scene.ts` work in normalised 0..1 coordinates throughout, so the renderer
+ * already draws correctly at any aspect ratio — "landscape" and "vertical" just pick a
+ * height from the container's actual width rather than always using the placement's own
+ * fixed `height` prop (`defaultHeight`, used for "auto"). Clamped so a very wide pane
+ * doesn't produce an absurdly tall vertical strip, or a very narrow sidebar an
+ * unreadably short landscape banner.
+ */
+function heightFor(layout: 'auto' | 'landscape' | 'vertical', cssW: number, defaultHeight: number): number {
+  if (layout === 'landscape') return Math.max(140, Math.min(480, Math.round(cssW / 2.6)));
+  if (layout === 'vertical') return Math.max(320, Math.min(700, Math.round(cssW * 1.4)));
+  return defaultHeight;
+}
+
 export interface GroveCanvasProps {
   bundle: GroveBundle;
   height?: number;
@@ -60,7 +76,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       if (!canvas || !container || !bundle.grove || !biome) return;
       const dpr = window.devicePixelRatio || 1;
       const cssW = container.clientWidth || 400;
-      const cssH = height;
+      const cssH = heightFor(bundle.settings.layout, cssW, height);
       const W = Math.round(cssW * dpr);
       const H = Math.round(cssH * dpr);
       if (canvas.width !== W) canvas.width = W;
