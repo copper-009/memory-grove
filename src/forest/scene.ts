@@ -35,8 +35,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr } from './rng';
-import { hex, mix } from './color';
-import { BAYER4 } from './color';
+import { hex, mix, mixHex, BAYER4 } from './color';
 
 export interface SceneInput {
   grove: Grove;
@@ -69,6 +68,13 @@ export interface DrawResult {
 const ENGINE_WIDTH = 220;
 
 const RABBIT_LIKE_HOP = 0.08;
+
+/**
+ * Share of engine height where solid ground ends and the water-reflection band begins.
+ * `layout.GROUND_BOTTOM` (0.965) still marks the very bottom of the whole frame — this is
+ * a nearer line, leaving the gap between the two for the reflection.
+ */
+const LAND_BOTTOM = 0.78;
 
 /** A dithered two-tone fill between `a` and `b`, textured with a 4x4 Bayer pattern rather
  * than a smooth gradient — this is what makes a flat area (sky, ground) read as pixel art
@@ -143,21 +149,131 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
   }
 }
 
-/** Ground: a dithered two-tone fill (far hill band, then the main slope), textured rather
- * than a smooth linear gradient, with ecosystem health mixed into both tones. */
-function drawGround(g: CanvasRenderingContext2D, W: number, horizonY: number, groundBottomY: number, th: Theme, visual: ReturnType<typeof visualParamsFor>): void {
-  const far = applyGroundHealth(th.far, visual);
-  g.fillStyle = far;
-  g.fillRect(0, Math.round(horizonY), W, Math.round((groundBottomY - horizonY) * 0.22));
+/**
+ * A soft, bumpy ridge silhouette along the horizon — the pale blue/purple hills Memory
+ * Forest always has behind the treeline. A simple two-frequency sine heightmap, drawn
+ * column by column, reads as a believable ridge once blitted through the blocky upscale;
+ * no noise library or asset needed. Stable per call (no seed input) since it's a static
+ * backdrop, not something that should shift between frames.
+ */
+function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string): void {
+  const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
+  g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
+  const base = horizonY + horizonY * 0.1;
+  const amp = horizonY * 0.14;
+  for (let x = 0; x < W; x++) {
+    const p = x / W;
+    const bump = 0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4);
+    const topY = Math.round(base - amp - amp * bump);
+    g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
+  }
+}
 
-  const g0 = applyGroundHealth(th.ground0, visual);
-  const g1 = applyGroundHealth(th.ground1, visual);
-  const top = horizonY + (groundBottomY - horizonY) * 0.18;
-  const rows = Math.max(6, Math.round(groundBottomY - top));
+/**
+ * Ground: a dithered two-tone fill, textured rather than a smooth linear gradient, with
+ * ecosystem health mixed into both tones. Only covers the *land* — `landBottomY` is above
+ * the full frame bottom, leaving room for the water reflection band `drawScene` adds below
+ * it (when the biome has one).
+ *
+ * The colour comes from the **biome's own `ground` palette**, not the time-of-day theme —
+ * red outback sand, grey-green alpine rock and deep rainforest green all need to stay
+ * distinct from each other, which a theme-only colour (identical in every biome) can't do.
+ * The theme still has the final word on *lighting*: its ground tones are blended in at a
+ * low weight so the same biome still warms at golden hour and cools at dusk, and snow
+ * weather overrides the blend entirely (every biome goes white under real snow).
+ */
+function drawGround(
+  g: CanvasRenderingContext2D,
+  W: number,
+  horizonY: number,
+  landBottomY: number,
+  biomeGround: readonly [string, string, string],
+  th: Theme,
+  visual: ReturnType<typeof visualParamsFor>,
+): void {
+  const LIGHTING_WEIGHT = 0.3;
+  const [bFar, bNear, bGrass] = biomeGround;
+  // Snow weather overrides every biome's own palette outright — every biome goes white
+  // under real snow, rather than blending snow-white with (say) red outback sand.
+  const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
+  const ground0 = th.snow ? th.ground0 : mixHex(bGrass, th.ground0, LIGHTING_WEIGHT);
+  const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
+
+  const farCol = applyGroundHealth(far, visual);
+  g.fillStyle = farCol;
+  g.fillRect(0, Math.round(horizonY), W, Math.round((landBottomY - horizonY) * 0.22));
+
+  const g0 = applyGroundHealth(ground0, visual);
+  const g1 = applyGroundHealth(ground1, visual);
+  drawHills(g, W, horizonY, farCol, g0);
+
+  const top = horizonY + (landBottomY - horizonY) * 0.18;
+  const rows = Math.max(6, Math.round(landBottomY - top));
   for (let y = 0; y < rows; y++) {
     const p = y / rows;
     const dith = BAYER4[(y % 4) * 4 + 1] / 16;
     ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
+  }
+}
+
+/**
+ * Mirror the land band (sky's lower edge through ground, trees and creatures — everything
+ * already drawn onto `canvas`) into the band below `landBottomY`, tinted with the theme's
+ * water colour. This is Memory Forest's signature "lake" look: the whole treeline
+ * reflected, not just scattered ponds. Drawing the canvas onto itself, flipped and
+ * clipped, is cheap at engine resolution and needs no second render pass.
+ */
+function drawReflection(
+  g: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  W: number,
+  landBottomY: number,
+  waterBottomY: number,
+  th: Theme,
+  visual: ReturnType<typeof visualParamsFor>,
+): void {
+  const bandH = waterBottomY - landBottomY;
+  if (bandH <= 1) return;
+
+  g.save();
+  g.beginPath();
+  g.rect(0, Math.round(landBottomY), W, Math.ceil(bandH));
+  g.clip();
+  g.translate(0, landBottomY * 2);
+  g.scale(1, -1);
+  g.globalAlpha = 0.55;
+  g.drawImage(canvas, 0, 0);
+  g.restore();
+
+  // Water tint over the reflection, clearer (less tint) the healthier the ecosystem.
+  const waterCol = hex(th.water);
+  g.fillStyle = `rgba(${waterCol[0] | 0},${waterCol[1] | 0},${waterCol[2] | 0},${0.3 * (1 - visual.waterClarity * 0.35)})`;
+  g.fillRect(0, Math.round(landBottomY), W, Math.ceil(bandH));
+
+  // A crisp waterline and a couple of ripple rows, so it doesn't read as a plain mirror.
+  g.fillStyle = th.near;
+  g.fillRect(0, Math.round(landBottomY) - 1, W, 1);
+  g.fillStyle = `rgba(255,255,255,${0.1 + 0.08 * visual.waterClarity})`;
+  for (let y = 2; y < bandH; y += 3) {
+    const shift = (y % 6 < 3 ? 1 : -1) * 2;
+    g.fillRect(shift, Math.round(landBottomY + y), W, 1);
+  }
+}
+
+/** Tiny flying "v" birds, drifting slowly across the upper sky. `th.birds` (0..6) comes
+ * from the brief's "your numbers as ambience" idea — more today's reviews, more birds. */
+function drawBirds(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, t: number): void {
+  if (!th.birds) return;
+  g.fillStyle = 'rgba(58,58,58,0.8)';
+  for (let i = 0; i < th.birds; i++) {
+    const speed = 5 + (i % 3) * 1.6;
+    const x = Math.round((((t * speed + i * 137) % (W + 30)) + W + 30) % (W + 30)) - 15;
+    const y = Math.round(horizonY * (0.12 + ((i * 53) % 100) / 100 * 0.3));
+    g.fillRect(x - 2, y + 1, 1, 1);
+    g.fillRect(x - 1, y, 1, 1);
+    g.fillRect(x, y, 1, 1);
+    g.fillRect(x + 1, y, 1, 1);
+    g.fillRect(x + 2, y + 1, 1, 1);
   }
 }
 
@@ -212,16 +328,20 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const engineH = Math.round(engineW / aspect);
   const blit = W / engineW;
 
-  const [, eg] = getEngineCanvas(engineW, engineH);
+  const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
 
   const th = buildTheme(input.mood, { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews });
   const visual = visualParamsFor(input.visualHealth);
   const horizonY = engineH * 0.42;
-  const groundBottomY = engineH * GROUND_BOTTOM;
+  // Land ends at LAND_BOTTOM; the frame's true bottom (GROUND_BOTTOM) is reserved for the
+  // water-reflection band when this biome has one — see Biome.hasWater.
+  const landBottomY = engineH * LAND_BOTTOM;
+  const frameBottomY = engineH * GROUND_BOTTOM;
+  const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
 
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, th, visual);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
 
   const layout: Layout = layoutGrove(input.grove.plants);
   // The hit boxes we report are in *real* canvas space, so every engine-space box drawn
@@ -231,8 +351,9 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     boxes.push(boxAt(kind, ref, cx * blit, topY * blit, w * blit, h * blit, depth));
   };
 
+  const groundBottomFrac = input.biome.hasWater ? LAND_BOTTOM : GROUND_BOTTOM;
   for (const item of layout.items) {
-    const placed = placeItem(item, engineW, engineH, horizonY, GROUND_BOTTOM);
+    const placed = placeItem(item, engineW, engineH, horizonY, groundBottomFrac);
     const zoomedScale = placed.scale * layout.zoom;
     if (isPond(item)) {
       const pw = 10 * item.slots * zoomedScale;
@@ -317,6 +438,16 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     eg.fill();
     pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, -2);
   }
+
+  // Water reflection, only for a biome that actually has standing water — an outback or
+  // alpine scene has no lake, so none is drawn and the land simply runs to the frame's
+  // true bottom instead (set above via `groundBottomY`/`groundBottomFrac`).
+  if (input.biome.hasWater) {
+    drawReflection(eg, ecv, engineW, landBottomY, frameBottomY, th, visual);
+  }
+
+  // Birds last, so they're never caught in the water reflection below them.
+  drawBirds(eg, engineW, horizonY, th, input.t);
 
   // The one blit: the whole low-resolution scene, scaled up with smoothing off. This is
   // what makes every pixel of sky, ground and sprite alike come out as a crisp block.

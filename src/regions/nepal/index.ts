@@ -65,6 +65,7 @@ export const nepal: Region = {
   biomes: [
     {
       key: 'terai',
+      hasWater: true,
       label: 'Terai lowland',
       note: 'Tall elephant grass and sal forest along the floodplain.',
       ground: ['#6a7a3e', '#4e5e2c', '#8a9850'],

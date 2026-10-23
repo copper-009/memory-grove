@@ -153,6 +153,7 @@ export const norway: Region = {
     },
     {
       key: 'fjord-plateau',
+      hasWater: true,
       label: 'Fjord coast and plateau',
       note: 'Steep fjord walls below, a wide windswept tundra plateau above.',
       ground: ['#8a9078', '#6a7258', '#9ca488'],

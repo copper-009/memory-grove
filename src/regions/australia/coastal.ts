@@ -4,6 +4,7 @@ import { ala, iucn } from '../sources';
 /** Coastal heath and wetland — banksia and paperbark over sedge and lily-covered water. */
 export const coastalHeath: Biome = {
   key: 'coastal',
+  hasWater: true,
   label: 'Coastal heath and wetland',
   note: 'Banksia and paperbark over still water, sedges, and waterlilies.',
   ground: ['#7d8a62', '#5e7250', '#8aa066'],

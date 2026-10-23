@@ -1755,6 +1755,7 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 // src/forest/scene.ts
 var ENGINE_WIDTH = 220;
 var RABBIT_LIKE_HOP = 0.08;
+var LAND_BOTTOM = 0.78;
 function ditherFill(g, x0, y0, w, h, a, b, t) {
   const rgbA = hex(a);
   const rgbB = hex(b);
@@ -1814,18 +1815,75 @@ function drawSky(g, W, horizonY, th, t) {
     }
   }
 }
-function drawGround(g, W, horizonY, groundBottomY, th, visual) {
-  const far = applyGroundHealth(th.far, visual);
-  g.fillStyle = far;
-  g.fillRect(0, Math.round(horizonY), W, Math.round((groundBottomY - horizonY) * 0.22));
-  const g0 = applyGroundHealth(th.ground0, visual);
-  const g1 = applyGroundHealth(th.ground1, visual);
-  const top = horizonY + (groundBottomY - horizonY) * 0.18;
-  const rows = Math.max(6, Math.round(groundBottomY - top));
+function drawHills(g, W, horizonY, farColor, groundColor) {
+  const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
+  g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
+  const base = horizonY + horizonY * 0.1;
+  const amp = horizonY * 0.14;
+  for (let x = 0; x < W; x++) {
+    const p = x / W;
+    const bump = 0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4);
+    const topY = Math.round(base - amp - amp * bump);
+    g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
+  }
+}
+function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
+  const LIGHTING_WEIGHT = 0.3;
+  const [bFar, bNear, bGrass] = biomeGround;
+  const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
+  const ground0 = th.snow ? th.ground0 : mixHex(bGrass, th.ground0, LIGHTING_WEIGHT);
+  const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
+  const farCol = applyGroundHealth(far, visual);
+  g.fillStyle = farCol;
+  g.fillRect(0, Math.round(horizonY), W, Math.round((landBottomY - horizonY) * 0.22));
+  const g0 = applyGroundHealth(ground0, visual);
+  const g1 = applyGroundHealth(ground1, visual);
+  drawHills(g, W, horizonY, farCol, g0);
+  const top = horizonY + (landBottomY - horizonY) * 0.18;
+  const rows = Math.max(6, Math.round(landBottomY - top));
   for (let y = 0; y < rows; y++) {
     const p = y / rows;
     const dith = BAYER4[y % 4 * 4 + 1] / 16;
     ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
+  }
+}
+function drawReflection(g, canvas, W, landBottomY, waterBottomY, th, visual) {
+  const bandH = waterBottomY - landBottomY;
+  if (bandH <= 1)
+    return;
+  g.save();
+  g.beginPath();
+  g.rect(0, Math.round(landBottomY), W, Math.ceil(bandH));
+  g.clip();
+  g.translate(0, landBottomY * 2);
+  g.scale(1, -1);
+  g.globalAlpha = 0.55;
+  g.drawImage(canvas, 0, 0);
+  g.restore();
+  const waterCol = hex(th.water);
+  g.fillStyle = `rgba(${waterCol[0] | 0},${waterCol[1] | 0},${waterCol[2] | 0},${0.3 * (1 - visual.waterClarity * 0.35)})`;
+  g.fillRect(0, Math.round(landBottomY), W, Math.ceil(bandH));
+  g.fillStyle = th.near;
+  g.fillRect(0, Math.round(landBottomY) - 1, W, 1);
+  g.fillStyle = `rgba(255,255,255,${0.1 + 0.08 * visual.waterClarity})`;
+  for (let y = 2; y < bandH; y += 3) {
+    const shift = (y % 6 < 3 ? 1 : -1) * 2;
+    g.fillRect(shift, Math.round(landBottomY + y), W, 1);
+  }
+}
+function drawBirds(g, W, horizonY, th, t) {
+  if (!th.birds)
+    return;
+  g.fillStyle = "rgba(58,58,58,0.8)";
+  for (let i = 0; i < th.birds; i++) {
+    const speed = 5 + i % 3 * 1.6;
+    const x = Math.round(((t * speed + i * 137) % (W + 30) + W + 30) % (W + 30)) - 15;
+    const y = Math.round(horizonY * (0.12 + i * 53 % 100 / 100 * 0.3));
+    g.fillRect(x - 2, y + 1, 1, 1);
+    g.fillRect(x - 1, y, 1, 1);
+    g.fillRect(x, y, 1, 1);
+    g.fillRect(x + 1, y, 1, 1);
+    g.fillRect(x + 2, y + 1, 1, 1);
   }
 }
 function drawPond(g, x, y, w, h, th, visual) {
@@ -1865,21 +1923,24 @@ function drawScene(g, W, H, input) {
   const engineW = ENGINE_WIDTH;
   const engineH = Math.round(engineW / aspect);
   const blit = W / engineW;
-  const [, eg] = getEngineCanvas(engineW, engineH);
+  const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
   const th = buildTheme(input.mood, { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews });
   const visual = visualParamsFor(input.visualHealth);
   const horizonY = engineH * 0.42;
-  const groundBottomY = engineH * GROUND_BOTTOM;
+  const landBottomY = engineH * LAND_BOTTOM;
+  const frameBottomY = engineH * GROUND_BOTTOM;
+  const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, th, visual);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
   const pushBox = (kind, ref, cx, topY, w, h, depth) => {
     boxes.push(boxAt(kind, ref, cx * blit, topY * blit, w * blit, h * blit, depth));
   };
+  const groundBottomFrac = input.biome.hasWater ? LAND_BOTTOM : GROUND_BOTTOM;
   for (const item of layout.items) {
-    const placed = placeItem(item, engineW, engineH, horizonY, GROUND_BOTTOM);
+    const placed = placeItem(item, engineW, engineH, horizonY, groundBottomFrac);
     const zoomedScale = placed.scale * layout.zoom;
     if (isPond(item)) {
       const pw = 10 * item.slots * zoomedScale;
@@ -1961,6 +2022,10 @@ function drawScene(g, W, H, input) {
     eg.fill();
     pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, -2);
   }
+  if (input.biome.hasWater) {
+    drawReflection(eg, ecv, engineW, landBottomY, frameBottomY, th, visual);
+  }
+  drawBirds(eg, engineW, horizonY, th, input.t);
   g.imageSmoothingEnabled = false;
   g.clearRect(0, 0, W, H);
   g.drawImage(engineCanvas, 0, 0, engineW, engineH, 0, 0, W, H);
@@ -2326,6 +2391,7 @@ var subtropicalRainforest = {
 // src/regions/australia/tropical.ts
 var tropicalNorth = {
   key: "tropical",
+  hasWater: true,
   label: "Tropical north",
   note: "Fan palms and buttressed figs, a mangrove fringe, and a wet season that means it.",
   ground: ["#35492e", "#273a24", "#426038"],
@@ -2470,6 +2536,7 @@ var tropicalNorth = {
 // src/regions/australia/coastal.ts
 var coastalHeath = {
   key: "coastal",
+  hasWater: true,
   label: "Coastal heath and wetland",
   note: "Banksia and paperbark over still water, sedges, and waterlilies.",
   ground: ["#7d8a62", "#5e7250", "#8aa066"],
@@ -3657,6 +3724,7 @@ var japan = {
     },
     {
       key: "hokkaido",
+      hasWater: true,
       label: "Northern snow country",
       note: "Birch and spruce under deep snow, with cranes on the marsh.",
       ground: ["#c6d0da", "#a6b4c2", "#dce4ec"],
@@ -4700,6 +4768,7 @@ var eastAfrica = {
     },
     {
       key: "riverine-woodland",
+      hasWater: true,
       label: "Riverine woodland",
       note: "A green ribbon of fig and fever tree following the only permanent water for miles.",
       ground: ["#3c5636", "#2c3e28", "#4e6e46"],
@@ -4891,6 +4960,7 @@ var canada = {
   biomes: [
     {
       key: "boreal",
+      hasWater: true,
       label: "Boreal forest and lakes",
       note: "Black spruce and birch around cold, clear lakes.",
       ground: ["#2e3e2a", "#20301e", "#3c523a"],
@@ -5391,6 +5461,7 @@ var norway = {
     },
     {
       key: "fjord-plateau",
+      hasWater: true,
       label: "Fjord coast and plateau",
       note: "Steep fjord walls below, a wide windswept tundra plateau above.",
       ground: ["#8a9078", "#6a7258", "#9ca488"],
@@ -5600,6 +5671,7 @@ var nepal = {
   biomes: [
     {
       key: "terai",
+      hasWater: true,
       label: "Terai lowland",
       note: "Tall elephant grass and sal forest along the floodplain.",
       ground: ["#6a7a3e", "#4e5e2c", "#8a9850"],
@@ -6416,6 +6488,7 @@ var borneo = {
     },
     {
       key: "mangrove-river",
+      hasWater: true,
       label: "Mangrove river",
       note: "A winding brown river through a tangle of mangrove roots.",
       ground: ["#3a4a30", "#2a3822", "#4c603e"],

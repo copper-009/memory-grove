@@ -127,6 +127,7 @@ export const borneo: Region = {
     },
     {
       key: 'mangrove-river',
+      hasWater: true,
       label: 'Mangrove river',
       note: 'A winding brown river through a tangle of mangrove roots.',
       ground: ['#3a4a30', '#2a3822', '#4c603e'],

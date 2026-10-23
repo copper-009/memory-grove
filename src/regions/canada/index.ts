@@ -57,6 +57,7 @@ export const canada: Region = {
   biomes: [
     {
       key: 'boreal',
+      hasWater: true,
       label: 'Boreal forest and lakes',
       note: 'Black spruce and birch around cold, clear lakes.',
       ground: ['#2e3e2a', '#20301e', '#3c523a'],

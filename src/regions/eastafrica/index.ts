@@ -122,6 +122,7 @@ export const eastAfrica: Region = {
     },
     {
       key: 'riverine-woodland',
+      hasWater: true,
       label: 'Riverine woodland',
       note: 'A green ribbon of fig and fever tree following the only permanent water for miles.',
       ground: ['#3c5636', '#2c3e28', '#4e6e46'],

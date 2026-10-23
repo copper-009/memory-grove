@@ -11,6 +11,7 @@ import { ala, iucn } from '../sources';
  */
 export const tropicalNorth: Biome = {
   key: 'tropical',
+  hasWater: true,
   label: 'Tropical north',
   note: 'Fan palms and buttressed figs, a mangrove fringe, and a wet season that means it.',
   ground: ['#35492e', '#273a24', '#426038'],

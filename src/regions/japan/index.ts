@@ -162,6 +162,7 @@ export const japan: Region = {
     },
     {
       key: 'hokkaido',
+      hasWater: true,
       label: 'Northern snow country',
       note: 'Birch and spruce under deep snow, with cranes on the marsh.',
       ground: ['#c6d0da', '#a6b4c2', '#dce4ec'],

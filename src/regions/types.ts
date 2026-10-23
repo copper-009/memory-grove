@@ -155,8 +155,17 @@ export interface Biome {
   label: string;
   /** One line for the picker. */
   note: string;
-  /** Ground colours: far, near, grass. */
+  /** Ground colours: far, near, grass. Blended with the time-of-day theme's lighting, so
+   * the same eucalypt woodland still looks warmer at golden hour than at dawn, but reads
+   * as its own place rather than every biome sharing one generic green. */
   ground: [string, string, string];
+  /**
+   * Whether this biome has standing water substantial enough to reflect the treeline —
+   * a wetland, river or lake biome, not an arid or alpine one. Gates the water-reflection
+   * band in `src/forest/scene.ts`: an outback or alpine scene has no lake, so it draws
+   * none, rather than every biome getting the same generic lake backdrop.
+   */
+  hasWater?: boolean;
   plants: PlantSpecies[];
   /** Exactly five, one per unlock slot. */
   creatures: Creature[];
