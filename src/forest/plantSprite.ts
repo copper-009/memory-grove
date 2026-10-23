@@ -179,21 +179,41 @@ const SHARE_OF_HEIGHT: Record<PlantForm, number> = {
  * Build a plant's tone map for its stage, health and form. `seed` fixes every random
  * choice, so the same plant on the same day always looks the same.
  */
-export function buildToneMap(plant: Pick<Plant, 'stage' | 'size' | 'health' | 'seed'>, form: PlantForm): ToneMap {
+/**
+ * `scale` sizes the whole sprite directly — a plant standing nearer the camera (or a small
+ * grove's zoom-in) gets a tone map built bigger in the first place, not a small one
+ * stretched afterward.
+ *
+ * This matters because the old call site (`scene.ts`) built one small, fixed-resolution
+ * tone map per stage and then tried to reach the target size by scaling it up by an
+ * *integer* factor (`round(targetHeight / tonemap.height)`). For a Sapling or Young plant,
+ * the fixed tone map was already close to the target height, so that ratio rounded to 1
+ * however much `zoomedScale` asked for — the depth/zoom scaling was silently a no-op for
+ * most of a grove's life. Building the tone map at the real target size from the start
+ * fixes that at the root, and also makes near/far depth differences in a dense grove
+ * actually visible per-plant rather than masked by the same rounding.
+ */
+export function buildToneMap(
+  plant: Pick<Plant, 'stage' | 'size' | 'health' | 'seed'>,
+  form: PlantForm,
+  scale = 1,
+): ToneMap {
   const r = rng(hashStr(`sprite|${plant.seed}|${form}`));
   if (plant.stage === Stage.Seedling) {
-    const tm = makeTone(SEEDLING_SIZE, SEEDLING_SIZE);
-    const cx = Math.floor(SEEDLING_SIZE / 2);
-    const base = SEEDLING_SIZE - 1;
-    set(tm, cx, base - 1, 2);
-    set(tm, cx, base - 2, 3);
-    set(tm, cx - 1, base - 3, 3);
-    set(tm, cx + 1, base - 3, 3);
-    set(tm, cx, base - 4, 4);
+    const size = Math.max(SEEDLING_SIZE, Math.round(SEEDLING_SIZE * scale));
+    const tm = makeTone(size, size);
+    const cx = Math.floor(size / 2);
+    const base = size - 1;
+    const s = size / SEEDLING_SIZE;
+    set(tm, cx, Math.round(base - 1 * s), 2);
+    set(tm, cx, Math.round(base - 2 * s), 3);
+    set(tm, cx - Math.round(s), Math.round(base - 3 * s), 3);
+    set(tm, cx + Math.round(s), Math.round(base - 3 * s), 3);
+    set(tm, cx, Math.round(base - 4 * s), 4);
     return tm;
   }
 
-  const h = Math.max(3, STAGE_HEIGHT[plant.stage]);
+  const h = Math.max(3, Math.round(STAGE_HEIGHT[plant.stage] * scale));
   const trunkShare = SHARE_OF_HEIGHT[form];
   const trunkH = Math.max(2, Math.round(h * trunkShare));
   const ancient = plant.stage === Stage.Ancient;

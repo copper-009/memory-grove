@@ -74,6 +74,37 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   10-plant grove rendered as a thin, indistinct smudge rather than a few large plants.
   Fixed alongside the rendering buffer change.
 
+## The sprite-scale bug — the root cause of "doesn't look like Memory Forest"
+
+- **`buildToneMap` generated a fixed, stage-only tone map, and the caller tried to reach
+  the real target size by scaling it up by an *integer* factor
+  (`round(targetHeight / tonemap.height)`).** For a Sapling or Young plant, the fixed tone
+  map was already close to the target height, so that ratio rounded to 1 however much the
+  depth/zoom scaling asked for. Concretely: a Sapling's base tone map is 10 engine-pixels
+  tall; even at the grove-zoom cap of 1.8x, the requested height only reached ~14px, and
+  `round(14/10) = 1` — the exact same as `round(8/10) = 1` with no zoom at all. The
+  "zoom in when the grove is small" mechanic, and ordinary near/far depth scaling, were
+  both silently no-ops for most of a grove's life. This is what made a real, sparse
+  RemNote account's grove read as a field of tiny indistinct smudges rather than a few
+  clear trees — not a style problem, an architecture bug.
+- Fixed by building the tone map at the real target size directly: `buildToneMap(plant,
+  form, scale)` now multiplies the crown/trunk height by `scale` before generating
+  anything, so depth and zoom are baked into the sprite's own resolution rather than
+  applied as an ineffective integer post-scale. `scene.ts` no longer computes a separate
+  `spriteK` at all. The seeded RNG that places each crown's blobs is still keyed only by
+  the plant's own seed (not by `scale`), so a given plant's silhouette stays stable as its
+  size changes continuously with depth — only its resolution changes, not its shape.
+- Also raised `ENGINE_WIDTH` from 220 to 300 (the internal drawing-buffer width everything
+  is rendered at before the final nearest-neighbour blit) for a finer pixel grain at the
+  widths the plugin actually renders at in RemNote, per separate user feedback that the
+  whole scene — not just trees — read as too blocky. A plant's size in engine pixels
+  (`STAGE_HEIGHT`) didn't need to change alongside this: distance from camera decides how
+  big something looks, not the buffer's own resolution.
+- Verified by rendering the exact fixture that matches the user's real account (a handful
+  of young plants, mostly Sapling/Young stage) before and after, and separately confirmed
+  via the screenshot harness that a dense (veteran) grove's crown texture, trunks and
+  species diversity all read far more clearly at the finer buffer resolution.
+
 ## Region packs (new feature)
 
 - **Art is entirely procedural — no image or sprite assets anywhere, for any region.**

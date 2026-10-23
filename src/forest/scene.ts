@@ -19,7 +19,6 @@
  */
 
 import type { Grove } from '../data/types';
-import { Stage, STAGE_HEIGHT } from '../data/types';
 import { layoutGrove, placeItem, isPond, GROUND_BOTTOM } from './layout';
 import type { Layout, LayoutItem } from './layout';
 import { buildTheme } from './theme';
@@ -63,9 +62,15 @@ export interface DrawResult {
  * Width of the internal drawing buffer, in engine pixels. Everything — sky, ground, every
  * sprite — is drawn at this resolution, then the whole buffer is scaled up to the real
  * canvas in one `drawImage` call with smoothing off. This is the number that controls how
- * "chunky" the pixel art reads; Memory Forest's own web build works at a comparable scale.
+ * "chunky" the pixel art reads: lower is blockier, higher is finer-grained but still
+ * crisp (never smooth/anti-aliased, since the blit always uses nearest-neighbour).
+ *
+ * Raised from an initial 220 after it read as too coarse at typical widget widths —
+ * 300 keeps the same pixel-art character at a noticeably finer grain. A plant's own size
+ * in engine pixels (`STAGE_HEIGHT` et al.) didn't need to change alongside this: distance
+ * from camera is what should decide how big something looks, not the buffer resolution.
  */
-const ENGINE_WIDTH = 220;
+const ENGINE_WIDTH = 300;
 
 const RABBIT_LIKE_HOP = 0.08;
 
@@ -290,9 +295,6 @@ function drawPond(g: CanvasRenderingContext2D, x: number, y: number, w: number, 
   g.fillRect(Math.round(x - w * 0.2), Math.round(y - 1), Math.round(w * 0.3), 1);
 }
 
-function stageHeightPx(stage: Stage, scale: number): number {
-  return Math.max(3, Math.round(STAGE_HEIGHT[stage] * scale));
-}
 
 /** An offscreen canvas at engine resolution, reused across frames (resized only when the
  * aspect ratio actually changes) so a redraw doesn't allocate a new canvas every frame. */
@@ -364,11 +366,12 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     }
     const plant = item as Extract<LayoutItem, { pond: false }>;
     const species = input.biome.plants[plant.species % input.biome.plants.length];
-    const tone = buildToneMap(plant, species.form);
-    const hPx = stageHeightPx(plant.stage, zoomedScale);
-    const spriteK = Math.max(1, Math.round(hPx / Math.max(1, tone.h)));
-    const x0 = Math.round(placed.x - (tone.w * spriteK) / 2);
-    const y0 = Math.round(placed.y - tone.h * spriteK);
+    // The tone map is now built at the plant's real target size directly (depth and the
+    // grove's zoom both folded into `zoomedScale`), not drawn small and integer-stretched
+    // afterward — see the long comment on `buildToneMap` for why that mattered.
+    const tone = buildToneMap(plant, species.form, zoomedScale);
+    const x0 = Math.round(placed.x - tone.w / 2);
+    const y0 = Math.round(placed.y - tone.h);
     paintPlant(eg, tone, species, {
       stage: plant.stage,
       health: plant.health,
@@ -379,8 +382,8 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       tint: th.tint ?? undefined,
       tintAmount: th.tintAmount,
       snow: th.snow,
-    }, x0, y0, spriteK);
-    pushBox('plant', plant.index, placed.x, y0, tone.w * spriteK, tone.h * spriteK, item.depth);
+    }, x0, y0, 1);
+    pushBox('plant', plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }
 
   const baseY = groundBottomY - 2;

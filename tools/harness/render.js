@@ -1354,20 +1354,22 @@ var SHARE_OF_HEIGHT = {
   columnar: 0.55,
   bulbous: 0.6
 };
-function buildToneMap(plant, form) {
+function buildToneMap(plant, form, scale = 1) {
   const r = rng(hashStr(`sprite|${plant.seed}|${form}`));
   if (plant.stage === 0 /* Seedling */) {
-    const tm2 = makeTone(SEEDLING_SIZE, SEEDLING_SIZE);
-    const cx2 = Math.floor(SEEDLING_SIZE / 2);
-    const base2 = SEEDLING_SIZE - 1;
-    set(tm2, cx2, base2 - 1, 2);
-    set(tm2, cx2, base2 - 2, 3);
-    set(tm2, cx2 - 1, base2 - 3, 3);
-    set(tm2, cx2 + 1, base2 - 3, 3);
-    set(tm2, cx2, base2 - 4, 4);
+    const size = Math.max(SEEDLING_SIZE, Math.round(SEEDLING_SIZE * scale));
+    const tm2 = makeTone(size, size);
+    const cx2 = Math.floor(size / 2);
+    const base2 = size - 1;
+    const s = size / SEEDLING_SIZE;
+    set(tm2, cx2, Math.round(base2 - 1 * s), 2);
+    set(tm2, cx2, Math.round(base2 - 2 * s), 3);
+    set(tm2, cx2 - Math.round(s), Math.round(base2 - 3 * s), 3);
+    set(tm2, cx2 + Math.round(s), Math.round(base2 - 3 * s), 3);
+    set(tm2, cx2, Math.round(base2 - 4 * s), 4);
     return tm2;
   }
-  const h = Math.max(3, STAGE_HEIGHT[plant.stage]);
+  const h = Math.max(3, Math.round(STAGE_HEIGHT[plant.stage] * scale));
   const trunkShare = SHARE_OF_HEIGHT[form];
   const trunkH = Math.max(2, Math.round(h * trunkShare));
   const ancient = plant.stage === 5 /* Ancient */;
@@ -1753,7 +1755,7 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 }
 
 // src/forest/scene.ts
-var ENGINE_WIDTH = 220;
+var ENGINE_WIDTH = 300;
 var RABBIT_LIKE_HOP = 0.08;
 var LAND_BOTTOM = 0.78;
 function ditherFill(g, x0, y0, w, h, a, b, t) {
@@ -1897,9 +1899,6 @@ function drawPond(g, x, y, w, h, th, visual) {
   g.fillStyle = `rgba(255,255,255,${0.12 + 0.1 * clarity})`;
   g.fillRect(Math.round(x - w * 0.2), Math.round(y - 1), Math.round(w * 0.3), 1);
 }
-function stageHeightPx(stage, scale) {
-  return Math.max(3, Math.round(STAGE_HEIGHT[stage] * scale));
-}
 var engineCanvas = null;
 var engineCtx = null;
 function getEngineCanvas(engineW, engineH) {
@@ -1951,11 +1950,9 @@ function drawScene(g, W, H, input) {
     }
     const plant = item;
     const species = input.biome.plants[plant.species % input.biome.plants.length];
-    const tone = buildToneMap(plant, species.form);
-    const hPx = stageHeightPx(plant.stage, zoomedScale);
-    const spriteK = Math.max(1, Math.round(hPx / Math.max(1, tone.h)));
-    const x0 = Math.round(placed.x - tone.w * spriteK / 2);
-    const y0 = Math.round(placed.y - tone.h * spriteK);
+    const tone = buildToneMap(plant, species.form, zoomedScale);
+    const x0 = Math.round(placed.x - tone.w / 2);
+    const y0 = Math.round(placed.y - tone.h);
     paintPlant(eg, tone, species, {
       stage: plant.stage,
       health: plant.health,
@@ -1966,8 +1963,8 @@ function drawScene(g, W, H, input) {
       tint: th.tint ?? void 0,
       tintAmount: th.tintAmount,
       snow: th.snow
-    }, x0, y0, spriteK);
-    pushBox("plant", plant.index, placed.x, y0, tone.w * spriteK, tone.h * spriteK, item.depth);
+    }, x0, y0, 1);
+    pushBox("plant", plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }
   const baseY = groundBottomY - 2;
   input.roster.creatures.forEach((save) => {
