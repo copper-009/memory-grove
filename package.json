@@ -1,0 +1,50 @@
+{
+  "private": true,
+  "name": "memory-grove",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "A living grove that grows from your RemNote flashcard history.",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --color --progress --no-open",
+    "build": "npm run typecheck && shx rm -rf dist && cross-env NODE_ENV=production webpack --color && cd dist && bestzip ../MemoryGrove.zip ./*",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"tools/**/*.{ts,mjs}\"",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "vitest bench --run",
+    "shots": "node tools/screenshots.mjs"
+  },
+  "dependencies": {
+    "@remnote/plugin-sdk": "0.0.46",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.2",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "bestzip": "^2.2.1",
+    "copy-webpack-plugin": "^11.0.0",
+    "cross-env": "^7.0.3",
+    "css-loader": "^6.7.1",
+    "esbuild-loader": "^2.19.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "glob": "^8.1.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.6.1",
+    "playwright": "^1.47.0",
+    "postcss": "^8.4.14",
+    "postcss-loader": "^7.0.0",
+    "shx": "^0.3.4",
+    "style-loader": "^3.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.3"
+  }
+}

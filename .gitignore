@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.zip
+.DS_Store
+screenshots/*.png
+coverage/
+.vitest/
+reference/memory-forest/
+reference/plugin-template/
+reference/official-plugins/

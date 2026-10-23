@@ -1,0 +1,15 @@
+{
+  "manifestVersion": 1,
+  "id": "memory-grove",
+  "name": "Memory Grove",
+  "author": "Cooper Bagley",
+  "repoUrl": "https://github.com/YOUR_USERNAME/memory-grove",
+  "version": { "major": 0, "minor": 1, "patch": 0 },
+  "theme": [],
+  "enableOnMobile": true,
+  "description": "A living grove that grows from your flashcard history. One plant a day, real native species, and a study heatmap underneath. Inspired by Barak Levy's Memory Forest for Anki (MIT).",
+  "requestNative": false,
+  "requiredScopes": [
+    { "type": "All", "level": "Read" }
+  ]
+}
