@@ -1,0 +1,27 @@
+/*
+ * Memory Grove — base styles.
+ *
+ * RemNote injects its own theme as CSS custom properties and `rn-clr-*` utility classes
+ * into every plugin iframe, so panels, text and borders follow light/dark mode
+ * automatically wherever those classes are used (see GroveCanvas.tsx). This file only
+ * covers what RemNote doesn't: the canvas's own crisp-pixel scaling and small layout
+ * resets that keep the widget readable at narrow (mobile) widths.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Narrow widths (mobile, a squeezed sidebar): keep the stat row from overflowing. */
+@media (max-width: 420px) {
+  .memory-grove-stats-row {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+}
