@@ -1128,14 +1128,24 @@ var MAX_FLIES = 60;
 var REVIEWS_PER_BIRD = 40;
 var MAX_BIRDS = 6;
 var CLOUDY_STARS_SHARE = 0.3;
-function buildTheme(mood, ambience) {
+function pickBackdrop(backdrops, isNight, seed = 0) {
+  const pool = backdrops.filter((b) => !!b.night === isNight);
+  const list = pool.length ? pool : backdrops;
+  if (list.length === 0)
+    return void 0;
+  return list[Math.abs(seed) % list.length];
+}
+function buildTheme(mood, ambience, backdrop) {
   const base = TIMES[mood.time];
   const night = mood.time === "night";
+  const sky = backdrop ? [...backdrop.sky] : [...base.sky];
+  const far = backdrop?.far ?? base.far;
+  const near = backdrop?.near ?? base.near;
   const th = {
-    sky: [...base.sky],
+    sky,
     orb: base.orb ? { ...base.orb, phase: mood.moonPhase } : null,
-    far: base.far,
-    near: base.near,
+    far,
+    near,
     ground0: base.ground0,
     ground1: base.ground1,
     grass: base.grass,
@@ -1157,7 +1167,8 @@ function buildTheme(mood, ambience) {
     rainbow: false,
     lightning: false,
     flat: false,
-    shadow: base.shadow ?? 0
+    shadow: base.shadow ?? 0,
+    hillForm: backdrop?.form ?? "rolling"
   };
   const w = mood.weather;
   const calm = w === "clear" || w === "cloudy" || w === "afterRain";
@@ -1817,14 +1828,43 @@ function drawSky(g, W, horizonY, th, t) {
     }
   }
 }
-function drawHills(g, W, horizonY, farColor, groundColor) {
+function drawHills(g, W, horizonY, farColor, groundColor, form) {
   const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
   g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.14;
+  const heightAt = (p) => {
+    switch (form) {
+      case "volcano": {
+        const d = Math.abs(p - 0.42) * 2.6;
+        return Math.max(0, 1 - d) ** 1.6;
+      }
+      case "peaks":
+      case "towers":
+      case "tsingy": {
+        const n = form === "tsingy" ? 9 : 6;
+        const saw = Math.abs(p * n % 1 - 0.5) * 2;
+        return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
+      }
+      case "fjord": {
+        const walls = Math.max(0, 1 - Math.abs(p - 0.5) * 2.4);
+        return walls > 0.15 ? walls : 0.05;
+      }
+      case "plateau": {
+        const inPlateau = p > 0.25 && p < 0.75;
+        return inPlateau ? 0.85 : 0.25 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+      }
+      case "flat":
+      case "canopy":
+        return 0.08;
+      case "rolling":
+      default:
+        return 0.5 + 0.5 * (0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4));
+    }
+  };
   for (let x = 0; x < W; x++) {
     const p = x / W;
-    const bump = 0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4);
+    const bump = heightAt(p) * 2 - 1;
     const topY = Math.round(base - amp - amp * bump);
     g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
   }
@@ -1840,7 +1880,7 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
   g.fillRect(0, Math.round(horizonY), W, Math.round((landBottomY - horizonY) * 0.22));
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  drawHills(g, W, horizonY, farCol, g0);
+  drawHills(g, W, horizonY, farCol, g0, th.hillForm);
   const top = horizonY + (landBottomY - horizonY) * 0.18;
   const rows = Math.max(6, Math.round(landBottomY - top));
   for (let y = 0; y < rows; y++) {
@@ -1924,7 +1964,12 @@ function drawScene(g, W, H, input) {
   const blit = W / engineW;
   const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
-  const th = buildTheme(input.mood, { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews });
+  const backdrop = input.backdrops?.length ? pickBackdrop(input.backdrops, input.mood.time === "night", input.grove.seed) : void 0;
+  const th = buildTheme(
+    input.mood,
+    { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews },
+    backdrop
+  );
   const visual = visualParamsFor(input.visualHealth);
   const horizonY = engineH * 0.42;
   const landBottomY = engineH * LAND_BOTTOM;
@@ -6664,7 +6709,8 @@ window.__renderFixture = (opts) => {
     animate: false,
     paused: false,
     dpr: 1,
-    regionKey: region.key
+    regionKey: region.key,
+    backdrops: region.backdrops
   });
   document.title = "ready";
 };

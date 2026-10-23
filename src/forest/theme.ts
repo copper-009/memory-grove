@@ -61,6 +61,9 @@ export interface Theme {
   lightning: boolean;
   flat: boolean;
   shadow: number;
+  /** The backdrop's landform ('peaks', 'volcano', 'fjord', ...), for the hill-silhouette
+   * shape in `scene.ts`. `'rolling'` (gentle bumps) when no backdrop is in play. */
+  hillForm: string;
 }
 
 interface TimeSpec {
@@ -137,20 +140,55 @@ export interface MoodInput {
   moonPhase?: number;
 }
 
+/** The pieces of a region's `Backdrop` the theme actually uses — kept structural so
+ * `theme.ts` stays decoupled from `src/regions/types.ts`. */
+export interface BackdropInput {
+  sky: readonly [string, string, string, string, string, string];
+  far: string;
+  near: string;
+  form: string;
+  night?: boolean;
+}
+
+/**
+ * Pick the day or night backdrop from a region's list, by `mood.time`. Regions ship 2–3 day
+ * backdrops plus one night/dusk variant (`Backdrop.night`); picking deterministically by
+ * `seed` rather than always the first keeps some variety between grove reloads while still
+ * being stable within one render.
+ */
+export function pickBackdrop<B extends { night?: boolean }>(
+  backdrops: readonly B[],
+  isNight: boolean,
+  seed = 0,
+): B | undefined {
+  const pool = backdrops.filter((b) => !!b.night === isNight);
+  const list = pool.length ? pool : backdrops;
+  if (list.length === 0) return undefined;
+  return list[Math.abs(seed) % list.length];
+}
+
 export interface AmbienceInput {
   streak: number;
   todayReviews: number;
 }
 
 /** Build the theme for one frame's mood and ambience: the time-of-day base, weather-mutated. */
-export function buildTheme(mood: MoodInput, ambience: AmbienceInput): Theme {
+export function buildTheme(mood: MoodInput, ambience: AmbienceInput, backdrop?: BackdropInput): Theme {
   const base = TIMES[mood.time];
   const night = mood.time === 'night';
+  // A region's own backdrop sky/far/near take over from the generic time-of-day palette —
+  // this is what makes Australia actually look different from Japan — while everything
+  // weather mutation does below still runs on top of it, so rain/fog/snow etc. still work
+  // regardless of region. The orb, cloud shapes, star count and so on stay time-of-day
+  // driven, since a Backdrop doesn't define those.
+  const sky = backdrop ? [...backdrop.sky] : [...base.sky];
+  const far = backdrop?.far ?? base.far;
+  const near = backdrop?.near ?? base.near;
   const th: Theme = {
-    sky: [...base.sky] as Theme['sky'],
+    sky: sky as Theme['sky'],
     orb: base.orb ? { ...base.orb, phase: mood.moonPhase } : null,
-    far: base.far,
-    near: base.near,
+    far,
+    near,
     ground0: base.ground0,
     ground1: base.ground1,
     grass: base.grass,
@@ -173,6 +211,7 @@ export function buildTheme(mood: MoodInput, ambience: AmbienceInput): Theme {
     lightning: false,
     flat: false,
     shadow: base.shadow ?? 0,
+    hillForm: backdrop?.form ?? 'rolling',
   };
 
   const w = mood.weather;

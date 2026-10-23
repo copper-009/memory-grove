@@ -21,8 +21,8 @@
 import type { Grove } from '../data/types';
 import { layoutGrove, placeItem, isPond, GROUND_BOTTOM } from './layout';
 import type { Layout, LayoutItem } from './layout';
-import { buildTheme } from './theme';
-import type { Theme, MoodInput } from './theme';
+import { buildTheme, pickBackdrop } from './theme';
+import type { Theme, MoodInput, BackdropInput } from './theme';
 import { buildToneMap } from './plantSprite';
 import { buildCreatureFrames } from './creatureSprite';
 import { groundMotion, hopHeight, flightPosition, flapFrame } from './creatureMotion';
@@ -52,6 +52,9 @@ export interface SceneInput {
   /** Device pixel ratio, for crisp integer scaling. */
   dpr: number;
   regionKey: string;
+  /** The region's backdrops, for `theme.ts`'s `pickBackdrop` — this is what makes one
+   * region's sky, hills and distant colour actually differ from another's. */
+  backdrops?: readonly BackdropInput[];
 }
 
 export interface DrawResult {
@@ -161,14 +164,58 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
  * no noise library or asset needed. Stable per call (no seed input) since it's a static
  * backdrop, not something that should shift between frames.
  */
-function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string): void {
+/**
+ * A horizon silhouette for the given `hillForm` (a region's `Backdrop.form`). Every form is
+ * a column-by-column heightmap — the same technique, different curve — so it stays cheap
+ * and reads as pixel art once blitted, but the shapes are different enough that Australia's
+ * rolling hills, Japan's volcanic cone, Norway's fjord wall and Nepal's jagged peaks don't
+ * all collapse into the same generic bump.
+ */
+function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string, form: string): void {
   const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
   g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.14;
+
+  const heightAt = (p: number): number => {
+    switch (form) {
+      case 'volcano': {
+        // one dominant symmetric cone, slightly off-centre
+        const d = Math.abs(p - 0.42) * 2.6;
+        return Math.max(0, 1 - d) ** 1.6;
+      }
+      case 'peaks':
+      case 'towers':
+      case 'tsingy': {
+        // sharp, higher-frequency jagged silhouette — ridgeline, not rolling hills
+        const n = form === 'tsingy' ? 9 : 6;
+        const saw = Math.abs(((p * n) % 1) - 0.5) * 2;
+        return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
+      }
+      case 'fjord': {
+        // steep near-vertical walls either side, a gap in the middle for the water
+        const walls = Math.max(0, 1 - Math.abs(p - 0.5) * 2.4);
+        return walls > 0.15 ? walls : 0.05;
+      }
+      case 'plateau': {
+        // a flat-topped mesa
+        const inPlateau = p > 0.25 && p < 0.75;
+        return inPlateau ? 0.85 : 0.25 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+      }
+      case 'flat':
+      case 'canopy':
+        // open horizon or canopy-covered — the treeline itself carries the silhouette, so
+        // the hill band stays almost flat rather than competing with it
+        return 0.08;
+      case 'rolling':
+      default:
+        return 0.5 + 0.5 * (0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4));
+    }
+  };
+
   for (let x = 0; x < W; x++) {
     const p = x / W;
-    const bump = 0.6 * Math.sin(p * Math.PI * 2.3 + 1.3) + 0.4 * Math.sin(p * Math.PI * 5.1 + 0.4);
+    const bump = heightAt(p) * 2 - 1; // back to the -1..1 range the rest of the maths expects
     const topY = Math.round(base - amp - amp * bump);
     g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
   }
@@ -210,7 +257,7 @@ function drawGround(
 
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  drawHills(g, W, horizonY, farCol, g0);
+  drawHills(g, W, horizonY, farCol, g0, th.hillForm);
 
   const top = horizonY + (landBottomY - horizonY) * 0.18;
   const rows = Math.max(6, Math.round(landBottomY - top));
@@ -333,7 +380,14 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
 
-  const th = buildTheme(input.mood, { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews });
+  const backdrop = input.backdrops?.length
+    ? pickBackdrop(input.backdrops, input.mood.time === 'night', input.grove.seed)
+    : undefined;
+  const th = buildTheme(
+    input.mood,
+    { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews },
+    backdrop,
+  );
   const visual = visualParamsFor(input.visualHealth);
   const horizonY = engineH * 0.42;
   // Land ends at LAND_BOTTOM; the frame's true bottom (GROUND_BOTTOM) is reserved for the

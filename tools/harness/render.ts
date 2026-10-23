@@ -68,6 +68,7 @@ window.__renderFixture = (opts) => {
     paused: false,
     dpr: 1,
     regionKey: region.key,
+    backdrops: region.backdrops,
   });
   document.title = 'ready';
 };

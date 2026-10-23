@@ -103,6 +103,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
         paused,
         dpr,
         regionKey: bundle.region.key,
+        backdrops: bundle.region.backdrops,
       });
       boxesRef.current = result.boxes;
     },
