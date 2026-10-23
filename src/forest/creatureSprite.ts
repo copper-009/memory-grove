@@ -5,8 +5,13 @@
  *
  * A `BodyPlan` (lengths and angles of named parts) generates the frame rather than an
  * artist drawing each of 143 species by hand — the only way that many creatures can be
- * both visually consistent and schema-checked (`src/regions/validate.ts`). See
+ * both visually consistent and schema-checkable (`src/regions/validate.ts`). See
  * `DECISIONS.md` § "Art and assets".
+ *
+ * Bodies are filled as ellipses, not rectangles — the same reason `plantSprite.ts` fills
+ * crowns as overlapping ellipse blobs rather than boxes: at this pixel scale a hard
+ * rectangle reads as furniture, not an animal, and a rounded silhouette reads as one
+ * immediately.
  *
  * Two frames per creature: 0 = idle/standing, 1 = the "busy" frame (walking leg position,
  * a graze, a wing-flap). `scene.ts` picks between them using `creatureMotion.ts`.
@@ -35,26 +40,56 @@ function put(g: string[][], x: number, y: number, ch: string): void {
 function hline(g: string[][], x0: number, x1: number, y: number, ch: string): void {
   for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) put(g, x, y, ch);
 }
-function body(g: string[][], cx: number, cy: number, w: number, h: number, ch: string, chD: string): void {
-  const x0 = Math.round(cx - w / 2);
-  const y0 = Math.round(cy - h / 2);
-  for (let y = y0; y < y0 + h; y++) {
-    for (let x = x0; x < x0 + w; x++) {
-      const edge = x === x0 || x === x0 + w - 1 || y === y0 || y === y0 + h - 1;
-      put(g, x, y, edge ? chD : ch);
+
+/**
+ * Fill an ellipse centred at `(cx, cy)`, `w` x `h`, shading each pixel by its position so
+ * the silhouette reads as lit from above: `light` along the top rim, `main` through the
+ * body, `dark` along the lower rim and any part beyond `darkFrom` (0..1, 1 = never dark —
+ * used for a belly stripe or underside marking passed via `darkFrom`).
+ */
+function ellipse(g: string[][], cx: number, cy: number, w: number, h: number, main: string, dark: string, light?: string): void {
+  const rx = Math.max(0.6, w / 2);
+  const ry = Math.max(0.6, h / 2);
+  const y0 = Math.floor(cy - ry);
+  const y1 = Math.ceil(cy + ry);
+  const x0 = Math.floor(cx - rx);
+  const x1 = Math.ceil(cx + rx);
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const nx = (x + 0.5 - cx) / rx;
+      const ny = (y + 0.5 - cy) / ry;
+      const q = nx * nx + ny * ny;
+      if (q > 1) continue;
+      const edge = q > 0.72;
+      const top = ny < -0.25;
+      const ch = edge ? dark : top && light ? light : main;
+      put(g, x, y, ch);
     }
   }
 }
 
-/** First colour key in the palette other than the eye/dark keys — used as the main body tone. */
+/** First colour key in the palette other than the eye key — used as the main body tone. */
 function mainKey(palette: Record<string, string>): string {
-  const skip = new Set(['e']);
-  return Object.keys(palette).find((k) => !skip.has(k)) ?? 'b';
+  return Object.keys(palette).find((k) => k !== 'e') ?? Object.keys(palette)[0] ?? 'b';
 }
+
+const KIND_PROPORTIONS: Record<BodyPlan['kind'], { bodyTilt: number; headScale: number }> = {
+  quadruped: { bodyTilt: 0, headScale: 0.6 },
+  hopper: { bodyTilt: -0.15, headScale: 0.55 },
+  bird: { bodyTilt: 0.1, headScale: 0.5 },
+  wader: { bodyTilt: 0.05, headScale: 0.4 },
+  flyer: { bodyTilt: 0, headScale: 0.45 },
+  frog: { bodyTilt: 0, headScale: 0.75 },
+  reptile: { bodyTilt: 0, headScale: 0.4 },
+  swimmer: { bodyTilt: 0, headScale: 0.5 },
+  bulky: { bodyTilt: 0, headScale: 0.55 },
+};
 
 /**
  * Build both frames for a creature at a given life stage. The body plan drives size; the
- * `kind` picks which of eight layout routines assembles the parts.
+ * `kind` picks proportions (how round the body is, how big the head reads) but every
+ * creature is assembled by the same ellipse-based routine, so the whole roster stays
+ * visually consistent.
  */
 export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex): [Frame, Frame] {
   const plan = creature.body;
@@ -65,75 +100,118 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex): 
   const legs = Math.round((plan.legs ?? 0) * scale);
   const neck = Math.round((plan.neck ?? 0) * scale);
   const tailLen = Math.round((plan.tail?.len ?? 0) * scale);
-  const beak = Math.round((plan.beak ?? 0) * scale);
+  const beak = Math.max(0, Math.round((plan.beak ?? 0) * scale * 0.6));
   const ears = Math.round((plan.ears ?? 0) * scale);
   const crest = Math.round((plan.crest ?? 0) * scale);
+  const proportions = KIND_PROPORTIONS[plan.kind];
 
   const pal = creature.palette;
   const main = mainKey(pal);
   const dark = pal.d ? 'd' : main;
-  const light = pal.l ? 'l' : main;
+  const light = pal.l ? 'l' : undefined;
   const eye = pal.e ? 'e' : dark;
+  const beakCol = pal.y ? 'y' : (light ?? main);
 
-  const totalW = w + Math.max(neck, beak, tailLen) * 2 + 4;
-  const totalH = h + legs + Math.max(neck, crest, ears) + 4;
+  const headR = Math.max(1.4, Math.round(w * proportions.headScale * 0.3));
+  const totalW = w + Math.max(neck, beak, tailLen) * 2 + Math.round(headR * 2) + 2;
+  const totalH = h + legs + Math.max(neck, crest, ears, Math.round(headR * 2)) + 3;
   const cx = Math.floor(totalW / 2);
-  const baseY = totalH - 1 - legs;
+  const baseY = totalH - 1 - legs - 1;
+
+  function headCentre(): { x: number; y: number } {
+    if (neck > 0) {
+      return { x: cx, y: baseY - h / 2 - neck };
+    }
+    return { x: cx + w / 2 + headR * 0.6, y: baseY - h - headR * 0.2 };
+  }
 
   function drawCommon(legPhase: 0 | 1): Frame {
     const g = grid(totalW, totalH);
-    // legs
+    const bodyCy = baseY - h / 2 - legs + proportions.bodyTilt * h;
+
+    // legs: thin, at the belly edge, offset in pairs for a walk cycle
     if (legs > 0) {
       const legN = plan.kind === 'bird' || plan.kind === 'wader' ? 2 : 4;
       for (let i = 0; i < legN; i++) {
-        const lx = cx - w / 4 + (i % 2) * (w / 2);
+        const lx = cx - w * 0.3 + (i * w * 0.6) / Math.max(1, legN - 1);
         const offset = legPhase && i % 2 === 0 ? 1 : 0;
-        for (let y = baseY - legs + offset; y <= baseY; y++) put(g, Math.round(lx), y, dark);
+        const topY = baseY - legs + offset;
+        for (let y = topY; y <= baseY; y++) put(g, Math.round(lx), y, dark);
       }
-    }
-    // body
-    body(g, cx, baseY - h / 2 - legs, w, h, main, dark);
-    // neck + head
-    if (neck > 0) {
-      const headY = baseY - legs - h / 2 - neck;
-      hline(g, cx, cx, headY, main);
-      for (let y = headY; y < baseY - legs - h / 2; y++) put(g, cx, y, main);
-      body(g, cx, headY, Math.max(2, Math.round(w * 0.3)), Math.max(2, Math.round(w * 0.3)), light, dark);
-      if (eye) put(g, cx + 1, headY, eye);
-      if (beak > 0) hline(g, cx + 1, cx + 1 + beak, headY, pal.y ? 'y' : light);
     } else {
-      const headY = baseY - legs - h - Math.max(1, Math.round(h * 0.25));
-      body(g, cx + w / 3, headY, Math.max(2, Math.round(w * 0.35)), Math.max(2, Math.round(h * 0.5)), light, dark);
-      if (eye) put(g, Math.round(cx + w / 3 + 1), headY, eye);
-      if (beak > 0) hline(g, Math.round(cx + w / 3 + 1), Math.round(cx + w / 3 + 1 + beak), headY, pal.y ? 'y' : light);
+      // legless (swimmer, frog resting): a soft shadow line instead of a hard edge
+      ellipse(g, cx, baseY + 0.5, w * 0.8, 1.4, dark, dark);
     }
-    // ears / crest
-    if (ears > 0) {
-      const headY = neck > 0 ? baseY - legs - h / 2 - neck : baseY - legs - h - Math.round(h * 0.25);
-      put(g, cx - 1, headY - ears, dark);
-      put(g, cx + 1, headY - ears, dark);
-    }
-    if (crest > 0) {
-      const headY = neck > 0 ? baseY - legs - h / 2 - neck : baseY - legs - h - Math.round(h * 0.25);
-      for (let i = 0; i < crest; i++) put(g, cx, headY - 1 - i, pal.y ? 'y' : light);
-    }
-    // tail
+
+    // tail, drawn before the body so the body's rump overlaps its base
     if (tailLen > 0) {
       const style = plan.tail?.style ?? 'down';
-      const tx = cx - Math.round(w / 2) - 1;
-      const ty = baseY - legs - (style === 'up' || style === 'fan' ? h : Math.round(h * 0.3));
+      const tx = cx - w / 2 - 1;
+      const ty = bodyCy + (style === 'up' || style === 'fan' ? -h * 0.2 : h * 0.15);
       for (let i = 0; i < tailLen; i++) {
-        const dy = style === 'up' ? -i : style === 'curl' ? -Math.round(Math.sin((i / tailLen) * Math.PI) * 3) : i * 0.15;
-        put(g, tx - (style === 'fan' ? Math.round(i * 0.4) : i), Math.round(ty + dy), dark);
+        const dy =
+          style === 'up'
+            ? -i * 0.8
+            : style === 'curl'
+              ? -Math.sin((i / tailLen) * Math.PI) * 3
+              : style === 'bush'
+                ? i * 0.1
+                : i * 0.25;
+        const tcol = style === 'bush' && i > tailLen * 0.4 ? (light ?? main) : dark;
+        put(g, tx - i, Math.round(ty + dy), tcol);
         if (style === 'fan' && i === tailLen - 1) {
-          for (let f = -2; f <= 2; f++) put(g, tx - i + f, Math.round(ty + dy) + f, light);
+          for (let f = -2; f <= 2; f++) put(g, tx - i + f * 0.6, Math.round(ty + dy) + Math.abs(f) * 0.5, light ?? main);
         }
+        if (style === 'bush') put(g, tx - i, Math.round(ty + dy) - 1, tcol);
       }
     }
-    // spines (echidna-style)
-    if (plan.spines) {
-      for (let x = cx - w / 2; x <= cx + w / 2; x += 2) put(g, Math.round(x), Math.round(baseY - legs - h - 1), dark);
+
+    // body: an ellipse, lit on top, shaded on the rim
+    const bodyW = w * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.85 : 1);
+    const bodyH = h * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.8 : 1);
+    ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark, light);
+
+    // belly marking for a bird/wader (the common white-underside look)
+    if ((plan.kind === 'bird' || plan.kind === 'wader') && pal.w) {
+      ellipse(g, cx, bodyCy + bodyH * 0.25, bodyW * 0.55, bodyH * 0.45, 'w', dark);
     }
+
+    // neck, as a short thick line connecting body to head
+    const head = headCentre();
+    if (neck > 0) {
+      const steps = Math.max(1, Math.round(neck));
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const y = bodyCy - bodyH / 2 - (neck - i);
+        const nx = cx + (head.x - cx) * t * 0.3;
+        put(g, Math.round(nx), Math.round(y), main);
+        put(g, Math.round(nx) + 1, Math.round(y), dark);
+      }
+    }
+
+    // head: a smaller ellipse, with eye and beak/snout
+    ellipse(g, head.x, head.y, headR * 2, headR * 1.8, light ?? main, dark);
+    put(g, Math.round(head.x + headR * 0.5), Math.round(head.y - headR * 0.1), eye);
+    if (beak > 0) hline(g, Math.round(head.x + headR * 0.7), Math.round(head.x + headR * 0.7 + beak), Math.round(head.y), beakCol);
+
+    // ears: two small ticks above the head
+    if (ears > 0) {
+      put(g, Math.round(head.x - headR * 0.5), Math.round(head.y - headR - ears * 0.6), dark);
+      put(g, Math.round(head.x + headR * 0.2), Math.round(head.y - headR - ears * 0.6), dark);
+    }
+    // crest: a short tuft above the head
+    if (crest > 0) {
+      for (let i = 0; i < crest; i++) {
+        put(g, Math.round(head.x), Math.round(head.y - headR - 1 - i), beakCol);
+      }
+    }
+    // spines (echidna-style): along the back
+    if (plan.spines) {
+      for (let x = -bodyW / 2; x <= bodyW / 2; x += 1.6) {
+        put(g, Math.round(cx + x), Math.round(bodyCy - bodyH / 2 - 1), dark);
+      }
+    }
+
     return rowsOf(g);
   }
 
