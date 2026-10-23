@@ -17,6 +17,77 @@ export const WEATHER_OPTIONS = ['clear', 'cloudy', 'rain', 'storm', 'fog', 'snow
 export const SEVERITY_OPTIONS = ['peaceful', 'gentle', 'wild', 'merciless', 'custom'] as const;
 export const ANIMATE_OPTIONS = ['on', 'off', 'system'] as const;
 export const LAYOUT_OPTIONS = ['auto', 'landscape', 'vertical'] as const;
+export const REGION_KEYS = [
+  'australia', 'aotearoa', 'japan', 'madagascar', 'costarica', 'eastafrica',
+  'canada', 'norway', 'nepal', 'patagonia', 'borneo',
+] as const;
+
+/**
+ * Every dropdown's raw value, labelled for a human. Settings registered with a bare value
+ * as its own label (`{ label: v }`) is what made "Follow the real sky" invisible as an
+ * option — it showed up as the literal string "auto", with nothing to say what that meant.
+ */
+const ENVIRONMENT_LABELS: Record<(typeof ENVIRONMENTS)[number], string> = {
+  natural: 'Golden hour by the lake',
+  misty_valley: 'Misty mountain valley',
+  aurora: 'Aurora night',
+  lanterns: 'Lanterns at night',
+  bamboo: 'Rainy bamboo grove',
+  synthwave: 'Synthwave',
+  daily: 'Surprise me daily',
+};
+const TIME_LABELS: Record<(typeof TIME_OPTIONS)[number], string> = {
+  dawn: 'Dawn',
+  day: 'Day',
+  goldenHour: 'Golden hour',
+  dusk: 'Dusk',
+  night: 'Night',
+  auto: 'Follow the real sky',
+};
+const WEATHER_LABELS: Record<(typeof WEATHER_OPTIONS)[number], string> = {
+  clear: 'Clear',
+  cloudy: 'Cloudy',
+  rain: 'Rain',
+  storm: 'Storm',
+  fog: 'Fog',
+  snow: 'Snow',
+  afterRain: 'After rain',
+  auto: 'Follow the real sky',
+};
+const SEVERITY_LABELS: Record<(typeof SEVERITY_OPTIONS)[number], string> = {
+  peaceful: 'Peaceful — only growth, nothing ever declines',
+  gentle: 'Gentle — mild decline, recovers quickly (default)',
+  wild: 'Wild — noticeable decline, creatures hide',
+  merciless: 'Merciless — strong decline, slow recovery',
+  custom: 'Custom — set your own window/decay/recovery',
+};
+const ANIMATE_LABELS: Record<(typeof ANIMATE_OPTIONS)[number], string> = {
+  on: 'Always animate',
+  off: 'Never animate (still image)',
+  system: 'Follow system setting (respects reduced motion)',
+};
+const LAYOUT_LABELS: Record<(typeof LAYOUT_OPTIONS)[number], string> = {
+  auto: 'Auto — fit each placement’s own space',
+  landscape: 'Landscape — always a wide banner',
+  vertical: 'Vertical — a tall strip for a narrow sidebar',
+};
+const REGION_LABELS: Record<(typeof REGION_KEYS)[number], string> = {
+  australia: 'Australia',
+  aotearoa: 'Aotearoa New Zealand',
+  japan: 'Japan',
+  madagascar: 'Madagascar',
+  costarica: 'Costa Rica',
+  eastafrica: 'East African savanna',
+  canada: 'Canada',
+  norway: 'Norway',
+  nepal: 'Nepal',
+  patagonia: 'Patagonia',
+  borneo: 'Borneo',
+};
+
+function options<T extends string>(values: readonly T[], labels: Record<T, string>) {
+  return values.map((v) => ({ key: v, label: labels[v], value: v }));
+}
 
 export async function registerSettings(plugin: RNPlugin): Promise<void> {
   // -- Scenery --------------------------------------------------------------
@@ -24,27 +95,27 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
     id: 'scenery.environment',
     title: 'Scenery — environment',
     description: 'A preset scene, or "Surprise me daily" for a different one each day.',
-    options: ENVIRONMENTS.map((v) => ({ key: v, label: v, value: v })),
+    options: options(ENVIRONMENTS, ENVIRONMENT_LABELS),
     defaultValue: 'natural',
   });
   await plugin.settings.registerDropdownSetting({
     id: 'scenery.time',
     title: 'Scenery — time of day',
-    description: '"Follow the real sky" keeps this in step with your clock.',
-    options: TIME_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    description: 'Pick "Follow the real sky" to keep this in step with your clock.',
+    options: options(TIME_OPTIONS, TIME_LABELS),
     defaultValue: 'goldenHour',
   });
   await plugin.settings.registerDropdownSetting({
     id: 'scenery.weather',
     title: 'Scenery — weather',
-    description: '"Follow the real sky" uses live weather for your city below.',
-    options: WEATHER_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    description: 'Pick "Follow the real sky" to use live weather for your city, set below.',
+    options: options(WEATHER_OPTIONS, WEATHER_LABELS),
     defaultValue: 'clear',
   });
   await plugin.settings.registerDropdownSetting({
     id: 'scenery.animate',
     title: 'Animate the grove',
-    options: ANIMATE_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    options: options(ANIMATE_OPTIONS, ANIMATE_LABELS),
     defaultValue: 'system',
   });
 
@@ -52,11 +123,8 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
   await plugin.settings.registerDropdownSetting({
     id: 'forest.region',
     title: 'Region',
-    description: 'Which native ecosystem your grove draws from. Switching keeps your progress.',
-    options: [
-      'australia', 'aotearoa', 'japan', 'madagascar', 'costarica', 'eastafrica',
-      'canada', 'norway', 'nepal', 'patagonia', 'borneo',
-    ].map((v) => ({ key: v, label: v, value: v })),
+    description: 'Which native ecosystem your grove draws from. Switching keeps your progress — your unlocked creatures, their ages and names all carry over.',
+    options: options(REGION_KEYS, REGION_LABELS),
     defaultValue: 'australia',
   });
   await plugin.settings.registerNumberSetting({
@@ -80,12 +148,17 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
     title: 'Show in the right sidebar',
     defaultValue: true,
   });
+  await plugin.settings.registerBooleanSetting({
+    id: 'forest.showOnLearningProgress',
+    title: 'Show on the Learning Progress page',
+    description: 'Adds the grove to RemNote\'s own stats page, styled to match its other cards.',
+    defaultValue: true,
+  });
   await plugin.settings.registerDropdownSetting({
     id: 'forest.layout',
     title: 'Grove shape',
-    description:
-      '"Auto" fits each placement\'s own space. "Landscape" always draws a wide banner; "Vertical" draws a tall strip, suited to a narrow sidebar.',
-    options: LAYOUT_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    description: 'Which shape the grove draws in, wherever it appears.',
+    options: options(LAYOUT_OPTIONS, LAYOUT_LABELS),
     defaultValue: 'auto',
   });
   await plugin.settings.registerStringSetting({
@@ -99,8 +172,8 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
   await plugin.settings.registerDropdownSetting({
     id: 'nature.severity',
     title: 'Nature',
-    description: 'How much a missed pattern of study shows in the ecosystem. Peaceful never declines; Merciless declines hardest and recovers slowest.',
-    options: SEVERITY_OPTIONS.map((v) => ({ key: v, label: v, value: v })),
+    description: 'How much a missed pattern of study shows in the ecosystem.',
+    options: options(SEVERITY_OPTIONS, SEVERITY_LABELS),
     defaultValue: 'gentle',
   });
 
@@ -123,6 +196,7 @@ export interface GroveSettings {
   breakDays: number;
   showOnFinishedQueue: boolean;
   showSidebar: boolean;
+  showOnLearningProgress: boolean;
   layout: 'auto' | 'landscape' | 'vertical';
   excludedRemIds: string[];
   severity: string;
@@ -145,7 +219,7 @@ async function withOverride<T>(plugin: RNPlugin, settingId: string, overrideKey:
 export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
   const [
     environment, time, weather, animate, region, rolloverHour, breakDays,
-    showOnFinishedQueue, showSidebar, layout, excludedRemIds, severity, weatherCity,
+    showOnFinishedQueue, showSidebar, showOnLearningProgress, layout, excludedRemIds, severity, weatherCity,
   ] = await Promise.all([
     withOverride(plugin, 'scenery.environment', 'scenery.environment.override', 'natural'),
     plugin.settings.getSetting<string>('scenery.time'),
@@ -156,6 +230,7 @@ export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
     plugin.settings.getSetting<number>('forest.breakDays'),
     plugin.settings.getSetting<boolean>('forest.showOnFinishedQueue'),
     plugin.settings.getSetting<boolean>('forest.showSidebar'),
+    plugin.settings.getSetting<boolean>('forest.showOnLearningProgress'),
     plugin.settings.getSetting<'auto' | 'landscape' | 'vertical'>('forest.layout'),
     plugin.settings.getSetting<string>('forest.excludedRemIds'),
     plugin.settings.getSetting<string>('nature.severity'),
@@ -171,6 +246,7 @@ export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
     breakDays: breakDays ?? 14,
     showOnFinishedQueue: showOnFinishedQueue ?? true,
     showSidebar: showSidebar ?? true,
+    showOnLearningProgress: showOnLearningProgress ?? true,
     layout: layout ?? 'auto',
     excludedRemIds: (excludedRemIds ?? '').split(',').map((s) => s.trim()).filter(Boolean),
     severity: severity ?? 'gentle',
