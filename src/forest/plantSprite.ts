@@ -29,6 +29,16 @@ const PINE_W = [0.46, 0.54, 0.62];
 const BROAD_W = [0.66, 0.8, 0.94];
 const ANCIENT_W = [0.9, 0.98, 1.04];
 
+/**
+ * Trunk pixels use a *separate* tone range (8..10) from crown pixels (0..4), so `paint.ts`
+ * can tell them apart and resolve them against `species.bark` instead of `species.crown`.
+ * Without this split, every trunk pixel resolved through the crown palette and a tree had
+ * no visible trunk at all — just a solid green blob from root to crown.
+ */
+export const TRUNK_LIGHT = 8;
+export const TRUNK_MID = 9;
+export const TRUNK_DARK = 10;
+
 function makeTone(w: number, h: number): ToneMap {
   return { w, h, tone: new Int8Array(w * h).fill(-1) };
 }
@@ -136,7 +146,7 @@ function bulbousTrunk(tm: ToneMap, trunkW: number, bulbW: number, top: number, t
     const intoBulge = y < top + bulgeH ? 1 - (y - top) / bulgeH : 0;
     const halfW = Math.round((trunkW / 2) + (bulbW / 2 - trunkW / 2) * intoBulge);
     for (let x = cx - halfW; x <= cx + halfW; x++) {
-      set(tm, x, y, x < cx ? 2 : x === cx ? 3 : 2);
+      set(tm, x, y, x < cx ? TRUNK_MID : x === cx ? TRUNK_LIGHT : TRUNK_MID);
     }
   }
   return { tx0: cx - Math.round(trunkW / 2) };
@@ -205,9 +215,13 @@ export function buildToneMap(plant: Pick<Plant, 'stage' | 'size' | 'health' | 's
   const trunkTop = base - trunkH;
   const trunkW = plant.stage >= Stage.Old ? 2 : 1;
 
+  const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {
-    for (let x = cx - Math.floor(trunkW / 2); x < cx - Math.floor(trunkW / 2) + trunkW; x++) {
-      set(tm, x, y, y <= trunkTop + 3 ? 1 : 2);
+    for (let x = tx0; x < tx0 + trunkW; x++) {
+      // dark where it's shaded under the crown, lit on the left edge for a two-tone trunk
+      let tone = y <= trunkTop + 3 ? TRUNK_DARK : TRUNK_MID;
+      if (trunkW > 1 && x === tx0) tone = TRUNK_LIGHT;
+      set(tm, x, y, tone);
     }
   }
 
@@ -244,10 +258,13 @@ export function buildToneMap(plant: Pick<Plant, 'stage' | 'size' | 'health' | 's
       break;
   }
 
-  // Edge cleanup: a tone pixel with no filled neighbour below/right reads as a stray speck.
+  // Edge cleanup: a crown-tone pixel with no filled neighbour below/right reads as a stray
+  // speck. Restricted to the crown's tone range (0..4) — a trunk pixel (8..10) reset to 0
+  // would resolve back through the crown palette and the trunk would lose its colour again.
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (get(tm, x, y) < 0) continue;
+      const tn = get(tm, x, y);
+      if (tn < 0 || tn > 4) continue;
       if (get(tm, x + 1, y) < 0 && get(tm, x, y + 1) < 0) set(tm, x, y, 0);
     }
   }

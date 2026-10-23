@@ -1227,6 +1227,9 @@ var SEEDLING_SIZE = 7;
 var PINE_W = [0.46, 0.54, 0.62];
 var BROAD_W = [0.66, 0.8, 0.94];
 var ANCIENT_W = [0.9, 0.98, 1.04];
+var TRUNK_LIGHT = 8;
+var TRUNK_MID = 9;
+var TRUNK_DARK = 10;
 function makeTone(w, h) {
   return { w, h, tone: new Int8Array(w * h).fill(-1) };
 }
@@ -1330,7 +1333,7 @@ function bulbousTrunk(tm, trunkW, bulbW, top, trunkH, cx) {
     const intoBulge = y < top + bulgeH ? 1 - (y - top) / bulgeH : 0;
     const halfW = Math.round(trunkW / 2 + (bulbW / 2 - trunkW / 2) * intoBulge);
     for (let x = cx - halfW; x <= cx + halfW; x++) {
-      set(tm, x, y, x < cx ? 2 : x === cx ? 3 : 2);
+      set(tm, x, y, x < cx ? TRUNK_MID : x === cx ? TRUNK_LIGHT : TRUNK_MID);
     }
   }
   return { tx0: cx - Math.round(trunkW / 2) };
@@ -1387,9 +1390,13 @@ function buildToneMap(plant, form) {
   const ch = h - trunkH + 2;
   const trunkTop = base - trunkH;
   const trunkW = plant.stage >= 4 /* Old */ ? 2 : 1;
+  const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {
-    for (let x = cx - Math.floor(trunkW / 2); x < cx - Math.floor(trunkW / 2) + trunkW; x++) {
-      set(tm, x, y, y <= trunkTop + 3 ? 1 : 2);
+    for (let x = tx0; x < tx0 + trunkW; x++) {
+      let tone = y <= trunkTop + 3 ? TRUNK_DARK : TRUNK_MID;
+      if (trunkW > 1 && x === tx0)
+        tone = TRUNK_LIGHT;
+      set(tm, x, y, tone);
     }
   }
   const hole = plant.health === 3 ? DYING_HOLES : 0;
@@ -1426,7 +1433,8 @@ function buildToneMap(plant, form) {
   }
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (get(tm, x, y) < 0)
+      const tn = get(tm, x, y);
+      if (tn < 0 || tn > 4)
         continue;
       if (get(tm, x + 1, y) < 0 && get(tm, x, y + 1) < 0)
         set(tm, x, y, 0);
@@ -1676,7 +1684,16 @@ function applyGroundHealth(baseColorHex, params) {
 
 // src/forest/paint.ts
 var TONE_COUNT = 5;
-function resolveTone(tone, x, y, crown, ailing, opts) {
+function resolveTone(tone, x, y, crown, bark, ailing, opts) {
+  if (tone >= TRUNK_LIGHT) {
+    const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
+    let col2 = hex(bark[Math.min(2, barkIndex)]);
+    if (opts.tint && opts.tintAmount)
+      col2 = mix(col2, hex(opts.tint), opts.tintAmount);
+    if (opts.haze && opts.hazeColor)
+      col2 = mix(col2, hex(opts.hazeColor), opts.haze);
+    return col2;
+  }
   const sickShare = opts.stage >= HEALTH_MIN_STAGE2 ? SICK_SHARE[opts.health] : 0;
   const clusterKey = `${opts.seed}|${opts.variant}|${x >> 1}|${y >> 1}`;
   const sick = sickShare > 0 && hashStr(clusterKey) % 1e3 / 1e3 < sickShare;
@@ -1703,7 +1720,7 @@ function paintPlant(g, tm, species, opts, x0, y0, k) {
       const tone = tm.tone[y * tm.w + x];
       if (tone < 0)
         continue;
-      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.ailing, opts);
+      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.bark, species.ailing, opts);
       g.fillStyle = `rgb(${r | 0},${gg | 0},${b | 0})`;
       g.fillRect(Math.round(x0 + x * k), Math.round(y0 + y * k), k, k);
     }

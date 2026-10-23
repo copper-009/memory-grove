@@ -8,7 +8,7 @@
  */
 
 import type { ToneMap } from './plantSprite';
-import { SICK_SHARE, HEALTH_MIN_STAGE } from './plantSprite';
+import { SICK_SHARE, HEALTH_MIN_STAGE, TRUNK_LIGHT, TRUNK_MID } from './plantSprite';
 import type { PlantSpecies } from '../regions/types';
 import { Stage } from '../data/types';
 import { hex, mix, type RGB } from './color';
@@ -31,15 +31,30 @@ export interface PaintOptions {
 
 const TONE_COUNT = 5;
 
-/** Resolve one tone index to a colour, honouring yellowing/browning, snow caps, haze and tint. */
+/**
+ * Resolve one tone index to a colour. A trunk-range tone (`TRUNK_LIGHT`..`TRUNK_DARK`, see
+ * `plantSprite.ts`) resolves against `bark`, never `crown` — that split is what makes a
+ * trunk read as brown wood rather than green foliage. Crown tones get the usual
+ * yellowing/browning, snow-cap, haze and tint treatment; bark gets haze and tint only
+ * (a trunk doesn't yellow, and snow caps only the canopy).
+ */
 function resolveTone(
   tone: number,
   x: number,
   y: number,
   crown: PlantSpecies['crown'],
+  bark: PlantSpecies['bark'],
   ailing: PlantSpecies['ailing'],
   opts: PaintOptions,
 ): RGB {
+  if (tone >= TRUNK_LIGHT) {
+    const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
+    let col = hex(bark[Math.min(2, barkIndex)]);
+    if (opts.tint && opts.tintAmount) col = mix(col, hex(opts.tint), opts.tintAmount);
+    if (opts.haze && opts.hazeColor) col = mix(col, hex(opts.hazeColor), opts.haze);
+    return col;
+  }
+
   const sickShare = opts.stage >= HEALTH_MIN_STAGE ? SICK_SHARE[opts.health] : 0;
   const clusterKey = `${opts.seed}|${opts.variant}|${(x >> 1)}|${(y >> 1)}`;
   const sick = sickShare > 0 && (hashStr(clusterKey) % 1000) / 1000 < sickShare;
@@ -76,7 +91,7 @@ export function paintPlant(
     for (let x = 0; x < tm.w; x++) {
       const tone = tm.tone[y * tm.w + x];
       if (tone < 0) continue;
-      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.ailing, opts);
+      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.bark, species.ailing, opts);
       g.fillStyle = `rgb(${r | 0},${gg | 0},${b | 0})`;
       g.fillRect(Math.round(x0 + x * k), Math.round(y0 + y * k), k, k);
     }
