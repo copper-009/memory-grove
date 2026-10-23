@@ -2,25 +2,14 @@
 
 Steps to take Memory Grove from this repo to a public RemNote plugin listing.
 
-## 1. Create the public repository
+## 1. Create the public repository ✅
 
-```sh
-# from this directory
-gh repo create YOUR_USERNAME/memory-grove --public --source=. --remote=origin
-git push -u origin main
-```
+Done — the repo is live at **https://github.com/copper-009/memory-grove**, with every commit
+pushed to `main`.
 
-(Or create it on github.com first and `git remote add origin <url>`.)
+## 2. Set `repoUrl` ✅
 
-## 2. Set `repoUrl`
-
-`public/manifest.json` currently has a placeholder:
-
-```json
-"repoUrl": "https://github.com/YOUR_USERNAME/memory-grove"
-```
-
-Replace `YOUR_USERNAME` with the real one and commit.
+`public/manifest.json`'s `repoUrl` points at the real repo above.
 
 ## 3. Decide the version
 
