@@ -14,8 +14,13 @@ export const GROUND_BOTTOM = 0.965;
 export const ROWS_TOP = 0.045;
 export const SLOT_MARGIN = 0.02;
 export const SLOT_SPAN = 0.96;
-export const FAR_SCALE = 0.82;
-export const NEAR_GAIN = 0.18;
+// Widened from the original's 0.82/0.18 (a 22% front-to-back size spread) after it read as
+// too flat once the sprite-scale fix (see plantSprite.ts) made zoom and depth scaling
+// actually take effect per-plant — with sprites finally responding to their own `scale`,
+// a bigger spread between the nearest and farthest row reads as real depth instead of a
+// uniform wall of same-sized trees.
+export const FAR_SCALE = 0.68;
+export const NEAR_GAIN = 0.32;
 export const DIM_HAZE = 1.5;
 
 const POND_DAYS_PER_SLOT = 10;

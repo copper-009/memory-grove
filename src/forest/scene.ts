@@ -34,7 +34,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr } from './rng';
-import { hex, mix, mixHex, BAYER4 } from './color';
+import { hex, mix, mixHex, luminance, BAYER4 } from './color';
 
 export interface SceneInput {
   grove: Grove;
@@ -275,6 +275,85 @@ function drawGround(
  * reflected, not just scattered ponds. Drawing the canvas onto itself, flipped and
  * clipped, is cheap at engine resolution and needs no second render pass.
  */
+/**
+ * The cabin that appears after a grove's first year. Built the same way every other sprite
+ * in this file is — tone-shaded pixel blocks, tinted by the current theme — rather than two
+ * flat, untinted rectangles, which is what made it stand out as noticeably lower quality
+ * than the plants once those were improved.
+ */
+function drawCabin(g: CanvasRenderingContext2D, cx: number, baseY: number, s: number, th: Theme): void {
+  const tintC = (col: string): string => {
+    if (!th.tint || !th.tintAmount) return col;
+    const c = mix(hex(col), hex(th.tint), th.tintAmount);
+    return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+  };
+  const wallW = 14 * s;
+  const wallH = 8 * s;
+  const x0 = Math.round(cx - wallW / 2);
+  const y0 = Math.round(baseY - wallH);
+
+  // Walls: alternating plank shading, darker at the bottom (ground shadow) and at the
+  // gable ends.
+  const wallLight = tintC('#8a6245');
+  const wallMid = tintC('#6a4a32');
+  const wallDark = tintC('#4e361f');
+  for (let y = 0; y < wallH; y++) {
+    const plank = y % (2 * s) < s;
+    const row = y > wallH - s ? wallDark : plank ? wallMid : wallLight;
+    g.fillStyle = row;
+    g.fillRect(x0, y0 + y, wallW, 1);
+  }
+  // Corner posts, a touch darker, for a built-log read rather than a flat painted box.
+  g.fillStyle = wallDark;
+  g.fillRect(x0, y0, s, wallH);
+  g.fillRect(x0 + wallW - s, y0, s, wallH);
+
+  // Door.
+  const doorW = Math.max(2, Math.round(2.6 * s));
+  const doorH = Math.round(wallH * 0.75);
+  g.fillStyle = tintC('#2e2016');
+  g.fillRect(Math.round(cx - doorW / 2), y0 + wallH - doorH, doorW, doorH);
+
+  // Window: lit warm when the sky itself is dark (dusk/night), a cool glass tone otherwise.
+  const lit = luminance(hex(th.sky[0])) < 90;
+  const winSize = Math.max(1, Math.round(1.6 * s));
+  const winX = x0 + wallW - winSize - s;
+  const winY = y0 + Math.round(s * 1.2);
+  g.fillStyle = lit ? '#f0d080' : tintC('#5a7a8a');
+  g.fillRect(winX, winY, winSize, winSize);
+  if (lit) {
+    g.fillStyle = 'rgba(240,208,128,0.25)';
+    g.fillRect(winX - 1, winY - 1, winSize + 2, winSize + 2);
+  }
+
+  // Roof: two-tone gable, a ridge highlight along the peak.
+  const roofW = wallW + 4 * s;
+  const roofH = 6 * s;
+  const peakX = cx;
+  const peakY = y0 - roofH;
+  const roofDark = tintC('#6a241a');
+  const roofLight = tintC('#8a3a2e');
+  for (let y = 0; y < roofH; y++) {
+    const t = y / roofH;
+    const halfW = (roofW / 2) * t;
+    const rowY = Math.round(peakY + y);
+    g.fillStyle = y < 2 ? roofLight : roofDark;
+    g.fillRect(Math.round(peakX - halfW), rowY, Math.max(1, Math.round(halfW)), 1);
+    g.fillStyle = roofDark;
+    g.fillRect(Math.round(peakX), rowY, Math.max(1, Math.round(halfW)), 1);
+  }
+
+  // Chimney smoke when the fire's presumably going — anywhere but a hot clear noon.
+  if (lit || th.snow) {
+    const smokeX = Math.round(cx + wallW * 0.28);
+    for (let i = 0; i < 3; i++) {
+      const py = Math.round(peakY - 2 - i * 2 * s);
+      g.fillStyle = `rgba(220,220,225,${0.4 - i * 0.1})`;
+      g.fillRect(smokeX + (i % 2 === 0 ? 0 : s), py, s, s);
+    }
+  }
+}
+
 function drawReflection(
   g: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -431,7 +510,10 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       health: plant.health,
       seed: plant.seed,
       variant: plant.variant,
-      haze: Math.min(1, placed.haze * th.hazeStep * 4),
+      // Raised from *4: with the widened FAR_SCALE/NEAR_GAIN spread, the back row needed a
+      // stronger haze pull too, or size alone would carry all of the depth cue and distant
+      // trees would still read as "small but equally crisp" rather than genuinely far away.
+      haze: Math.min(1, placed.haze * th.hazeStep * 6.5),
       hazeColor: th.haze,
       tint: th.tint ?? undefined,
       tintAmount: th.tintAmount,
@@ -458,12 +540,18 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + (save.slot / 5) * 0.7;
     const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4));
+    // Creatures previously never received the scene's ambient tint at all — painted in raw
+    // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
+    // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint
+    // amount than plants get (0.6x) keeps fur/feather colour still readable as the
+    // species' own colour, rather than washing it out entirely.
+    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : undefined;
 
     if (creature.zone === 'sky') {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw = frame[0]?.length ?? 1;
-      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale);
+      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint);
       pushBox('creature', save.slot, pos.x, pos.y - frame.length * creatureScale, fw * creatureScale, frame.length * creatureScale, 0);
       return;
     }
@@ -477,23 +565,13 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     }
     const x = motion.x * engineW;
     const y0 = baseY - frame.length * creatureScale + dy;
-    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0);
+    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint);
     pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
 
   if (hasCabin(input.grove.stats)) {
-    const cx = engineW * 0.08;
-    const cy = groundBottomY - 2;
-    const s = Math.max(1, Math.round(layout.zoom));
-    eg.fillStyle = '#6a4a32';
-    eg.fillRect(Math.round(cx - 7 * s), Math.round(cy - 8 * s), 14 * s, 8 * s);
-    eg.fillStyle = '#8a3a2e';
-    eg.beginPath();
-    eg.moveTo(cx - 9 * s, cy - 8 * s);
-    eg.lineTo(cx, cy - 14 * s);
-    eg.lineTo(cx + 9 * s, cy - 8 * s);
-    eg.fill();
-    pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, -2);
+    drawCabin(eg, engineW * 0.08, groundBottomY - 2, Math.max(1, Math.round(layout.zoom)), th);
+    pushBox('plant', -1, engineW * 0.08, groundBottomY - 2 - 14 * Math.max(1, Math.round(layout.zoom)), 18 * Math.max(1, Math.round(layout.zoom)), 14 * Math.max(1, Math.round(layout.zoom)), -2);
   }
 
   // Water reflection, only for a biome that actually has standing water — an outback or

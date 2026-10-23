@@ -878,6 +878,9 @@ function mix(a, b, t) {
 function mixHex(a, b, t) {
   return toHex(mix(hex(a), hex(b), t));
 }
+function luminance(c) {
+  return c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11;
+}
 var BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
@@ -889,8 +892,8 @@ var GROUND_BOTTOM = 0.965;
 var ROWS_TOP = 0.045;
 var SLOT_MARGIN = 0.02;
 var SLOT_SPAN = 0.96;
-var FAR_SCALE = 0.82;
-var NEAR_GAIN = 0.18;
+var FAR_SCALE = 0.68;
+var NEAR_GAIN = 0.32;
 var POND_DAYS_PER_SLOT = 10;
 var POND_SLOTS = [2, 4];
 var POND_APART = 3;
@@ -1889,6 +1892,67 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
     ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
   }
 }
+function drawCabin(g, cx, baseY, s, th) {
+  const tintC = (col) => {
+    if (!th.tint || !th.tintAmount)
+      return col;
+    const c = mix(hex(col), hex(th.tint), th.tintAmount);
+    return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+  };
+  const wallW = 14 * s;
+  const wallH = 8 * s;
+  const x0 = Math.round(cx - wallW / 2);
+  const y0 = Math.round(baseY - wallH);
+  const wallLight = tintC("#8a6245");
+  const wallMid = tintC("#6a4a32");
+  const wallDark = tintC("#4e361f");
+  for (let y = 0; y < wallH; y++) {
+    const plank = y % (2 * s) < s;
+    const row = y > wallH - s ? wallDark : plank ? wallMid : wallLight;
+    g.fillStyle = row;
+    g.fillRect(x0, y0 + y, wallW, 1);
+  }
+  g.fillStyle = wallDark;
+  g.fillRect(x0, y0, s, wallH);
+  g.fillRect(x0 + wallW - s, y0, s, wallH);
+  const doorW = Math.max(2, Math.round(2.6 * s));
+  const doorH = Math.round(wallH * 0.75);
+  g.fillStyle = tintC("#2e2016");
+  g.fillRect(Math.round(cx - doorW / 2), y0 + wallH - doorH, doorW, doorH);
+  const lit = luminance(hex(th.sky[0])) < 90;
+  const winSize = Math.max(1, Math.round(1.6 * s));
+  const winX = x0 + wallW - winSize - s;
+  const winY = y0 + Math.round(s * 1.2);
+  g.fillStyle = lit ? "#f0d080" : tintC("#5a7a8a");
+  g.fillRect(winX, winY, winSize, winSize);
+  if (lit) {
+    g.fillStyle = "rgba(240,208,128,0.25)";
+    g.fillRect(winX - 1, winY - 1, winSize + 2, winSize + 2);
+  }
+  const roofW = wallW + 4 * s;
+  const roofH = 6 * s;
+  const peakX = cx;
+  const peakY = y0 - roofH;
+  const roofDark = tintC("#6a241a");
+  const roofLight = tintC("#8a3a2e");
+  for (let y = 0; y < roofH; y++) {
+    const t = y / roofH;
+    const halfW = roofW / 2 * t;
+    const rowY = Math.round(peakY + y);
+    g.fillStyle = y < 2 ? roofLight : roofDark;
+    g.fillRect(Math.round(peakX - halfW), rowY, Math.max(1, Math.round(halfW)), 1);
+    g.fillStyle = roofDark;
+    g.fillRect(Math.round(peakX), rowY, Math.max(1, Math.round(halfW)), 1);
+  }
+  if (lit || th.snow) {
+    const smokeX = Math.round(cx + wallW * 0.28);
+    for (let i = 0; i < 3; i++) {
+      const py = Math.round(peakY - 2 - i * 2 * s);
+      g.fillStyle = `rgba(220,220,225,${0.4 - i * 0.1})`;
+      g.fillRect(smokeX + (i % 2 === 0 ? 0 : s), py, s, s);
+    }
+  }
+}
 function drawReflection(g, canvas, W, landBottomY, waterBottomY, th, visual) {
   const bandH = waterBottomY - landBottomY;
   if (bandH <= 1)
@@ -2003,7 +2067,10 @@ function drawScene(g, W, H, input) {
       health: plant.health,
       seed: plant.seed,
       variant: plant.variant,
-      haze: Math.min(1, placed.haze * th.hazeStep * 4),
+      // Raised from *4: with the widened FAR_SCALE/NEAR_GAIN spread, the back row needed a
+      // stronger haze pull too, or size alone would carry all of the depth cue and distant
+      // trees would still read as "small but equally crisp" rather than genuinely far away.
+      haze: Math.min(1, placed.haze * th.hazeStep * 6.5),
       hazeColor: th.haze,
       tint: th.tint ?? void 0,
       tintAmount: th.tintAmount,
@@ -2030,11 +2097,12 @@ function drawScene(g, W, H, input) {
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + save.slot / 5 * 0.7;
     const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4));
+    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame2 = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw2 = frame2[0]?.length ?? 1;
-      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale);
+      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint);
       pushBox("creature", save.slot, pos.x, pos.y - frame2.length * creatureScale, fw2 * creatureScale, frame2.length * creatureScale, 0);
       return;
     }
@@ -2047,22 +2115,12 @@ function drawScene(g, W, H, input) {
     }
     const x = motion.x * engineW;
     const y0 = baseY - frame.length * creatureScale + dy;
-    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0);
+    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint);
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
   if (hasCabin(input.grove.stats)) {
-    const cx = engineW * 0.08;
-    const cy = groundBottomY - 2;
-    const s = Math.max(1, Math.round(layout.zoom));
-    eg.fillStyle = "#6a4a32";
-    eg.fillRect(Math.round(cx - 7 * s), Math.round(cy - 8 * s), 14 * s, 8 * s);
-    eg.fillStyle = "#8a3a2e";
-    eg.beginPath();
-    eg.moveTo(cx - 9 * s, cy - 8 * s);
-    eg.lineTo(cx, cy - 14 * s);
-    eg.lineTo(cx + 9 * s, cy - 8 * s);
-    eg.fill();
-    pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, -2);
+    drawCabin(eg, engineW * 0.08, groundBottomY - 2, Math.max(1, Math.round(layout.zoom)), th);
+    pushBox("plant", -1, engineW * 0.08, groundBottomY - 2 - 14 * Math.max(1, Math.round(layout.zoom)), 18 * Math.max(1, Math.round(layout.zoom)), 14 * Math.max(1, Math.round(layout.zoom)), -2);
   }
   if (input.biome.hasWater) {
     drawReflection(eg, ecv, engineW, landBottomY, frameBottomY, th, visual);
