@@ -4,22 +4,36 @@ import { registerSettings } from './settings';
 import { startPause, endPause, pauseActive } from '../data/calendar';
 import { loadStudyCalendar, saveStudyCalendar } from './groveBuilder';
 import { isoToDay, dayIndex } from '../data/day';
+import { ICON_DATA_URI } from './icon';
 
 async function onActivate(plugin: ReactRNPlugin): Promise<void> {
   await registerSettings(plugin);
 
   // -- Widgets, one per placement from the brief -----------------------
+  // `widgetTabIcon`/`widgetTabTitle` are what RemNote's own official plugins (e.g. the
+  // History plugin's RightSidebar widget) set so a widget shows up correctly in the
+  // sidebar's "Add Widget" tray — without them a RightSidebar widget can register but
+  // never surface as a choice there. `dimensions: { height: '100%', width: '100%' }` on
+  // RightSidebar matches that same official pattern, in place of 'auto'.
   await plugin.app.registerWidget('sidebar_widget', WidgetLocation.RightSidebar, {
     dimensions: { height: 'auto', width: '100%' },
+    widgetTabIcon: ICON_DATA_URI,
+    widgetTabTitle: 'Memory Grove',
   });
   await plugin.app.registerWidget('queue_widget', WidgetLocation.QueueBelowTopBar, {
     dimensions: { height: 'auto', width: '100%' },
+    widgetTabIcon: ICON_DATA_URI,
+    widgetTabTitle: 'Memory Grove',
   });
   await plugin.app.registerWidget('pane_widget', WidgetLocation.Pane, {
     dimensions: { height: 'auto', width: '100%' },
+    widgetTabIcon: ICON_DATA_URI,
+    widgetTabTitle: 'Memory Grove',
   });
   await plugin.app.registerWidget('learning_progress_widget', WidgetLocation.LearningProgressPage, {
     dimensions: { height: 'auto', width: '100%' },
+    widgetTabIcon: ICON_DATA_URI,
+    widgetTabTitle: 'Memory Grove',
   });
 
   // -- Commands -----------------------------------------------------------

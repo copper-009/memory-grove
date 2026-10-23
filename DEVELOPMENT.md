@@ -133,6 +133,22 @@ Kept honest here rather than glossed over:
   "Holiday mode" command. A calendar popup widget is the natural next addition.
 - **The cabin** is a simple two-colour shape in `scene.ts`, not yet a full creature-style
   sprite with smoke and lit windows at night, as the original has.
+- **A "Cannot parse window string" toast can appear while developing from localhost.**
+  Seen once, immediately after using the "Open Memory Grove" command, which calls
+  `plugin.window.openWidgetInPane`. RemNote persists its pane layout, and a dev-server
+  rebuild changes the bundle's content hash between loads, so a layout string saved before
+  a rebuild can fail to parse against the widget RemNote now sees. This looks like a
+  dev-mode-only artifact of frequent hot rebuilds rather than something the plugin itself
+  does wrong — a production build's widget files don't change hash between loads, so the
+  saved layout should stay valid. Flagged here rather than silently ignored; if it turns up
+  in a production build too, it needs a real fix (most likely: don't let the pane's layout
+  persist at all, or give the pane a stable identity independent of the build).
+- **RemNote commands only ever surface through the omnibar (Cmd/Ctrl+K)** — there is no
+  plugin API for a persistent left-nav icon the way "Tutorials" or "Settings" have one.
+  `sidebar_widget.tsx` now has an "Open full view →" button that calls
+  `openWidgetInPane` directly, so the everyday route into the full pane doesn't need the
+  omnibar at all; the commands remain as the omnibar/keyboard path for anyone who prefers
+  it.
 
 None of these affect data correctness, the plugin's build, or its tests — they're rendering
 and settings-surface polish, left for a follow-up pass.

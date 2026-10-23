@@ -11,8 +11,7 @@ function PaneWidget() {
 
   return (
     <div style={{ padding: 16, maxWidth: 1000, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, marginBottom: 4 }}>{bundle.region.label}</h1>
-      <p style={{ fontSize: 13, opacity: 0.75, marginBottom: 12 }}>{bundle.region.note}</p>
+      <h1 style={{ fontSize: 20, marginBottom: 12 }}>{bundle.region.label}</h1>
       <GroveCanvas bundle={bundle} height={420} />
       <div className="memory-grove-stats-row" style={{ marginTop: 16, display: 'flex', gap: 24, fontSize: 13 }}>
         <div>
