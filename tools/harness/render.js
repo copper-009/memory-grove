@@ -1910,23 +1910,38 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
   }
   g.putImageData(img, 0, top);
 }
-function drawCabin(g, cx, baseY, s, th) {
+function cabinStyleFor(biomeKey) {
+  if (/tropical|rainforest|coastal|wetland|mangrove|terai|riverine|dipterocarp/.test(biomeKey))
+    return "stilt";
+  if (/alpine|himalaya|plateau|rocky/.test(biomeKey))
+    return "stone";
+  if (/outback|savanna|steppe|spiny/.test(biomeKey))
+    return "earthen";
+  return "log";
+}
+function drawCabin(g, cx, baseY, s, th, biomeKey) {
   const tintC = (col) => {
     if (!th.tint || !th.tintAmount)
       return col;
     const c = mix(hex(col), hex(th.tint), th.tintAmount);
     return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
   };
+  const style = cabinStyleFor(biomeKey);
+  const lit = luminance(hex(th.sky[0])) < 90;
   const wallW = 14 * s;
-  const wallH = 8 * s;
+  const stilt = style === "stilt" ? Math.round(2.5 * s) : 0;
+  const wallH = (style === "stone" ? 7 : 8) * s;
   const x0 = Math.round(cx - wallW / 2);
-  const y0 = Math.round(baseY - wallH);
-  const wallLight = tintC("#8a6245");
-  const wallMid = tintC("#6a4a32");
-  const wallDark = tintC("#4e361f");
+  const y0 = Math.round(baseY - wallH - stilt);
+  if (stilt > 0) {
+    g.fillStyle = tintC("#4a3a28");
+    for (const lx of [x0 + s, x0 + wallW - 2 * s])
+      g.fillRect(lx, y0 + wallH, s, stilt);
+  }
+  const [wallLight, wallMid, wallDark] = style === "stone" ? ["#9a9488", "#7a7468", "#58544a"].map(tintC) : style === "earthen" ? ["#c8a870", "#a8864c", "#7a6038"].map(tintC) : ["#8a6245", "#6a4a32", "#4e361f"].map(tintC);
   for (let y = 0; y < wallH; y++) {
-    const plank = y % (2 * s) < s;
-    const row = y > wallH - s ? wallDark : plank ? wallMid : wallLight;
+    const band = style === "stone" ? y % (3 * s) < s : y % (2 * s) < s;
+    const row = y > wallH - s ? wallDark : band ? wallMid : wallLight;
     g.fillStyle = row;
     g.fillRect(x0, y0 + y, wallW, 1);
   }
@@ -1937,7 +1952,6 @@ function drawCabin(g, cx, baseY, s, th) {
   const doorH = Math.round(wallH * 0.75);
   g.fillStyle = tintC("#2e2016");
   g.fillRect(Math.round(cx - doorW / 2), y0 + wallH - doorH, doorW, doorH);
-  const lit = luminance(hex(th.sky[0])) < 90;
   const winSize = Math.max(1, Math.round(1.6 * s));
   const winX = x0 + wallW - winSize - s;
   const winY = y0 + Math.round(s * 1.2);
@@ -1948,26 +1962,46 @@ function drawCabin(g, cx, baseY, s, th) {
     g.fillRect(winX - 1, winY - 1, winSize + 2, winSize + 2);
   }
   const roofW = wallW + 4 * s;
-  const roofH = 6 * s;
   const peakX = cx;
-  const peakY = y0 - roofH;
-  const roofDark = tintC("#6a241a");
-  const roofLight = tintC("#8a3a2e");
-  for (let y = 0; y < roofH; y++) {
-    const t = y / roofH;
-    const halfW = roofW / 2 * t;
-    const rowY = Math.round(peakY + y);
-    g.fillStyle = y < 2 ? roofLight : roofDark;
-    g.fillRect(Math.round(peakX - halfW), rowY, Math.max(1, Math.round(halfW)), 1);
-    g.fillStyle = roofDark;
-    g.fillRect(Math.round(peakX), rowY, Math.max(1, Math.round(halfW)), 1);
-  }
-  if (lit || th.snow) {
-    const smokeX = Math.round(cx + wallW * 0.28);
-    for (let i = 0; i < 3; i++) {
-      const py = Math.round(peakY - 2 - i * 2 * s);
-      g.fillStyle = `rgba(220,220,225,${0.4 - i * 0.1})`;
-      g.fillRect(smokeX + (i % 2 === 0 ? 0 : s), py, s, s);
+  if (style === "earthen") {
+    const roofH = 2 * s;
+    g.fillStyle = tintC("#8a7450");
+    g.fillRect(x0 - s, y0 - roofH, wallW + 2 * s, roofH);
+    g.fillStyle = tintC("#6a5a3c");
+    g.fillRect(x0 - s, y0 - roofH, wallW + 2 * s, 1);
+  } else if (style === "stilt") {
+    const roofH = 8 * s;
+    const peakY = y0 - roofH;
+    const thatchLight = tintC("#c8a850");
+    const thatchDark = tintC("#9a7e34");
+    for (let y = 0; y < roofH; y++) {
+      const t = y / roofH;
+      const halfW = roofW / 2 * (0.15 + 0.85 * t);
+      const rowY = Math.round(peakY + y);
+      g.fillStyle = y % (2 * s) < s ? thatchLight : thatchDark;
+      g.fillRect(Math.round(peakX - halfW), rowY, Math.max(1, Math.round(halfW * 2)), 1);
+    }
+  } else {
+    const roofH = (style === "stone" ? 7 : 6) * s;
+    const peakY = y0 - roofH;
+    const roofDark = tintC(style === "stone" ? "#4a4a52" : "#6a241a");
+    const roofLight = tintC(style === "stone" ? "#6a6a72" : "#8a3a2e");
+    for (let y = 0; y < roofH; y++) {
+      const t = y / roofH;
+      const halfW = roofW / 2 * t;
+      const rowY = Math.round(peakY + y);
+      g.fillStyle = y < 2 ? roofLight : roofDark;
+      g.fillRect(Math.round(peakX - halfW), rowY, Math.max(1, Math.round(halfW)), 1);
+      g.fillStyle = roofDark;
+      g.fillRect(Math.round(peakX), rowY, Math.max(1, Math.round(halfW)), 1);
+    }
+    if (lit || th.snow) {
+      const smokeX = Math.round(cx + wallW * 0.28);
+      for (let i = 0; i < 3; i++) {
+        const py = Math.round(peakY - 2 - i * 2 * s);
+        g.fillStyle = `rgba(220,220,225,${0.4 - i * 0.1})`;
+        g.fillRect(smokeX + (i % 2 === 0 ? 0 : s), py, s, s);
+      }
     }
   }
 }
@@ -2137,8 +2171,11 @@ function drawScene(g, W, H, input) {
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
   if (hasCabin(input.grove.stats)) {
-    drawCabin(eg, engineW * 0.08, groundBottomY - 2, Math.max(1, Math.round(layout.zoom)), th);
-    pushBox("plant", -1, engineW * 0.08, groundBottomY - 2 - 14 * Math.max(1, Math.round(layout.zoom)), 18 * Math.max(1, Math.round(layout.zoom)), 14 * Math.max(1, Math.round(layout.zoom)), -2);
+    const onRight = hashStr(`cabin|${input.biome.key}`) % 2 === 0;
+    const cx = onRight ? engineW * 0.92 : engineW * 0.08;
+    const s = Math.max(1, Math.round(layout.zoom));
+    drawCabin(eg, cx, groundBottomY - 2, s, th, input.biome.key);
+    pushBox("plant", -1, cx, groundBottomY - 2 - 14 * s, 18 * s, 14 * s, -2);
   }
   if (input.biome.hasWater) {
     drawReflection(eg, ecv, engineW, landBottomY, frameBottomY, th, visual);
