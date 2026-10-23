@@ -19,7 +19,7 @@
  */
 
 import type { Grove } from '../data/types';
-import { layoutGrove, placeItem, isPond, GROUND_BOTTOM } from './layout';
+import { layoutGrove, placeItem, isPond, GROUND_BOTTOM, FAR_SCALE, NEAR_GAIN, ROWS_TOP } from './layout';
 import type { Layout, LayoutItem } from './layout';
 import { buildTheme, pickBackdrop } from './theme';
 import type { Theme, MoodInput, BackdropInput } from './theme';
@@ -33,8 +33,9 @@ import type { HitBox } from './hitTest';
 import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
-import { hashStr } from './rng';
+import { hashStr, rng } from './rng';
 import { hex, mix, mixHex, luminance, BAYER4 } from './color';
+import type { RGB } from './color';
 
 export interface SceneInput {
   grove: Grove;
@@ -296,6 +297,84 @@ function drawGround(
   g.putImageData(img, 0, top);
 }
 
+const DEEP_TREES_PER_BAND = 60;
+const DEEP_MAX_BANDS = 4;
+const DEEP_RISE = 3; // engine px a band stands higher than the one in front of it
+const DEEP_CROWN = 8; // engine px, nearest band's canopy height
+const DEEP_STEP = 6; // engine px taller per band further back
+const LOBE_GAP = 4;
+const LOBE_R = 4;
+const LOBE_R_SPREAD = 3.5;
+const LOBE_H = 0.55;
+const LOBE_H_SPREAD = 0.65;
+
+/** How many hazy canopy bands a grove of this size gets — ported from the original's
+ * `clamp(round(log2(max(2, n/60))), 1, 4)`: even a brand-new grove gets one band, so the
+ * forest never reads as floating in empty space with nothing behind it; a large grove
+ * gets up to four, each one further back. */
+function deepForestBands(totalPlants: number): number {
+  const n = Math.max(2, totalPlants / DEEP_TREES_PER_BAND);
+  return Math.max(1, Math.min(DEEP_MAX_BANDS, Math.round(Math.log2(n))));
+}
+
+/**
+ * The deep forest: a hazy, scalloped canopy skyline standing behind the individually
+ * drawn trees, rising band by band into the mist — Memory Forest's own `deepForest()`
+ * (`web/engines/pixel/ground.js`). This is the single biggest depth cue the original has
+ * that an earlier version of this file never ported: individual sprite scaling alone
+ * can't suggest a forest that keeps going past what's actually drawn, but a receding,
+ * fading treeline silhouette behind the back row does exactly that — the same reason a
+ * real landscape painting puts hazy blue hills behind its foreground trees.
+ *
+ * Each band is drawn as a row of overlapping lobes (half-ellipses) along a base line,
+ * furthest band first so nearer ones paint over it, every pixel dithered between two
+ * tones in a checkerboard (matching the original) and faded toward the theme's haze
+ * colour more heavily the further back the band stands.
+ */
+function drawDeepForest(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, bands: number, seed: number): void {
+  const R = rng(seed ^ 0x5eed);
+  const haze = hex(th.haze);
+  const tintC = th.tint ? hex(th.tint) : null;
+  const lightBase = hex(th.grass);
+  const darkBase = hex(mixHex(th.grass, '#000000', 0.38));
+  const rimBase = hex(th.rim ?? mixHex(th.grass, '#ffffff', 0.3));
+  const far = horizonY + 2;
+
+  for (let k = bands - 1; k >= 0; k--) {
+    const hz = Math.min(0.92, th.hazeStep * (2.6 + k * 1.7));
+    const tone = (c: RGB): string => {
+      const q = tintC ? mix(c, tintC, th.tintAmount) : c;
+      const m = mix(q, haze, hz);
+      return `rgb(${m[0] | 0},${m[1] | 0},${m[2] | 0})`;
+    };
+    const c1 = tone(lightBase);
+    const c2 = tone(darkBase);
+    const rim = tone(th.snow ? [240, 248, 255] : rimBase);
+    const base = Math.round(far - k * DEEP_RISE);
+    const crown = DEEP_CROWN + k * DEEP_STEP;
+
+    const top = new Float32Array(W).fill(base);
+    for (let cx = -2; cx <= W + 2; cx += Math.max(1, LOBE_GAP + R() * LOBE_GAP)) {
+      const r = LOBE_R + R() * LOBE_R_SPREAD;
+      const h = crown * (LOBE_H + R() * LOBE_H_SPREAD);
+      for (let x = Math.ceil(cx - r); x <= cx + r; x++) {
+        if (x < 0 || x >= W) continue;
+        const reach = Math.sqrt(Math.max(0, 1 - ((x - cx) / r) ** 2));
+        top[x] = Math.min(top[x], base - h * reach);
+      }
+    }
+    for (let x = 0; x < W; x++) {
+      const y0 = Math.round(top[x]);
+      g.fillStyle = rim;
+      g.fillRect(x, y0, 1, 1);
+      for (let y = y0 + 1; y <= base; y++) {
+        g.fillStyle = (x + y) & 1 ? c2 : c1;
+        g.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+}
+
 /**
  * Mirror the land band (sky's lower edge through ground, trees and creatures — everything
  * already drawn onto `canvas`) into the band below `landBottomY`, tinted with the theme's
@@ -326,10 +405,11 @@ function cabinStyleFor(biomeKey: string): CabinStyle {
  * of four styles chosen by the biome's own ecosystem, standing on whichever side of the
  * scene a stable per-biome hash picks (not always the same front-left corner).
  */
-function drawCabin(g: CanvasRenderingContext2D, cx: number, baseY: number, s: number, th: Theme, biomeKey: string): void {
+function drawCabin(g: CanvasRenderingContext2D, cx: number, baseY: number, s: number, th: Theme, biomeKey: string, haze = 0): void {
   const tintC = (col: string): string => {
-    if (!th.tint || !th.tintAmount) return col;
-    const c = mix(hex(col), hex(th.tint), th.tintAmount);
+    let c = hex(col);
+    if (th.tint && th.tintAmount) c = mix(c, hex(th.tint), th.tintAmount);
+    if (haze > 0) c = mix(c, hex(th.haze), haze);
     return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
   };
   const style = cabinStyleFor(biomeKey);
@@ -551,6 +631,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
   drawSky(eg, engineW, horizonY, th, input.t);
   drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
+  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
 
   const layout: Layout = layoutGrove(input.grove.plants);
   // The hit boxes we report are in *real* canvas space, so every engine-space box drawn
@@ -644,14 +725,22 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   });
 
   if (hasCabin(input.grove.stats)) {
-    // Which side of the scene it stands on is a stable hash of the biome's own key — a
-    // different ecosystem can put it on the other side, but it never jitters day to day
-    // for the same biome.
-    const onRight = hashStr(`cabin|${input.biome.key}`) % 2 === 0;
+    // Both which side of the scene it stands on and how far back it sits are a stable hash
+    // of the biome's own key — a different ecosystem can put it anywhere in the scene, but
+    // it never jitters day to day for the same biome. Placed with the exact same
+    // depth -> y/scale/haze mapping `placeItem` uses for every plant, so a cabin standing
+    // in the back row genuinely recedes (smaller, hazier, higher up) instead of always
+    // being pasted at full size in the front corner regardless of where it's "standing."
+    const onRight = hashStr(`cabin-side|${input.biome.key}`) % 2 === 0;
+    const cabinDepth = 0.15 + 0.8 * ((hashStr(`cabin-depth|${input.biome.key}`) % 1000) / 1000);
+    const top = horizonY + engineH * ROWS_TOP;
+    const cy = top + (groundBottomY - top) * Math.pow(cabinDepth, 1.1);
+    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
+    const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(1, Math.round(layout.zoom));
-    drawCabin(eg, cx, groundBottomY - 2, s, th, input.biome.key);
-    pushBox('plant', -1, cx, groundBottomY - 2 - 14 * s, 18 * s, 14 * s, -2);
+    const s = Math.max(0.6, cabinScale);
+    drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
+    pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
   }
 
   // Water reflection, only for a biome that actually has standing water — an outback or

@@ -1911,6 +1911,62 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
   }
   g.putImageData(img, 0, top);
 }
+var DEEP_TREES_PER_BAND = 60;
+var DEEP_MAX_BANDS = 4;
+var DEEP_RISE = 3;
+var DEEP_CROWN = 8;
+var DEEP_STEP = 6;
+var LOBE_GAP = 4;
+var LOBE_R = 4;
+var LOBE_R_SPREAD = 3.5;
+var LOBE_H = 0.55;
+var LOBE_H_SPREAD = 0.65;
+function deepForestBands(totalPlants) {
+  const n = Math.max(2, totalPlants / DEEP_TREES_PER_BAND);
+  return Math.max(1, Math.min(DEEP_MAX_BANDS, Math.round(Math.log2(n))));
+}
+function drawDeepForest(g, W, horizonY, th, bands, seed) {
+  const R = rng(seed ^ 24301);
+  const haze = hex(th.haze);
+  const tintC = th.tint ? hex(th.tint) : null;
+  const lightBase = hex(th.grass);
+  const darkBase = hex(mixHex(th.grass, "#000000", 0.38));
+  const rimBase = hex(th.rim ?? mixHex(th.grass, "#ffffff", 0.3));
+  const far = horizonY + 2;
+  for (let k = bands - 1; k >= 0; k--) {
+    const hz = Math.min(0.92, th.hazeStep * (2.6 + k * 1.7));
+    const tone = (c) => {
+      const q = tintC ? mix(c, tintC, th.tintAmount) : c;
+      const m = mix(q, haze, hz);
+      return `rgb(${m[0] | 0},${m[1] | 0},${m[2] | 0})`;
+    };
+    const c1 = tone(lightBase);
+    const c2 = tone(darkBase);
+    const rim = tone(th.snow ? [240, 248, 255] : rimBase);
+    const base = Math.round(far - k * DEEP_RISE);
+    const crown = DEEP_CROWN + k * DEEP_STEP;
+    const top = new Float32Array(W).fill(base);
+    for (let cx = -2; cx <= W + 2; cx += Math.max(1, LOBE_GAP + R() * LOBE_GAP)) {
+      const r = LOBE_R + R() * LOBE_R_SPREAD;
+      const h = crown * (LOBE_H + R() * LOBE_H_SPREAD);
+      for (let x = Math.ceil(cx - r); x <= cx + r; x++) {
+        if (x < 0 || x >= W)
+          continue;
+        const reach = Math.sqrt(Math.max(0, 1 - ((x - cx) / r) ** 2));
+        top[x] = Math.min(top[x], base - h * reach);
+      }
+    }
+    for (let x = 0; x < W; x++) {
+      const y0 = Math.round(top[x]);
+      g.fillStyle = rim;
+      g.fillRect(x, y0, 1, 1);
+      for (let y = y0 + 1; y <= base; y++) {
+        g.fillStyle = x + y & 1 ? c2 : c1;
+        g.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+}
 function cabinStyleFor(biomeKey) {
   if (/tropical|rainforest|coastal|wetland|mangrove|terai|riverine|dipterocarp/.test(biomeKey))
     return "stilt";
@@ -1920,11 +1976,13 @@ function cabinStyleFor(biomeKey) {
     return "earthen";
   return "log";
 }
-function drawCabin(g, cx, baseY, s, th, biomeKey) {
+function drawCabin(g, cx, baseY, s, th, biomeKey, haze = 0) {
   const tintC = (col) => {
-    if (!th.tint || !th.tintAmount)
-      return col;
-    const c = mix(hex(col), hex(th.tint), th.tintAmount);
+    let c = hex(col);
+    if (th.tint && th.tintAmount)
+      c = mix(c, hex(th.tint), th.tintAmount);
+    if (haze > 0)
+      c = mix(c, hex(th.haze), haze);
     return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
   };
   const style = cabinStyleFor(biomeKey);
@@ -2094,6 +2152,7 @@ function drawScene(g, W, H, input) {
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
   drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
+  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
   const pushBox = (kind, ref, cx, topY, w, h, depth) => {
@@ -2172,11 +2231,16 @@ function drawScene(g, W, H, input) {
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
   if (hasCabin(input.grove.stats)) {
-    const onRight = hashStr(`cabin|${input.biome.key}`) % 2 === 0;
+    const onRight = hashStr(`cabin-side|${input.biome.key}`) % 2 === 0;
+    const cabinDepth = 0.15 + 0.8 * (hashStr(`cabin-depth|${input.biome.key}`) % 1e3 / 1e3);
+    const top = horizonY + engineH * ROWS_TOP;
+    const cy = top + (groundBottomY - top) * Math.pow(cabinDepth, 1.1);
+    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
+    const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(1, Math.round(layout.zoom));
-    drawCabin(eg, cx, groundBottomY - 2, s, th, input.biome.key);
-    pushBox("plant", -1, cx, groundBottomY - 2 - 14 * s, 18 * s, 14 * s, -2);
+    const s = Math.max(0.6, cabinScale);
+    drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
+    pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
   }
   if (input.biome.hasWater) {
     drawReflection(eg, ecv, engineW, landBottomY, frameBottomY, th, visual);
