@@ -899,12 +899,12 @@ var POND_SLOTS = [2, 4];
 var POND_APART = 3;
 var X_JITTER = 0.7;
 var Y_JITTER = 0.6;
-var SINGLE_ROW_NEAREST = 0.3;
+var SINGLE_ROW_NEAREST = 0.15;
 var ZOOM_FULL_LOG = 7;
 var ZOOM_PER_LOG = 0.15;
 var ZOOM_MAX = 1.8;
 var ROW_SPREAD = 1.6;
-var ROW_MIN = 10;
+var ROW_MIN = 5;
 var ROW_MAX = 34;
 var ROW_MAX_BIG = 52;
 var BIG_FOREST_ITEMS = 500;
@@ -1617,20 +1617,20 @@ function buildCreatureFrames(creature, stage) {
 }
 
 // src/forest/creatureMotion.ts
-var ROAM_EVERY_S = 150;
-var ROAM_STAGGER_S = 41;
-var ROAM_OFFSET_S = 37;
-var WALK_SPEED_UNITS_PER_S = 7;
+var ROAM_EVERY_S = 60;
+var ROAM_STAGGER_S = 23;
+var ROAM_OFFSET_S = 17;
+var WALK_SPEED_UNITS_PER_S = 4;
 var STRIDE_SHARE = 0.25;
-var ROAM_REACH_SHARE = 0.045;
-var IDLE_GLANCE_THRESHOLD = 0.93;
+var ROAM_REACH_SHARE = 0.08;
+var IDLE_GLANCE_THRESHOLD = 0.85;
 function spotFor(daySeed2, slotIndex, home, reach, n) {
   const r = rng(hashInt(hashInt(daySeed2, slotIndex * 104729), n * 7919));
   return home + (r() - 0.5) * 2 * reach;
 }
 function groundMotion(t, daySeed2, slotIndex, home, reach = ROAM_REACH_SHARE, animate = true) {
   if (!animate) {
-    return { x: home, groundCovered: 0, moving: false, facing: 1, frame: 0 };
+    return { x: home, groundCovered: 0, moving: false, facing: 1, frame: 0, idleBob: 0 };
   }
   const period = ROAM_EVERY_S + slotIndex * ROAM_STAGGER_S;
   const shifted = t + slotIndex * ROAM_OFFSET_S;
@@ -1653,7 +1653,8 @@ function groundMotion(t, daySeed2, slotIndex, home, reach = ROAM_REACH_SHARE, an
     const glance = Math.sin(t * 0.7 + slotIndex * 2.1);
     frame = glance > IDLE_GLANCE_THRESHOLD ? 1 : 0;
   }
-  return { x, groundCovered, moving, facing, frame };
+  const idleBob = moving ? 0 : Math.sin(t * 1.1 + slotIndex * 3.3);
+  return { x, groundCovered, moving, facing, frame, idleBob };
 }
 function hopHeight(groundCovered, hopLenShare, hopHeightPx) {
   if (hopLenShare <= 0)
@@ -2158,10 +2159,10 @@ function drawScene(g, W, H, input) {
       pushBox("creature", save.slot, pos.x, pos.y - frame2.length * creatureScale, fw2 * creatureScale, frame2.length * creatureScale, 0);
       return;
     }
-    const motion = groundMotion(input.t, input.grove.seed, save.slot, home, 0.06, input.animate);
+    const motion = groundMotion(input.t, input.grove.seed, save.slot, home, 0.08, input.animate);
     const frame = motion.moving ? busy : idle;
     const fw = frame[0]?.length ?? 1;
-    let dy = 0;
+    let dy = -motion.idleBob * 0.6 * creatureScale;
     if (creature.body.kind === "hopper" && motion.moving) {
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }

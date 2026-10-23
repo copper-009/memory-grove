@@ -630,10 +630,10 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       return;
     }
 
-    const motion = groundMotion(input.t, input.grove.seed, save.slot, home, 0.06, input.animate);
+    const motion = groundMotion(input.t, input.grove.seed, save.slot, home, 0.08, input.animate);
     const frame = motion.moving ? busy : idle;
     const fw = frame[0]?.length ?? 1;
-    let dy = 0;
+    let dy = -motion.idleBob * 0.6 * creatureScale;
     if (creature.body.kind === 'hopper' && motion.moving) {
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }

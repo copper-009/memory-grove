@@ -28,12 +28,18 @@ const POND_SLOTS: [number, number] = [2, 4];
 const POND_APART = 3;
 const X_JITTER = 0.7;
 const Y_JITTER = 0.6;
-const SINGLE_ROW_NEAREST = 0.3;
+const SINGLE_ROW_NEAREST = 0.15;
 const ZOOM_FULL_LOG = 7;
 const ZOOM_PER_LOG = 0.15;
 const ZOOM_MAX = 1.8;
 const ROW_SPREAD = 1.6;
-const ROW_MIN = 10;
+// Lowered from 10: a floor of 10 columns forced ANY grove of 10 plants or fewer — which is
+// most groves for their first weeks or months — into a single row with no real front/back
+// structure at all, just narrow per-item jitter. A real small grove (the common case a user
+// actually watches day to day) deserves genuine row depth too; 5 still keeps a handful of
+// plants scattered in one row (see the "lone first row" test) while anything from ~6 plants
+// up now actually splits into a near row and a far one.
+const ROW_MIN = 5;
 const ROW_MAX = 34;
 const ROW_MAX_BIG = 52;
 const BIG_FOREST_ITEMS = 500;

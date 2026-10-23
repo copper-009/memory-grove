@@ -26,15 +26,31 @@ export interface CellColor {
  * golden-hour lake scenery reads warm and green; in Norway's fjord dusk it reads cool and
  * blue; nothing here is ever a flat, scenery-independent grey.
  */
+/** The GitHub-contribution-grid look this is deliberately matching needs real rungs
+ * between levels, not a continuous lerp — four quantized steps read as a ladder at a
+ * glance; a smooth gradient over a handful of pixels just reads as noise. */
+function studiedLevel(level: number): number {
+  if (level <= 0) return 0;
+  if (level < 0.25) return 1;
+  if (level < 0.6) return 2;
+  return 3;
+}
+
 export function cellColor(cell: HeatCell, theme: Theme): CellColor {
   switch (cell.kind) {
     case 'studied': {
-      // Unstudied-adjacent tone (soil/shadow) brightening toward the grass colour as more
-      // was reviewed that day — the same "grass saturation" logic the grove's own ground
-      // uses for ecosystem health, applied per day instead of per frame.
-      const base = mixHex(theme.ground1, theme.grass, 0.25);
-      const fill = mixHex(base, theme.grass, Math.max(0.2, cell.level));
-      return { fill, pattern: 'none' };
+      // A four-rung ladder from bare soil up through the grass colour to a bright
+      // near-white highlight on the heaviest study days — the same light-to-dark-green
+      // ladder a GitHub contribution graph uses, just built from this scenery's own ground
+      // and grass tones instead of a fixed green.
+      const rung = studiedLevel(cell.level);
+      const stops = [
+        mixHex(theme.ground1, '#000000', 0.3),
+        mixHex(theme.ground1, theme.grass, 0.55),
+        theme.grass,
+        mixHex(theme.grass, '#f4f8e8', 0.45),
+      ];
+      return { fill: stops[rung], pattern: 'none' };
     }
     case 'excused':
       // A dim, desaturated version of the sky's own haze — "paused," not "wrong."
@@ -42,14 +58,14 @@ export function cellColor(cell: HeatCell, theme: Theme): CellColor {
     case 'due':
       // Warms from bark towards the sun/moon's own glow colour as more falls due — ties
       // the "upcoming" colour to the same light source the sky itself uses.
-      return { fill: mixHex(theme.near, theme.orb?.glow ?? theme.tint ?? '#c08838', cell.level), pattern: 'none' };
+      return { fill: mixHex(theme.near, theme.orb?.glow ?? theme.tint ?? '#c08838', Math.max(0.35, cell.level)), pattern: 'none' };
     case 'future':
       return { fill: mixHex(theme.near, theme.haze, 0.6), pattern: 'none' };
     case 'missed':
     default:
-      // Unlit soil: as dark as the ground gets without touching night-sky colours, so a
-      // missed day still reads as "ground," not "void."
-      return { fill: mixHex(theme.ground1, '#000000', 0.35), pattern: 'none' };
+      // Unlit soil, pushed close to black — the "no activity" rung has to sit clearly
+      // below every studied rung for the ladder to read, not just a slightly darker green.
+      return { fill: mixHex(theme.ground1, '#000000', 0.55), pattern: 'none' };
   }
 }
 

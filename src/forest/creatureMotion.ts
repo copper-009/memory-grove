@@ -10,14 +10,20 @@
 
 import { rng, hashInt } from './rng';
 
-export const ROAM_EVERY_S = 150;
-export const ROAM_STAGGER_S = 41;
-export const ROAM_OFFSET_S = 37;
-export const WALK_SPEED_UNITS_PER_S = 7;
+// Tuned down from an original 150s roam period, 0.045 reach and 7 units/s walk speed after
+// user feedback that "the animals barely move": at the old values a creature spent under
+// 1% of real time in motion (a ~1.3s walk once every 2.5 minutes), which read as frozen in
+// any session shorter than several minutes. Still deliberately calm — no constant busy
+// motion — but a roam every ~minute, covering more ground at a slower, more visible pace,
+// actually gets seen rather than being a statistical rarity.
+export const ROAM_EVERY_S = 60;
+export const ROAM_STAGGER_S = 23;
+export const ROAM_OFFSET_S = 17;
+export const WALK_SPEED_UNITS_PER_S = 4;
 export const STRIDE_SHARE = 0.25;
-export const ROAM_REACH_SHARE = 0.045;
+export const ROAM_REACH_SHARE = 0.08;
 /** A resting creature shows its idle/glance frame while this slow sine is above the line. */
-export const IDLE_GLANCE_THRESHOLD = 0.93;
+export const IDLE_GLANCE_THRESHOLD = 0.85;
 export const FRAME_FPS = 6; // within the brief's 4-8 fps range for sprite cycles
 
 export interface MotionState {
@@ -29,6 +35,9 @@ export interface MotionState {
   facing: 1 | -1;
   /** Which animation frame to show, 0 = idle/default, 1 = alternate (walk/glance). */
   frame: number;
+  /** A small continuous -1..1 sway, always present even between roams — a creature that's
+   * stopped is still breathing/shifting weight, not a frozen sprite pasted on the ground. */
+  idleBob: number;
 }
 
 /** A deterministic "spot" the creature wanders to on its `n`th outing. */
@@ -51,7 +60,7 @@ export function groundMotion(
   animate = true,
 ): MotionState {
   if (!animate) {
-    return { x: home, groundCovered: 0, moving: false, facing: 1, frame: 0 };
+    return { x: home, groundCovered: 0, moving: false, facing: 1, frame: 0, idleBob: 0 };
   }
   const period = ROAM_EVERY_S + slotIndex * ROAM_STAGGER_S;
   const shifted = t + slotIndex * ROAM_OFFSET_S;
@@ -78,8 +87,9 @@ export function groundMotion(
     const glance = Math.sin(t * 0.7 + slotIndex * 2.1);
     frame = glance > IDLE_GLANCE_THRESHOLD ? 1 : 0;
   }
+  const idleBob = moving ? 0 : Math.sin(t * 1.1 + slotIndex * 3.3);
 
-  return { x, groundCovered, moving, facing, frame };
+  return { x, groundCovered, moving, facing, frame, idleBob };
 }
 
 /** A hopper (rabbit-style) bounces in fixed-length hops rather than striding continuously. */

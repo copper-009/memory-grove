@@ -4,7 +4,7 @@ import { groundMotion, hopHeight, flightPosition, flapFrame, ROAM_EVERY_S } from
 describe('groundMotion', () => {
   it('is frozen at home with animation off', () => {
     const m = groundMotion(123, 1, 0, 0.5, 0.05, false);
-    expect(m).toEqual({ x: 0.5, groundCovered: 0, moving: false, facing: 1, frame: 0 });
+    expect(m).toEqual({ x: 0.5, groundCovered: 0, moving: false, facing: 1, frame: 0, idleBob: 0 });
   });
 
   it('stays within reach of home over a long span of time', () => {
@@ -41,7 +41,11 @@ describe('groundMotion', () => {
   });
 
   it('cycles the roam period as documented', () => {
-    expect(ROAM_EVERY_S).toBeGreaterThan(60); // calm: minutes, not seconds
+    // Calm, not idle: closer to once a minute than constant motion, but frequent enough
+    // that a roam is actually seen rather than a statistical rarity (tuned down from an
+    // earlier 150s after user feedback that creatures "barely move").
+    expect(ROAM_EVERY_S).toBeGreaterThan(30);
+    expect(ROAM_EVERY_S).toBeLessThan(120);
   });
 });
 
