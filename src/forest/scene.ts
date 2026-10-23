@@ -34,7 +34,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr, rng } from './rng';
-import { hex, mix, mixHex, luminance, BAYER4 } from './color';
+import { hex, mix, mixHex, luminance, rgba, BAYER4 } from './color';
 import type { RGB } from './color';
 
 export interface SceneInput {
@@ -56,6 +56,11 @@ export interface SceneInput {
   /** The region's backdrops, for `theme.ts`'s `pickBackdrop` — this is what makes one
    * region's sky, hills and distant colour actually differ from another's. */
   backdrops?: readonly BackdropInput[];
+  /** This region's current real season (`'spring'`, `'wet'`, ...) — one of the names in
+   * its own `seasons.months`, from `currentSeasonFor`. Picks a season-tagged backdrop
+   * when one exists, replacing the old standalone "environment" preset picker with
+   * scenery that actually follows the calendar and the place. */
+  season?: string;
 }
 
 export interface DrawResult {
@@ -153,6 +158,38 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
     const ox = Math.round(W * th.orb.x);
     const oy = Math.round(horizonY * th.orb.y);
     const r = Math.max(3, Math.round(th.orb.r * (W / 420) * 2.2));
+    // A low, strong-haloed sun (dawn/dusk, th.orb.halo is high in those presets) casts a
+    // few soft rays — straight, uneven-length wedges radiating outward, each a sliver of
+    // the orb's own colour fading to nothing. Purely additive atmosphere, not a feature
+    // this file is porting from anywhere; skipped for a dim/low-halo orb so a plain midday
+    // sun or a quiet moon stays plain.
+    if (th.orb.halo > 0.5) {
+      const rayCount = 8;
+      const rayLen = r * (2.2 + th.orb.halo * 1.6);
+      const rSeed = rng(Math.floor(ox * 7 + oy * 13));
+      g.save();
+      g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < rayCount; i++) {
+        const a = (i / rayCount) * Math.PI * 2 + rSeed() * 0.3;
+        const len = rayLen * (0.55 + rSeed() * 0.45);
+        const width = r * 0.22;
+        const tx = ox + Math.cos(a) * len;
+        const ty = oy + Math.sin(a) * len;
+        const px = Math.cos(a + Math.PI / 2) * width;
+        const py = Math.sin(a + Math.PI / 2) * width;
+        const ray = g.createLinearGradient(ox, oy, tx, ty);
+        ray.addColorStop(0, rgba(hex(th.orb.color), 0.22));
+        ray.addColorStop(1, rgba(hex(th.orb.color), 0));
+        g.fillStyle = ray;
+        g.beginPath();
+        g.moveTo(ox + px, oy + py);
+        g.lineTo(ox - px, oy - py);
+        g.lineTo(tx, ty);
+        g.closePath();
+        g.fill();
+      }
+      g.restore();
+    }
     // halo first (behind), soft
     const glow = g.createRadialGradient(ox, oy, 0, ox, oy, r * (1 + th.orb.halo * 0.35));
     glow.addColorStop(0, th.orb.color);
@@ -614,7 +651,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   eg.clearRect(0, 0, engineW, engineH);
 
   const backdrop = input.backdrops?.length
-    ? pickBackdrop(input.backdrops, input.mood.time === 'night', input.grove.seed)
+    ? pickBackdrop(input.backdrops, input.mood.time === 'night', input.grove.seed, input.season)
     : undefined;
   const th = buildTheme(
     input.mood,

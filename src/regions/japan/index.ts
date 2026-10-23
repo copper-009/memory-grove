@@ -57,6 +57,26 @@ export const japan: Region = {
       night: true,
       form: 'peaks',
     },
+    {
+      key: 'blossom-ridge',
+      label: 'Cherry blossom ridge',
+      note: 'Soft pink haze along a wooded ridgeline in spring, under a pale afternoon sky.',
+      sky: ['#89a9d0', '#a6bedc', '#cdd0e0', '#e9cfdc', '#f3dde6', '#f9ecec'],
+      far: '#b79aad',
+      near: '#8a7290',
+      form: 'rolling',
+      season: ['spring'],
+    },
+    {
+      key: 'maple-ridge',
+      label: 'Maple ridge',
+      note: 'A wooded ridge turned through gold to deep red, under a clear autumn sky.',
+      sky: ['#6f93c4', '#8fa6cc', '#c3b48c', '#e0a460', '#e88a4e', '#d46a44'],
+      far: '#9c6a4a',
+      near: '#7a4632',
+      form: 'rolling',
+      season: ['autumn'],
+    },
   ],
 
   biomes: [

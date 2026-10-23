@@ -12,7 +12,7 @@ import { emptyCalendar } from '../../src/data/calendar';
 import { updateRoster, emptyRoster } from '../../src/data/milestones';
 import { drawScene } from '../../src/forest/scene';
 import type { MoodInput } from '../../src/forest/theme';
-import { regionByKey } from '../../src/regions';
+import { regionByKey, currentSeasonFor } from '../../src/regions';
 import type { FixtureName } from '../../src/data/fixtures';
 import type { Severity } from '../../src/data/calendar';
 
@@ -27,6 +27,7 @@ declare global {
       width: number;
       height: number;
       forceVisualHealth?: number;
+      season?: string;
     }) => void;
   }
 }
@@ -69,6 +70,7 @@ window.__renderFixture = (opts) => {
     dpr: 1,
     regionKey: region.key,
     backdrops: region.backdrops,
+    season: opts.season ?? currentSeasonFor(region),
   });
   document.title = 'ready';
 };

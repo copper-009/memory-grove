@@ -58,18 +58,6 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
   });
 
   await plugin.app.registerCommand({
-    id: 'memory-grove.change-scenery',
-    name: 'Change Memory Grove scenery',
-    action: async () => {
-      const options = ['natural', 'misty_valley', 'aurora', 'lanterns', 'bamboo', 'synthwave'];
-      const current = (await plugin.settings.getSetting<string>('scenery.environment')) ?? 'natural';
-      const next = options[(options.indexOf(current) + 1) % options.length];
-      await plugin.storage.setSynced('scenery.environment.override', next);
-      await plugin.app.toast(`Scenery: ${next}`);
-    },
-  });
-
-  await plugin.app.registerCommand({
     id: 'memory-grove.pause',
     name: 'Memory Grove: Holiday mode (pause now)',
     description: 'Pause the grove indefinitely. Studying while paused still helps; nothing counts against you.',

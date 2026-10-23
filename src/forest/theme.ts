@@ -148,21 +148,29 @@ export interface BackdropInput {
   near: string;
   form: string;
   night?: boolean;
+  season?: readonly string[];
 }
 
 /**
- * Pick the day or night backdrop from a region's list, by `mood.time`. Regions ship 2–3 day
- * backdrops plus one night/dusk variant (`Backdrop.night`); picking deterministically by
- * `seed` rather than always the first keeps some variety between grove reloads while still
- * being stable within one render.
+ * Pick the day or night backdrop from a region's list, by `mood.time` and, where one is
+ * tagged for it, the real current season. Regions ship 2–3 day backdrops plus one night/
+ * dusk variant (`Backdrop.night`), and some carry a `season` tag (a cherry-blossom hillside
+ * only in spring, an aurora sky only in winter); an untagged backdrop is a year-round
+ * fallback. Picking deterministically by `seed` rather than always the first keeps some
+ * variety between grove reloads while still being stable within one render.
  */
-export function pickBackdrop<B extends { night?: boolean }>(
+export function pickBackdrop<B extends { night?: boolean; season?: readonly string[] }>(
   backdrops: readonly B[],
   isNight: boolean,
   seed = 0,
+  season?: string,
 ): B | undefined {
-  const pool = backdrops.filter((b) => !!b.night === isNight);
-  const list = pool.length ? pool : backdrops;
+  const timePool = backdrops.filter((b) => !!b.night === isNight);
+  const base = timePool.length ? timePool : backdrops;
+  // Within the right time-of-day pool, prefer anything tagged for the current season; if
+  // nothing matches (most backdrops are untagged, year-round), fall back to the whole pool.
+  const seasonal = season ? base.filter((b) => b.season?.includes(season)) : [];
+  const list = seasonal.length ? seasonal : base;
   if (list.length === 0) return undefined;
   return list[Math.abs(seed) % list.length];
 }

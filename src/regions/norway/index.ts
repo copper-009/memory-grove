@@ -74,6 +74,19 @@ export const norway: Region = {
       near: '#0e1826',
       night: true,
       form: 'peaks',
+      // Matches the season notes above ("aurora on clear nights" under polarNight) -
+      // this is when it actually appears, rather than every clear night year-round.
+      season: ['polarNight', 'winter'],
+    },
+    {
+      key: 'clear-mountains-night',
+      label: 'Clear night over the mountains',
+      note: 'A plain, star-clear night sky above a dark jagged skyline, no aurora.',
+      sky: ['#060a16', '#0b1326', '#131f38', '#1b2b4a', '#25375c', '#30446e'],
+      far: '#182236',
+      near: '#101a2a',
+      night: true,
+      form: 'peaks',
     },
   ],
 

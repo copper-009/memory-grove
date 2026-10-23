@@ -20,6 +20,7 @@ import type { Tooltip } from '../forest/tooltip';
 import { pauseLabel } from '../data/calendar';
 import type { GroveBundle } from './useGrove';
 import { resolveMood } from './mood';
+import { currentSeasonFor } from '../regions';
 
 function prefersReducedMotion(): boolean {
   try {
@@ -104,6 +105,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
         dpr,
         regionKey: bundle.region.key,
         backdrops: bundle.region.backdrops,
+        season: currentSeasonFor(bundle.region),
       });
       boxesRef.current = result.boxes;
     },

@@ -200,6 +200,13 @@ export interface Backdrop {
   night?: boolean;
   /** Landform silhouette style. */
   form: 'peaks' | 'fjord' | 'plateau' | 'rolling' | 'volcano' | 'flat' | 'canopy' | 'tsingy' | 'towers';
+  /**
+   * Which of this region's own `seasons.months` names this backdrop belongs to — e.g.
+   * `['spring']` for a cherry-blossom hillside, so it only ever appears when the real
+   * calendar (or the grove's region/hemisphere) actually says spring. Omitted entirely,
+   * a backdrop is a year-round fallback, picked whenever nothing seasonal matches.
+   */
+  season?: string[];
 }
 
 export interface Region {

@@ -11,7 +11,6 @@
 
 import type { RNPlugin } from '@remnote/plugin-sdk';
 
-export const ENVIRONMENTS = ['natural', 'misty_valley', 'aurora', 'lanterns', 'bamboo', 'synthwave', 'daily'] as const;
 export const TIME_OPTIONS = ['dawn', 'day', 'goldenHour', 'dusk', 'night', 'auto'] as const;
 export const WEATHER_OPTIONS = ['clear', 'cloudy', 'rain', 'storm', 'fog', 'snow', 'afterRain', 'auto'] as const;
 export const SEVERITY_OPTIONS = ['peaceful', 'gentle', 'wild', 'merciless', 'custom'] as const;
@@ -27,15 +26,6 @@ export const REGION_KEYS = [
  * as its own label (`{ label: v }`) is what made "Follow the real sky" invisible as an
  * option — it showed up as the literal string "auto", with nothing to say what that meant.
  */
-const ENVIRONMENT_LABELS: Record<(typeof ENVIRONMENTS)[number], string> = {
-  natural: 'Golden hour by the lake',
-  misty_valley: 'Misty mountain valley',
-  aurora: 'Aurora night',
-  lanterns: 'Lanterns at night',
-  bamboo: 'Rainy bamboo grove',
-  synthwave: 'Synthwave',
-  daily: 'Surprise me daily',
-};
 const TIME_LABELS: Record<(typeof TIME_OPTIONS)[number], string> = {
   dawn: 'Dawn',
   day: 'Day',
@@ -91,13 +81,11 @@ function options<T extends string>(values: readonly T[], labels: Record<T, strin
 
 export async function registerSettings(plugin: RNPlugin): Promise<void> {
   // -- Scenery --------------------------------------------------------------
-  await plugin.settings.registerDropdownSetting({
-    id: 'scenery.environment',
-    title: 'Scenery — environment',
-    description: 'A preset scene, or "Surprise me daily" for a different one each day.',
-    options: options(ENVIRONMENTS, ENVIRONMENT_LABELS),
-    defaultValue: 'natural',
-  });
+  // There is deliberately no standalone "environment" preset picker (no "synthwave",
+  // "lanterns at night", "bamboo grove" generic skins unrelated to the grove's actual
+  // place): the backdrop now comes from the chosen region itself and the real calendar
+  // season (`currentSeasonFor`, `theme.ts`'s `pickBackdrop`) - a cherry-blossom hillside
+  // in Japan only appears in spring, an aurora sky in Norway only in winter, and so on.
   await plugin.settings.registerDropdownSetting({
     id: 'scenery.time',
     title: 'Scenery — time of day',
@@ -187,7 +175,6 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
 }
 
 export interface GroveSettings {
-  environment: string;
   time: string;
   weather: string;
   animate: 'on' | 'off' | 'system';
@@ -218,10 +205,9 @@ async function withOverride<T>(plugin: RNPlugin, settingId: string, overrideKey:
 
 export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
   const [
-    environment, time, weather, animate, region, rolloverHour, breakDays,
+    time, weather, animate, region, rolloverHour, breakDays,
     showOnFinishedQueue, showSidebar, showOnLearningProgress, layout, excludedRemIds, severity, weatherCity,
   ] = await Promise.all([
-    withOverride(plugin, 'scenery.environment', 'scenery.environment.override', 'natural'),
     plugin.settings.getSetting<string>('scenery.time'),
     plugin.settings.getSetting<string>('scenery.weather'),
     withOverride<'on' | 'off' | 'system'>(plugin, 'scenery.animate', 'scenery.animate.override', 'system'),
@@ -237,7 +223,6 @@ export async function readSettings(plugin: RNPlugin): Promise<GroveSettings> {
     plugin.settings.getSetting<string>('weather.city'),
   ]);
   return {
-    environment: environment ?? 'natural',
     time: time ?? 'goldenHour',
     weather: weather ?? 'clear',
     animate: animate ?? 'system',

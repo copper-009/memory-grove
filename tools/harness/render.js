@@ -878,6 +878,9 @@ function mix(a, b, t) {
 function mixHex(a, b, t) {
   return toHex(mix(hex(a), hex(b), t));
 }
+function rgba(c, a = 1) {
+  return `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+}
 function luminance(c) {
   return c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11;
 }
@@ -1131,9 +1134,11 @@ var MAX_FLIES = 60;
 var REVIEWS_PER_BIRD = 40;
 var MAX_BIRDS = 6;
 var CLOUDY_STARS_SHARE = 0.3;
-function pickBackdrop(backdrops, isNight, seed = 0) {
-  const pool = backdrops.filter((b) => !!b.night === isNight);
-  const list = pool.length ? pool : backdrops;
+function pickBackdrop(backdrops, isNight, seed = 0, season) {
+  const timePool = backdrops.filter((b) => !!b.night === isNight);
+  const base = timePool.length ? timePool : backdrops;
+  const seasonal = season ? base.filter((b) => b.season?.includes(season)) : [];
+  const list = seasonal.length ? seasonal : base;
   if (list.length === 0)
     return void 0;
   return list[Math.abs(seed) % list.length];
@@ -1821,6 +1826,33 @@ function drawSky(g, W, horizonY, th, t) {
     const ox = Math.round(W * th.orb.x);
     const oy = Math.round(horizonY * th.orb.y);
     const r = Math.max(3, Math.round(th.orb.r * (W / 420) * 2.2));
+    if (th.orb.halo > 0.5) {
+      const rayCount = 8;
+      const rayLen = r * (2.2 + th.orb.halo * 1.6);
+      const rSeed = rng(Math.floor(ox * 7 + oy * 13));
+      g.save();
+      g.globalCompositeOperation = "lighter";
+      for (let i = 0; i < rayCount; i++) {
+        const a = i / rayCount * Math.PI * 2 + rSeed() * 0.3;
+        const len = rayLen * (0.55 + rSeed() * 0.45);
+        const width = r * 0.22;
+        const tx = ox + Math.cos(a) * len;
+        const ty = oy + Math.sin(a) * len;
+        const px = Math.cos(a + Math.PI / 2) * width;
+        const py = Math.sin(a + Math.PI / 2) * width;
+        const ray = g.createLinearGradient(ox, oy, tx, ty);
+        ray.addColorStop(0, rgba(hex(th.orb.color), 0.22));
+        ray.addColorStop(1, rgba(hex(th.orb.color), 0));
+        g.fillStyle = ray;
+        g.beginPath();
+        g.moveTo(ox + px, oy + py);
+        g.lineTo(ox - px, oy - py);
+        g.lineTo(tx, ty);
+        g.closePath();
+        g.fill();
+      }
+      g.restore();
+    }
     const glow = g.createRadialGradient(ox, oy, 0, ox, oy, r * (1 + th.orb.halo * 0.35));
     glow.addColorStop(0, th.orb.color);
     glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -2139,7 +2171,7 @@ function drawScene(g, W, H, input) {
   const blit = W / engineW;
   const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
-  const backdrop = input.backdrops?.length ? pickBackdrop(input.backdrops, input.mood.time === "night", input.grove.seed) : void 0;
+  const backdrop = input.backdrops?.length ? pickBackdrop(input.backdrops, input.mood.time === "night", input.grove.seed, input.season) : void 0;
   const th = buildTheme(
     input.mood,
     { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews },
@@ -3763,6 +3795,26 @@ var japan = {
       near: "#141d33",
       night: true,
       form: "peaks"
+    },
+    {
+      key: "blossom-ridge",
+      label: "Cherry blossom ridge",
+      note: "Soft pink haze along a wooded ridgeline in spring, under a pale afternoon sky.",
+      sky: ["#89a9d0", "#a6bedc", "#cdd0e0", "#e9cfdc", "#f3dde6", "#f9ecec"],
+      far: "#b79aad",
+      near: "#8a7290",
+      form: "rolling",
+      season: ["spring"]
+    },
+    {
+      key: "maple-ridge",
+      label: "Maple ridge",
+      note: "A wooded ridge turned through gold to deep red, under a clear autumn sky.",
+      sky: ["#6f93c4", "#8fa6cc", "#c3b48c", "#e0a460", "#e88a4e", "#d46a44"],
+      far: "#9c6a4a",
+      near: "#7a4632",
+      form: "rolling",
+      season: ["autumn"]
     }
   ],
   biomes: [
@@ -5512,6 +5564,19 @@ var norway = {
       far: "#162030",
       near: "#0e1826",
       night: true,
+      form: "peaks",
+      // Matches the season notes above ("aurora on clear nights" under polarNight) -
+      // this is when it actually appears, rather than every clear night year-round.
+      season: ["polarNight", "winter"]
+    },
+    {
+      key: "clear-mountains-night",
+      label: "Clear night over the mountains",
+      note: "A plain, star-clear night sky above a dark jagged skyline, no aurora.",
+      sky: ["#060a16", "#0b1326", "#131f38", "#1b2b4a", "#25375c", "#30446e"],
+      far: "#182236",
+      near: "#101a2a",
+      night: true,
       form: "peaks"
     }
   ],
@@ -6837,6 +6902,12 @@ var borneo = {
   ]
 };
 
+// src/regions/season.ts
+function currentSeasonFor(region, date = new Date()) {
+  const month = date.getMonth();
+  return region.seasons.months[month] ?? region.seasons.months[0];
+}
+
 // src/regions/index.ts
 var REGIONS = [
   australia,
@@ -6888,7 +6959,8 @@ window.__renderFixture = (opts) => {
     paused: false,
     dpr: 1,
     regionKey: region.key,
-    backdrops: region.backdrops
+    backdrops: region.backdrops,
+    season: opts.season ?? currentSeasonFor(region)
   });
   document.title = "ready";
 };
