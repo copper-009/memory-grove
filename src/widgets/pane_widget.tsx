@@ -1,6 +1,8 @@
 import { renderWidget } from '@remnote/plugin-sdk';
 import { GroveCanvas } from './GroveCanvas';
+import { HeatmapView } from './HeatmapView';
 import { useGrove } from './useGrove';
+import { resolveMood } from './mood';
 import '../style.css';
 
 /** The dedicated "Grove" page, opened via command / omnibar. */
@@ -23,6 +25,16 @@ function PaneWidget() {
         <div>
           Ecosystem health: <b>{Math.round(bundle.health.visual)}</b>/100
         </div>
+      </div>
+      <div style={{ marginTop: 20, overflowX: 'auto' }}>
+        <HeatmapView
+          grove={bundle.grove}
+          calendar={bundle.calendar}
+          dueByDay={bundle.dueByDay}
+          mood={resolveMood(bundle)}
+          cellSize={9}
+          daysBack={365}
+        />
       </div>
     </div>
   );

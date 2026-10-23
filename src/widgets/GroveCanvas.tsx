@@ -19,6 +19,7 @@ import { plantTooltip, creatureTooltip, ecosystemTooltip } from '../forest/toolt
 import type { Tooltip } from '../forest/tooltip';
 import { pauseLabel } from '../data/calendar';
 import type { GroveBundle } from './useGrove';
+import { resolveMood } from './mood';
 
 function prefersReducedMotion(): boolean {
   try {
@@ -71,11 +72,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
 
       // "Follow the real sky" (weather set to "auto") uses the fetched city weather when
       // it has landed; otherwise, and for every other weather setting, the preset wins.
-      const liveWeather = bundle.settings.weather === 'auto' && bundle.realWeather ? bundle.realWeather.weather : null;
-      const mood: MoodInput = {
-        time: (bundle.settings.time === 'auto' ? 'day' : bundle.settings.time) as MoodInput['time'],
-        weather: (liveWeather ?? (bundle.settings.weather === 'auto' ? 'clear' : bundle.settings.weather)) as MoodInput['weather'],
-      };
+      const mood: MoodInput = resolveMood(bundle);
       const paused = pauseLabel(bundle.calendar, bundle.grove.today) != null;
 
       const result = drawScene(g, W, H, {

@@ -29,6 +29,8 @@ export interface GroveBundle {
   roster: CreatureRoster;
   health: HealthResult;
   activeStudyDays: number;
+  /** day number -> cards due that day — the heatmap's "due" shading ahead of today. */
+  dueByDay: Map<number, number>;
   /** Set only when "follow the real sky" would apply — i.e. a city is configured and the
    * fetch succeeded. `undefined` means: use the scenery's own preset weather. */
   realWeather?: { weather: string; isDay: boolean };
@@ -54,7 +56,7 @@ export function useGrove(): GroveBundle {
       try {
         const settings = await readSettings(plugin);
         const calendar = await loadStudyCalendar(plugin);
-        const { grove, overdue, cardCount } = await buildOrLoadGrove(plugin);
+        const { grove, overdue, cardCount, dueByDay } = await buildOrLoadGrove(plugin);
         const region = regionByKey(settings.region) ?? regionByKey(DEFAULT_REGION_KEY)!;
 
         const storedRoster = await plugin.storage.getSynced<CreatureRoster>(rosterKey(region.key));
@@ -87,6 +89,7 @@ export function useGrove(): GroveBundle {
           setBundle({
             grove, settings, calendar, region, roster, health,
             activeStudyDays: grove.stats.activeStudyDays,
+            dueByDay,
           });
         }
       } catch (e) {
@@ -110,6 +113,7 @@ export function useGrove(): GroveBundle {
       roster: null as unknown as CreatureRoster,
       health: null as unknown as HealthResult,
       activeStudyDays: 0,
+      dueByDay: new Map<number, number>(),
     }),
     loading,
     error,

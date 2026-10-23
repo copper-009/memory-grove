@@ -36,6 +36,9 @@ export interface BuiltGrove {
   grove: Grove;
   overdue: number;
   cardCount: number;
+  /** day number -> cards due that day; the heatmap's "due" shading. Always freshly scanned
+   * (never part of the cached grove), since it's cheap and changes every day regardless. */
+  dueByDay: Map<number, number>;
 }
 
 /** Build the grove, using the local cache when the knowledge base hasn't changed. */
@@ -65,10 +68,10 @@ export async function buildOrLoadGrove(plugin: RNPlugin): Promise<BuiltGrove> {
 
   const cached = await loadCachedGrove(plugin.storage, key);
   if (cached) {
-    return { grove: mergeOld(cached), overdue: probe.overdue, cardCount: probe.cardCount };
+    return { grove: mergeOld(cached), overdue: probe.overdue, cardCount: probe.cardCount, dueByDay: probe.dueByDay };
   }
 
   const grove = mergeOld(buildGrove(probe, { breakDays: settings.breakDays, excusedDays: excused }));
   await saveCachedGrove(plugin.storage, grove, key);
-  return { grove, overdue: probe.overdue, cardCount: probe.cardCount };
+  return { grove, overdue: probe.overdue, cardCount: probe.cardCount, dueByDay: probe.dueByDay };
 }

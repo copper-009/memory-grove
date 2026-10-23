@@ -1,6 +1,8 @@
 import { renderWidget, usePlugin } from '@remnote/plugin-sdk';
 import { GroveCanvas } from './GroveCanvas';
+import { HeatmapView } from './HeatmapView';
 import { useGrove } from './useGrove';
+import { resolveMood } from './mood';
 import '../style.css';
 
 function SidebarWidget() {
@@ -11,6 +13,16 @@ function SidebarWidget() {
   return (
     <div>
       <GroveCanvas bundle={bundle} height={200} />
+      <div style={{ padding: '6px 8px', overflowX: 'auto' }}>
+        <HeatmapView
+          grove={bundle.grove}
+          calendar={bundle.calendar}
+          dueByDay={bundle.dueByDay}
+          mood={resolveMood(bundle)}
+          compact
+          cellSize={6}
+        />
+      </div>
       {/* A direct way into the full pane view, since RemNote commands only ever surface
        * through the omnibar — this is the everyday route, not Cmd/Ctrl+K every time. */}
       <button
