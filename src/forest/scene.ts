@@ -1,11 +1,21 @@
 /**
  * The scene composer: one function that draws a whole grove to a canvas.
  *
- * This is where every pure module upstream (`layout`, `theme`, `plantSprite`,
- * `creatureSprite`, `creatureMotion`, `ecosystemVisual`, `paint`) is actually called
- * together. It is intentionally thin and procedural — almost everything it does is call a
- * tested function and hand the canvas context to `paint.ts`. Verified visually via the
- * screenshot harness (`tools/screenshots.mjs`), not by pixel-diffing in Vitest.
+ * **Everything is drawn onto a genuinely low-resolution offscreen buffer, then blitted up
+ * to the real canvas with `imageSmoothingEnabled = false`.** This is the actual technique
+ * `reference/NOTES.md` describes ("one low-resolution canvas, scaled up") and it is what a
+ * first version of this file got wrong: it drew gradients and shapes straight onto the
+ * full device-resolution canvas, so only individual sprite pixels ended up blocky — the
+ * sky, sun and ground rendered as smooth CSS-style gradients instead of pixel art, because
+ * `CanvasGradient` and `ellipse()` anti-alias regardless of how carefully a *sprite* is
+ * scaled. Rendering the whole scene at ~180 engine pixels wide and scaling that buffer up
+ * forces every element — sky, ground, water, sun, trees, creatures alike — through the
+ * same blocky upscale, which is what actually produces the pixel-art look.
+ *
+ * Every pure module upstream (`layout`, `theme`, `plantSprite`, `creatureSprite`,
+ * `creatureMotion`, `ecosystemVisual`, `paint`) is still what's called here; this file
+ * stays thin and procedural. Verified visually via the screenshot harness
+ * (`tools/screenshots.mjs`), not by pixel-diffing in Vitest.
  */
 
 import type { Grove } from '../data/types';
@@ -26,6 +36,7 @@ import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr } from './rng';
 import { hex, mix } from './color';
+import { BAYER4 } from './color';
 
 export interface SceneInput {
   grove: Grove;
@@ -49,57 +60,105 @@ export interface DrawResult {
   boxes: HitBox[];
 }
 
-const RABBIT_LIKE_HOP = 0.08; // creatures whose body plan reads as a hopper use this
-const CREATURE_SPEED_SCALE = 0.01;
+/**
+ * Width of the internal drawing buffer, in engine pixels. Everything — sky, ground, every
+ * sprite — is drawn at this resolution, then the whole buffer is scaled up to the real
+ * canvas in one `drawImage` call with smoothing off. This is the number that controls how
+ * "chunky" the pixel art reads; Memory Forest's own web build works at a comparable scale.
+ */
+const ENGINE_WIDTH = 220;
 
-function pxScale(W: number): number {
-  // An integer-ish scale that keeps the low-res art crisp: aim for roughly 420 engine
-  // columns across the canvas, the original's rough working resolution.
-  return Math.max(1, Math.round(W / 420));
+const RABBIT_LIKE_HOP = 0.08;
+
+/** A dithered two-tone fill between `a` and `b`, textured with a 4x4 Bayer pattern rather
+ * than a smooth gradient — this is what makes a flat area (sky, ground) read as pixel art
+ * instead of a CSS gradient once it's scaled up blocky. */
+function ditherFill(g: CanvasRenderingContext2D, x0: number, y0: number, w: number, h: number, a: string, b: string, t: number): void {
+  const rgbA = hex(a);
+  const rgbB = hex(b);
+  const col = mix(rgbA, rgbB, t);
+  g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
+  g.fillRect(x0, y0, w, h);
 }
 
-/** Draw the sky gradient and any orb (sun/moon). */
-function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme): void {
-  const grad = g.createLinearGradient(0, 0, 0, horizonY);
+/** Sky: six-stop gradient approximated as dithered horizontal bands, plus a hard-edged
+ * sun/moon disc with a soft halo glow around it (the original always draws a crisp disc
+ * first, then a separate glow — a glow alone, with no disc, is what reads as "just blurry"). */
+function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, t: number): void {
   const stops = th.sky;
-  stops.forEach((c, i) => grad.addColorStop(i / (stops.length - 1), c));
-  g.fillStyle = grad;
-  g.fillRect(0, 0, W, horizonY);
+  const bands = Math.max(8, Math.round(horizonY));
+  for (let y = 0; y < bands; y++) {
+    const p = (y / Math.max(1, bands - 1)) * (stops.length - 1);
+    const i0 = Math.min(stops.length - 2, Math.floor(p));
+    const f = p - i0;
+    // dither the transition between adjacent stops by row, using a Bayer threshold so the
+    // band edges break up rather than banding cleanly (which itself looks more "gradient")
+    const dith = BAYER4[(y % 4) * 4] / 16;
+    const tt = f > dith ? 1 : 0;
+    ditherFill(g, 0, Math.floor((y / bands) * horizonY), W, Math.ceil(horizonY / bands) + 1, stops[i0], stops[i0 + 1], tt);
+  }
+
+  if (th.clouds) {
+    const seedBase = Math.floor(t / 40);
+    for (let i = 0; i < th.clouds.n; i++) {
+      const cx = ((hashStr(`cloud${i}${seedBase}`) % 1000) / 1000) * W;
+      const cy = horizonY * (0.1 + ((hashStr(`cloudy${i}`) % 1000) / 1000) * 0.3);
+      const cw = W * (0.08 + ((hashStr(`cloudw${i}`) % 1000) / 1000) * 0.08);
+      g.fillStyle = th.clouds.top;
+      g.globalAlpha = th.clouds.alpha / 255;
+      g.fillRect(Math.round(cx - cw / 2), Math.round(cy), Math.round(cw), Math.max(1, Math.round(cw * 0.22)));
+      g.globalAlpha = 1;
+    }
+  }
+
+  if (th.stars > 0) {
+    const n = Math.min(th.stars, 70);
+    g.fillStyle = 'rgba(255,255,255,0.85)';
+    for (let i = 0; i < n; i++) {
+      const sx = Math.floor(((hashStr(`star${i}`) % 1000) / 1000) * W);
+      const sy = Math.floor(((hashStr(`stary${i}`) % 1000) / 1000) * horizonY * 0.9);
+      g.fillRect(sx, sy, 1, 1);
+    }
+  }
 
   if (th.orb) {
-    const ox = W * th.orb.x;
-    const oy = horizonY * th.orb.y;
-    const r = th.orb.r * pxScale(W) * 1.6;
-    const glow = g.createRadialGradient(ox, oy, 0, ox, oy, r * (1 + th.orb.halo * 0.3));
+    const ox = Math.round(W * th.orb.x);
+    const oy = Math.round(horizonY * th.orb.y);
+    const r = Math.max(3, Math.round(th.orb.r * (W / 420) * 2.2));
+    // halo first (behind), soft
+    const glow = g.createRadialGradient(ox, oy, 0, ox, oy, r * (1 + th.orb.halo * 0.35));
     glow.addColorStop(0, th.orb.color);
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     g.fillStyle = glow;
     g.beginPath();
-    g.arc(ox, oy, r * (1 + th.orb.halo * 0.3), 0, Math.PI * 2);
+    g.arc(ox, oy, r * (1 + th.orb.halo * 0.35), 0, Math.PI * 2);
     g.fill();
-  }
-
-  if (th.stars > 0) {
-    const r = Math.min(1, th.stars / 90);
-    g.fillStyle = `rgba(255,255,255,${0.7 * r})`;
-    const n = th.stars;
-    for (let i = 0; i < n; i++) {
-      const sx = (hashStr(`star${i}`) % 1000) / 1000 * W;
-      const sy = (hashStr(`stary${i}`) % 1000) / 1000 * horizonY * 0.9;
-      g.fillRect(Math.round(sx), Math.round(sy), 1, 1);
+    // the disc itself: hard-edged, pixel-circle, so there is an actual bright core
+    g.fillStyle = th.orb.color;
+    for (let y = -r; y <= r; y++) {
+      for (let x = -r; x <= r; x++) {
+        if (x * x + y * y <= r * r) g.fillRect(ox + x, oy + y, 1, 1);
+      }
     }
   }
 }
 
-/** Draw the ground: far hills, a gradient band, grass tint from ecosystem health. */
+/** Ground: a dithered two-tone fill (far hill band, then the main slope), textured rather
+ * than a smooth linear gradient, with ecosystem health mixed into both tones. */
 function drawGround(g: CanvasRenderingContext2D, W: number, horizonY: number, groundBottomY: number, th: Theme, visual: ReturnType<typeof visualParamsFor>): void {
-  g.fillStyle = applyGroundHealth(th.far, visual);
-  g.fillRect(0, horizonY, W, (groundBottomY - horizonY) * 0.3);
-  const grad = g.createLinearGradient(0, horizonY, 0, groundBottomY);
-  grad.addColorStop(0, applyGroundHealth(th.ground0, visual));
-  grad.addColorStop(1, applyGroundHealth(th.ground1, visual));
-  g.fillStyle = grad;
-  g.fillRect(0, horizonY + (groundBottomY - horizonY) * 0.15, W, groundBottomY - horizonY);
+  const far = applyGroundHealth(th.far, visual);
+  g.fillStyle = far;
+  g.fillRect(0, Math.round(horizonY), W, Math.round((groundBottomY - horizonY) * 0.22));
+
+  const g0 = applyGroundHealth(th.ground0, visual);
+  const g1 = applyGroundHealth(th.ground1, visual);
+  const top = horizonY + (groundBottomY - horizonY) * 0.18;
+  const rows = Math.max(6, Math.round(groundBottomY - top));
+  for (let y = 0; y < rows; y++) {
+    const p = y / rows;
+    const dith = BAYER4[(y % 4) * 4 + 1] / 16;
+    ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
+  }
 }
 
 function drawPond(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, th: Theme, visual: ReturnType<typeof visualParamsFor>): void {
@@ -108,51 +167,88 @@ function drawPond(g: CanvasRenderingContext2D, x: number, y: number, w: number, 
   const murk = mix(base, [90, 95, 70], 1 - clarity);
   g.fillStyle = `rgb(${murk[0] | 0},${murk[1] | 0},${murk[2] | 0})`;
   g.beginPath();
-  g.ellipse(x, y, w / 2, h / 2, 0, 0, Math.PI * 2);
+  g.ellipse(Math.round(x), Math.round(y), Math.round(w / 2), Math.round(h / 2), 0, 0, Math.PI * 2);
   g.fill();
+  // a single highlight band, hard-edged, rather than a soft gradient shimmer
+  g.fillStyle = `rgba(255,255,255,${0.12 + 0.1 * clarity})`;
+  g.fillRect(Math.round(x - w * 0.2), Math.round(y - 1), Math.round(w * 0.3), 1);
 }
 
-function stageHeightPx(stage: Stage, scale: number, k: number): number {
-  return Math.max(3, Math.round(STAGE_HEIGHT[stage] * scale)) * k;
+function stageHeightPx(stage: Stage, scale: number): number {
+  return Math.max(3, Math.round(STAGE_HEIGHT[stage] * scale));
+}
+
+/** An offscreen canvas at engine resolution, reused across frames (resized only when the
+ * aspect ratio actually changes) so a redraw doesn't allocate a new canvas every frame. */
+let engineCanvas: HTMLCanvasElement | null = null;
+let engineCtx: CanvasRenderingContext2D | null = null;
+
+function getEngineCanvas(engineW: number, engineH: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  if (!engineCanvas) {
+    engineCanvas = document.createElement('canvas');
+  }
+  if (engineCanvas.width !== engineW || engineCanvas.height !== engineH) {
+    engineCanvas.width = engineW;
+    engineCanvas.height = engineH;
+    engineCtx = null;
+  }
+  if (!engineCtx) {
+    engineCtx = engineCanvas.getContext('2d', { willReadFrequently: false });
+    if (engineCtx) engineCtx.imageSmoothingEnabled = false;
+  }
+  return [engineCanvas, engineCtx!];
 }
 
 /**
- * Render one frame of the grove to `g`'s canvas (size `W` x `H` in device pixels already;
- * the caller sizes the `<canvas>` element and sets up the context). Returns the hit boxes
- * for this frame, for the caller's hover/tap handling.
+ * Render one frame of the grove onto `g`'s real canvas (device-pixel size `W` x `H`; the
+ * caller sizes the `<canvas>` element). Draws at `ENGINE_WIDTH` internal resolution and
+ * blits that up, so the whole scene — not just individual sprites — reads as pixel art.
+ * Hit boxes are returned in the *real* canvas's coordinate space, since that's what the
+ * caller's pointer events are measured in.
  */
 export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, input: SceneInput): DrawResult {
-  g.imageSmoothingEnabled = false;
+  const aspect = W / H;
+  const engineW = ENGINE_WIDTH;
+  const engineH = Math.round(engineW / aspect);
+  const blit = W / engineW;
+
+  const [, eg] = getEngineCanvas(engineW, engineH);
+  eg.clearRect(0, 0, engineW, engineH);
+
   const th = buildTheme(input.mood, { streak: input.grove.stats.streak, todayReviews: input.grove.stats.todayReviews });
   const visual = visualParamsFor(input.visualHealth);
-  const horizonY = H * 0.42;
-  const groundBottomY = H * GROUND_BOTTOM;
-  const k = pxScale(W);
+  const horizonY = engineH * 0.42;
+  const groundBottomY = engineH * GROUND_BOTTOM;
 
-  drawSky(g, W, horizonY, th);
-  drawGround(g, W, horizonY, groundBottomY, th, visual);
+  drawSky(eg, engineW, horizonY, th, input.t);
+  drawGround(eg, engineW, horizonY, groundBottomY, th, visual);
 
   const layout: Layout = layoutGrove(input.grove.plants);
+  // The hit boxes we report are in *real* canvas space, so every engine-space box drawn
+  // below gets scaled by `blit` before it's pushed.
   const boxes: HitBox[] = [];
+  const pushBox = (kind: HitBox['kind'], ref: number, cx: number, topY: number, w: number, h: number, depth: number) => {
+    boxes.push(boxAt(kind, ref, cx * blit, topY * blit, w * blit, h * blit, depth));
+  };
 
-  // Back-to-front: layoutGrove already orders oldest (back) first.
   for (const item of layout.items) {
-    const placed = placeItem(item, W, H, horizonY, GROUND_BOTTOM);
+    const placed = placeItem(item, engineW, engineH, horizonY, GROUND_BOTTOM);
+    const zoomedScale = placed.scale * layout.zoom;
     if (isPond(item)) {
-      const pw = 40 * k * item.slots * 0.5 * placed.scale;
-      const ph = 14 * k * placed.scale;
-      drawPond(g, placed.x, placed.y - ph / 2, pw, ph, th, visual);
-      boxes.push(boxAt('pond', item.group, placed.x, placed.y - ph, pw, ph, item.depth));
+      const pw = 10 * item.slots * zoomedScale;
+      const ph = 3.4 * zoomedScale;
+      drawPond(eg, placed.x, placed.y - ph / 2, pw, ph, th, visual);
+      pushBox('pond', item.group, placed.x, placed.y - ph, pw, ph, item.depth);
       continue;
     }
     const plant = item as Extract<LayoutItem, { pond: false }>;
     const species = input.biome.plants[plant.species % input.biome.plants.length];
     const tone = buildToneMap(plant, species.form);
-    const hPx = stageHeightPx(plant.stage, placed.scale, k);
-    const spriteK = Math.max(1, Math.round((hPx / Math.max(1, tone.h)) ));
+    const hPx = stageHeightPx(plant.stage, zoomedScale);
+    const spriteK = Math.max(1, Math.round(hPx / Math.max(1, tone.h)));
     const x0 = Math.round(placed.x - (tone.w * spriteK) / 2);
     const y0 = Math.round(placed.y - tone.h * spriteK);
-    paintPlant(g, tone, species, {
+    paintPlant(eg, tone, species, {
       stage: plant.stage,
       health: plant.health,
       seed: plant.seed,
@@ -163,14 +259,10 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       tintAmount: th.tintAmount,
       snow: th.snow,
     }, x0, y0, spriteK);
-    boxes.push(boxAt('plant', plant.index, placed.x, y0, tone.w * spriteK, tone.h * spriteK, item.depth));
+    pushBox('plant', plant.index, placed.x, y0, tone.w * spriteK, tone.h * spriteK, item.depth);
   }
 
-  // Creatures: unlocked slots only, each perched near its scene-appropriate zone. Kept
-  // intentionally simple (ground-anchored wander) rather than true zone pathfinding —
-  // every zone still reads correctly because each creature's home position is chosen to
-  // suit its `Zone` (near water for waterEdge, etc.) by the caller via `homeFor`.
-  const baseY = groundBottomY - 2 * k;
+  const baseY = groundBottomY - 2;
   input.roster.creatures.forEach((save) => {
     const creature: Creature | undefined = input.biome.creatures.find((c) => c.slot === save.slot);
     if (!creature) return;
@@ -187,13 +279,14 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + (save.slot / 5) * 0.7;
+    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4));
 
     if (creature.zone === 'sky') {
-      const pos = flightPosition(input.t, W * 0.6, horizonY * 0.5, W * 0.1, horizonY * 0.08, 0.3);
+      const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw = frame[0]?.length ?? 1;
-      paintCreature(g, frame, creature.palette, Math.round(pos.x - (fw * k) / 2), Math.round(pos.y - frame.length * k), k);
-      boxes.push(boxAt('creature', save.slot, pos.x, pos.y - frame.length * k, fw * k, frame.length * k, 0));
+      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale);
+      pushBox('creature', save.slot, pos.x, pos.y - frame.length * creatureScale, fw * creatureScale, frame.length * creatureScale, 0);
       return;
     }
 
@@ -202,30 +295,34 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const fw = frame[0]?.length ?? 1;
     let dy = 0;
     if (creature.body.kind === 'hopper' && motion.moving) {
-      dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * k);
+      dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }
-    const x = motion.x * W;
-    const y0 = baseY - frame.length * k + dy;
-    paintCreature(g, frame, creature.palette, Math.round(x - (fw * k) / 2), Math.round(y0), k, motion.facing < 0);
-    boxes.push(boxAt('creature', save.slot, x, y0, fw * k, frame.length * k, -1));
+    const x = motion.x * engineW;
+    const y0 = baseY - frame.length * creatureScale + dy;
+    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0);
+    pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
 
   if (hasCabin(input.grove.stats)) {
-    // A small cabin marker at the front-left corner; a full sprite is a later refinement.
-    const cx = W * 0.06;
-    const cy = groundBottomY - 2 * k;
-    g.fillStyle = '#6a4a32';
-    g.fillRect(cx - 7 * k, cy - 8 * k, 14 * k, 8 * k);
-    g.fillStyle = '#8a3a2e';
-    g.beginPath();
-    g.moveTo(cx - 9 * k, cy - 8 * k);
-    g.lineTo(cx, cy - 14 * k);
-    g.lineTo(cx + 9 * k, cy - 8 * k);
-    g.fill();
-    boxes.push(boxAt('plant', -1, cx, cy - 14 * k, 18 * k, 14 * k, -2));
+    const cx = engineW * 0.08;
+    const cy = groundBottomY - 2;
+    const s = Math.max(1, Math.round(layout.zoom));
+    eg.fillStyle = '#6a4a32';
+    eg.fillRect(Math.round(cx - 7 * s), Math.round(cy - 8 * s), 14 * s, 8 * s);
+    eg.fillStyle = '#8a3a2e';
+    eg.beginPath();
+    eg.moveTo(cx - 9 * s, cy - 8 * s);
+    eg.lineTo(cx, cy - 14 * s);
+    eg.lineTo(cx + 9 * s, cy - 8 * s);
+    eg.fill();
+    pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, -2);
   }
+
+  // The one blit: the whole low-resolution scene, scaled up with smoothing off. This is
+  // what makes every pixel of sky, ground and sprite alike come out as a crisp block.
+  g.imageSmoothingEnabled = false;
+  g.clearRect(0, 0, W, H);
+  g.drawImage(engineCanvas!, 0, 0, engineW, engineH, 0, 0, W, H);
 
   return { boxes };
 }
-
-export { CREATURE_SPEED_SCALE };

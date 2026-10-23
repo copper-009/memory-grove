@@ -51,6 +51,29 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   function's own comment in `src/data/schedulePresets.ts`, and the part-day Christmas Eve
   holiday is left out entirely rather than approximated as a full day.
 
+## Rendering — the low-resolution buffer fix
+
+- **The scene was drawn straight onto the full device-resolution canvas, not onto a
+  low-resolution buffer scaled up.** `reference/NOTES.md`'s own research said the original
+  draws "one low-resolution canvas, scaled up," but the first implementation of
+  `scene.ts` didn't actually do that: individual sprites were drawn as `k`-pixel blocks
+  (genuinely blocky), but the sky, sun and ground used `CanvasGradient` and `ellipse()`
+  calls straight against the full canvas, which anti-alias regardless of how the sprites
+  next to them are scaled. The user loaded it in RemNote and immediately flagged it as
+  looking nothing like pixel art — correctly. Fixed by rendering the *whole* frame
+  (sky, ground, water, every sprite) onto a ~220px-wide offscreen canvas and blitting that
+  up in one `drawImage` call with smoothing off, which is what actually forces every
+  element through the same blocky upscale. Also replaced the sky/ground `CanvasGradient`
+  fills with Bayer-dithered two-tone bands (closer to the original's dithering, and
+  incapable of smooth-gradient blur by construction), and gave the sun/moon an actual
+  hard-edged disc — the earlier version drew only the soft halo glow, with no bright core
+  at all, which read as a diffuse blur.
+- **`layout.zoom` was computed but never applied.** `layoutGrove` correctly scales a young
+  grove up to 1.8x so a handful of plants still read as distinct trees, but `scene.ts`
+  never multiplied a placed item's draw scale by it — caught from the same screenshot: a
+  10-plant grove rendered as a thin, indistinct smudge rather than a few large plants.
+  Fixed alongside the rendering buffer change.
+
 ## Region packs (new feature)
 
 - **Art is entirely procedural — no image or sprite assets anywhere, for any region.**
