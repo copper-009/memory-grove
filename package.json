@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "vitest bench --run",
-    "shots": "node tools/screenshots.mjs"
+    "shots": "node tools/screenshots.mjs",
+    "species-doc": "node tools/species-doc.mjs"
   },
   "dependencies": {
     "@remnote/plugin-sdk": "0.0.46",
