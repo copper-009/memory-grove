@@ -84,33 +84,46 @@ const RABBIT_LIKE_HOP = 0.08;
  */
 const LAND_BOTTOM = 0.78;
 
-/** A dithered two-tone fill between `a` and `b`, textured with a 4x4 Bayer pattern rather
- * than a smooth gradient — this is what makes a flat area (sky, ground) read as pixel art
- * instead of a CSS gradient once it's scaled up blocky. */
-function ditherFill(g: CanvasRenderingContext2D, x0: number, y0: number, w: number, h: number, a: string, b: string, t: number): void {
-  const rgbA = hex(a);
-  const rgbB = hex(b);
-  const col = mix(rgbA, rgbB, t);
-  g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
-  g.fillRect(x0, y0, w, h);
-}
 
 /** Sky: six-stop gradient approximated as dithered horizontal bands, plus a hard-edged
  * sun/moon disc with a soft halo glow around it (the original always draws a crisp disc
  * first, then a separate glow — a glow alone, with no disc, is what reads as "just blurry"). */
+/**
+ * The sky: a true per-pixel ordered (Bayer) dither between adjacent gradient stops, the
+ * same technique Memory Forest's own `web/engines/pixel/sky.js` uses — a continuous
+ * gradient position computed per row, and every *pixel* in that row independently decides
+ * which of the two nearest stops to show, by comparing against `BAYER4[(y%4)*4+x%4]`.
+ *
+ * An earlier version of this file got this wrong in a way worth recording: it divided the
+ * sky into a handful of discrete row-bands and dithered each one only by `y % 4` — the
+ * same decision for every pixel across a whole row — which produced flat horizontal
+ * stripes instead of the stippled gradient texture a 2D dither actually gives. Dithering
+ * by `x % 4` *and* `y % 4` per pixel is what turns a sharp two-colour edge into something
+ * that reads as a smooth gradient once the whole scene is blitted up.
+ */
 function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, t: number): void {
   const stops = th.sky;
-  const bands = Math.max(8, Math.round(horizonY));
-  for (let y = 0; y < bands; y++) {
-    const p = (y / Math.max(1, bands - 1)) * (stops.length - 1);
-    const i0 = Math.min(stops.length - 2, Math.floor(p));
+  const H = Math.ceil(horizonY);
+  const img = g.createImageData(W, H);
+  const d = img.data;
+  const stopRGB = stops.map(hex);
+  for (let y = 0; y < H; y++) {
+    const p = Math.min(1, y / Math.max(1, H - 1)) * (stopRGB.length - 1);
+    const i0 = Math.min(stopRGB.length - 2, Math.floor(p));
     const f = p - i0;
-    // dither the transition between adjacent stops by row, using a Bayer threshold so the
-    // band edges break up rather than banding cleanly (which itself looks more "gradient")
-    const dith = BAYER4[(y % 4) * 4] / 16;
-    const tt = f > dith ? 1 : 0;
-    ditherFill(g, 0, Math.floor((y / bands) * horizonY), W, Math.ceil(horizonY / bands) + 1, stops[i0], stops[i0 + 1], tt);
+    const a = stopRGB[i0];
+    const b = stopRGB[i0 + 1];
+    for (let x = 0; x < W; x++) {
+      const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
+      const c = f > threshold ? b : a;
+      const idx = (y * W + x) * 4;
+      d[idx] = c[0];
+      d[idx + 1] = c[1];
+      d[idx + 2] = c[2];
+      d[idx + 3] = 255;
+    }
   }
+  g.putImageData(img, 0, 0);
 
   if (th.clouds) {
     const seedBase = Math.floor(t / 40);
@@ -259,13 +272,28 @@ function drawGround(
   const g1 = applyGroundHealth(ground1, visual);
   drawHills(g, W, horizonY, farCol, g0, th.hillForm);
 
-  const top = horizonY + (landBottomY - horizonY) * 0.18;
-  const rows = Math.max(6, Math.round(landBottomY - top));
+  // Same per-pixel Bayer dither as the sky, not a per-row one — see the long comment on
+  // drawSky for why that distinction actually matters visually.
+  const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
+  const bottom = Math.round(landBottomY);
+  const rows = Math.max(1, bottom - top);
+  const g0rgb = hex(g0);
+  const g1rgb = hex(g1);
+  const img = g.createImageData(W, rows);
+  const d = img.data;
   for (let y = 0; y < rows; y++) {
-    const p = y / rows;
-    const dith = BAYER4[(y % 4) * 4 + 1] / 16;
-    ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
+    const p = Math.min(1, (y / Math.max(1, rows)) * 1.15);
+    for (let x = 0; x < W; x++) {
+      const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
+      const c = p > threshold ? g1rgb : g0rgb;
+      const idx = (y * W + x) * 4;
+      d[idx] = c[0];
+      d[idx + 1] = c[1];
+      d[idx + 2] = c[2];
+      d[idx + 3] = 255;
+    }
   }
+  g.putImageData(img, 0, top);
 }
 
 /**

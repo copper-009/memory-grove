@@ -1772,24 +1772,29 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 var ENGINE_WIDTH = 300;
 var RABBIT_LIKE_HOP = 0.08;
 var LAND_BOTTOM = 0.78;
-function ditherFill(g, x0, y0, w, h, a, b, t) {
-  const rgbA = hex(a);
-  const rgbB = hex(b);
-  const col = mix(rgbA, rgbB, t);
-  g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
-  g.fillRect(x0, y0, w, h);
-}
 function drawSky(g, W, horizonY, th, t) {
   const stops = th.sky;
-  const bands = Math.max(8, Math.round(horizonY));
-  for (let y = 0; y < bands; y++) {
-    const p = y / Math.max(1, bands - 1) * (stops.length - 1);
-    const i0 = Math.min(stops.length - 2, Math.floor(p));
+  const H = Math.ceil(horizonY);
+  const img = g.createImageData(W, H);
+  const d = img.data;
+  const stopRGB = stops.map(hex);
+  for (let y = 0; y < H; y++) {
+    const p = Math.min(1, y / Math.max(1, H - 1)) * (stopRGB.length - 1);
+    const i0 = Math.min(stopRGB.length - 2, Math.floor(p));
     const f = p - i0;
-    const dith = BAYER4[y % 4 * 4] / 16;
-    const tt = f > dith ? 1 : 0;
-    ditherFill(g, 0, Math.floor(y / bands * horizonY), W, Math.ceil(horizonY / bands) + 1, stops[i0], stops[i0 + 1], tt);
+    const a = stopRGB[i0];
+    const b = stopRGB[i0 + 1];
+    for (let x = 0; x < W; x++) {
+      const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
+      const c = f > threshold ? b : a;
+      const idx = (y * W + x) * 4;
+      d[idx] = c[0];
+      d[idx + 1] = c[1];
+      d[idx + 2] = c[2];
+      d[idx + 3] = 255;
+    }
   }
+  g.putImageData(img, 0, 0);
   if (th.clouds) {
     const seedBase = Math.floor(t / 40);
     for (let i = 0; i < th.clouds.n; i++) {
@@ -1884,13 +1889,26 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
   drawHills(g, W, horizonY, farCol, g0, th.hillForm);
-  const top = horizonY + (landBottomY - horizonY) * 0.18;
-  const rows = Math.max(6, Math.round(landBottomY - top));
+  const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
+  const bottom = Math.round(landBottomY);
+  const rows = Math.max(1, bottom - top);
+  const g0rgb = hex(g0);
+  const g1rgb = hex(g1);
+  const img = g.createImageData(W, rows);
+  const d = img.data;
   for (let y = 0; y < rows; y++) {
-    const p = y / rows;
-    const dith = BAYER4[y % 4 * 4 + 1] / 16;
-    ditherFill(g, 0, Math.round(top + y), W, 2, g0, g1, p > dith ? Math.min(1, p + 0.15) : p);
+    const p = Math.min(1, y / Math.max(1, rows) * 1.15);
+    for (let x = 0; x < W; x++) {
+      const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
+      const c = p > threshold ? g1rgb : g0rgb;
+      const idx = (y * W + x) * 4;
+      d[idx] = c[0];
+      d[idx + 1] = c[1];
+      d[idx + 2] = c[2];
+      d[idx + 3] = 255;
+    }
   }
+  g.putImageData(img, 0, top);
 }
 function drawCabin(g, cx, baseY, s, th) {
   const tintC = (col) => {
