@@ -19,6 +19,7 @@ import { updateRoster, emptyRoster } from '../data/milestones';
 import type { CreatureRoster } from '../data/milestones';
 import { regionByKey, DEFAULT_REGION_KEY } from '../regions';
 import type { Region } from '../regions/types';
+import { resolveRealWeather } from './weatherFetch';
 
 export interface GroveBundle {
   grove: Grove;
@@ -28,6 +29,9 @@ export interface GroveBundle {
   roster: CreatureRoster;
   health: HealthResult;
   activeStudyDays: number;
+  /** Set only when "follow the real sky" would apply — i.e. a city is configured and the
+   * fetch succeeded. `undefined` means: use the scenery's own preset weather. */
+  realWeather?: { weather: string; isDay: boolean };
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -67,6 +71,17 @@ export function useGrove(): GroveBundle {
           overdue,
           totalCards: cardCount,
         });
+
+        // The one network call in the whole plugin, and only when a city is set. Never
+        // blocks the first render: it resolves in the background and the bundle updates
+        // once it lands, falling back silently to the scenery's own weather until then.
+        if (settings.weatherCity) {
+          resolveRealWeather(plugin, settings.weatherCity).then((real) => {
+            if (!cancelled && real) {
+              setBundle((prev) => (prev ? { ...prev, realWeather: { weather: real.weather, isDay: real.isDay } } : prev));
+            }
+          });
+        }
 
         if (!cancelled) {
           setBundle({

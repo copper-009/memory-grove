@@ -69,9 +69,12 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       const g = canvas.getContext('2d');
       if (!g) return;
 
+      // "Follow the real sky" (weather set to "auto") uses the fetched city weather when
+      // it has landed; otherwise, and for every other weather setting, the preset wins.
+      const liveWeather = bundle.settings.weather === 'auto' && bundle.realWeather ? bundle.realWeather.weather : null;
       const mood: MoodInput = {
         time: (bundle.settings.time === 'auto' ? 'day' : bundle.settings.time) as MoodInput['time'],
-        weather: (bundle.settings.weather === 'auto' ? 'clear' : bundle.settings.weather) as MoodInput['weather'],
+        weather: (liveWeather ?? (bundle.settings.weather === 'auto' ? 'clear' : bundle.settings.weather)) as MoodInput['weather'],
       };
       const paused = pauseLabel(bundle.calendar, bundle.grove.today) != null;
 
