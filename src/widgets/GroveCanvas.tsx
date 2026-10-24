@@ -61,7 +61,9 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
   const visibleRef = useRef(true);
   const [tooltip, setTooltip] = useState<{ content: Tooltip; x: number; y: number } | null>(null);
 
-  const biome = bundle.region?.biomes?.[0];
+  // Was hardcoded to biomes[0]: a region's other ecosystems were never reachable by any
+  // means at all. bundle.biome resolves the user's own choice, or the month-based default.
+  const biome = bundle.biome ?? bundle.region?.biomes?.[0];
 
   const animate = (() => {
     const mode = bundle.settings?.animate ?? 'system';

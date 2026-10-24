@@ -18,14 +18,38 @@ import type { HealthResult } from '../data/health';
 import { updateRoster, emptyRoster } from '../data/milestones';
 import type { CreatureRoster } from '../data/milestones';
 import { regionByKey, DEFAULT_REGION_KEY } from '../regions';
-import type { Region } from '../regions/types';
+import type { Region, Biome } from '../regions/types';
 import { resolveRealWeather } from './weatherFetch';
+
+/** Storage key for a region's chosen biome override — namespaced per region, so picking
+ * "Outback" for Australia doesn't also apply if the user switches to Japan and back. */
+function biomeKey(regionKey: string): string {
+  return `forest.biome.${regionKey}`;
+}
+
+/**
+ * Which biome to show when the user hasn't picked one: rotate through the region's own
+ * biomes by the real calendar month. This is what used to be entirely hardcoded to
+ * `biomes[0]` — a region's other ecosystems were never reachable at all, by any means, which
+ * is the real cause behind "it's hard to cycle through ecosystems." A plain month-based
+ * rotation doesn't claim ecological authenticity (a biome doesn't actually change with the
+ * seasons the way weather does), but it does mean every ecosystem in a region gets an equal
+ * turn over the year instead of one being permanently invisible.
+ */
+export function defaultBiomeIndex(region: Region, date: Date = new Date()): number {
+  return date.getMonth() % region.biomes.length;
+}
 
 export interface GroveBundle {
   grove: Grove;
   settings: GroveSettings;
   calendar: StudyCalendar;
   region: Region;
+  biome: Biome;
+  biomeIndex: number;
+  /** null = following the automatic month rotation. */
+  biomeOverride: number | null;
+  setBiome: (index: number | null) => void;
   roster: CreatureRoster;
   health: HealthResult;
   activeStudyDays: number;
@@ -41,7 +65,7 @@ export interface GroveBundle {
 
 export function useGrove(): GroveBundle {
   const plugin = usePlugin();
-  const [bundle, setBundle] = useState<Omit<GroveBundle, 'loading' | 'error' | 'refresh'> | null>(null);
+  const [bundle, setBundle] = useState<Omit<GroveBundle, 'loading' | 'error' | 'refresh' | 'setBiome'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gen, setGen] = useState(0);
@@ -58,6 +82,10 @@ export function useGrove(): GroveBundle {
         const calendar = await loadStudyCalendar(plugin);
         const { grove, overdue, cardCount, dueByDay } = await buildOrLoadGrove(plugin);
         const region = regionByKey(settings.region) ?? regionByKey(DEFAULT_REGION_KEY)!;
+        const storedBiomeOverride = await plugin.storage.getSynced<number>(biomeKey(region.key));
+        const biomeOverride = storedBiomeOverride != null && storedBiomeOverride < region.biomes.length ? storedBiomeOverride : null;
+        const biomeIndex = biomeOverride ?? defaultBiomeIndex(region);
+        const biome = region.biomes[biomeIndex];
 
         const storedRoster = await plugin.storage.getSynced<CreatureRoster>(rosterKey(region.key));
         const roster = updateRoster(storedRoster ?? emptyRoster(), grove.stats.activeStudyDays, grove.stats, grove.today);
@@ -87,7 +115,7 @@ export function useGrove(): GroveBundle {
 
         if (!cancelled) {
           setBundle({
-            grove, settings, calendar, region, roster, health,
+            grove, settings, calendar, region, biome, biomeIndex, biomeOverride, roster, health,
             activeStudyDays: grove.stats.activeStudyDays,
             dueByDay,
           });
@@ -104,17 +132,29 @@ export function useGrove(): GroveBundle {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plugin, gen]);
 
+  const setBiome = useCallback(
+    (index: number | null) => {
+      if (!bundle) return;
+      plugin.storage.setSynced(biomeKey(bundle.region.key), index ?? undefined).then(refresh);
+    },
+    [plugin, bundle, refresh],
+  );
+
   return {
     ...(bundle ?? {
       grove: null as unknown as Grove,
       settings: null as unknown as GroveSettings,
       calendar: null as unknown as StudyCalendar,
       region: null as unknown as Region,
+      biome: null as unknown as Biome,
+      biomeIndex: 0,
+      biomeOverride: null,
       roster: null as unknown as CreatureRoster,
       health: null as unknown as HealthResult,
       activeStudyDays: 0,
       dueByDay: new Map<number, number>(),
     }),
+    setBiome,
     loading,
     error,
     refresh,

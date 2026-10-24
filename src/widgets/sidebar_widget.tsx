@@ -12,6 +12,32 @@ function SidebarWidget() {
   if (!bundle.settings.showSidebar) return null;
   return (
     <div>
+      {bundle.region.biomes.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '6px 8px 0' }}>
+          {bundle.region.biomes.map((b, i) => {
+            const active = i === bundle.biomeIndex;
+            return (
+              <button
+                key={b.key}
+                onClick={() => bundle.setBiome(i)}
+                title={b.note}
+                style={{
+                  fontSize: 10.5,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  cursor: 'pointer',
+                  border: active ? '1px solid var(--rn-clr-accent-primary, #6a8f5a)' : '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))',
+                  background: active ? 'var(--rn-clr-accent-primary, #6a8f5a)' : 'transparent',
+                  color: active ? '#fff' : 'inherit',
+                  opacity: active ? 1 : 0.75,
+                }}
+              >
+                {b.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <GroveCanvas bundle={bundle} height={200} />
       <div style={{ padding: '6px 8px', overflowX: 'auto' }}>
         <HeatmapView

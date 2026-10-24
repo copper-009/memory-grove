@@ -16,7 +16,52 @@ function PaneWidget() {
     // text-reading width (the original 1000px) just left dead space on either side of it
     // in a wide pane. 1800px is still a sane ceiling on an ultrawide display.
     <div style={{ padding: 16, maxWidth: 1800, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, marginBottom: 12 }}>{bundle.region.label}</h1>
+      <h1 style={{ fontSize: 20, marginBottom: 4 }}>{bundle.region.label}</h1>
+      <p className="rn-clr-content-secondary" style={{ fontSize: 12.5, marginBottom: 10, opacity: 0.75 }}>
+        {bundle.biome.label}
+        {bundle.biomeOverride == null && ' · following the season'}
+      </p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+        {bundle.region.biomes.map((b, i) => {
+          const active = i === bundle.biomeIndex;
+          return (
+            <button
+              key={b.key}
+              onClick={() => bundle.setBiome(i)}
+              title={b.note}
+              style={{
+                fontSize: 12,
+                padding: '4px 10px',
+                borderRadius: 999,
+                cursor: 'pointer',
+                border: active ? '1px solid var(--rn-clr-accent-primary, #6a8f5a)' : '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))',
+                background: active ? 'var(--rn-clr-accent-primary, #6a8f5a)' : 'transparent',
+                color: active ? '#fff' : 'inherit',
+                opacity: active ? 1 : 0.8,
+              }}
+            >
+              {b.label}
+            </button>
+          );
+        })}
+        {bundle.biomeOverride != null && (
+          <button
+            onClick={() => bundle.setBiome(null)}
+            style={{
+              fontSize: 12,
+              padding: '4px 10px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              border: 'none',
+              background: 'none',
+              textDecoration: 'underline',
+              opacity: 0.7,
+            }}
+          >
+            Follow the season
+          </button>
+        )}
+      </div>
       <GroveCanvas bundle={bundle} height={480} />
       <div className="memory-grove-stats-row" style={{ marginTop: 16, display: 'flex', gap: 24, fontSize: 13 }}>
         <div>
