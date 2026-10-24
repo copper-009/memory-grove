@@ -95,6 +95,7 @@ export const norway: Region = {
       key: 'taiga',
       label: 'Taiga forest',
       note: 'Pine, spruce and birch, with rowan berries turning red in autumn.',
+      landform: 'rolling',
       ground: ['#2e3e28', '#20301e', '#3c523a'],
       ambience: ['mist', 'snow'],
       plants: [
@@ -169,6 +170,7 @@ export const norway: Region = {
       hasWater: true,
       label: 'Fjord coast and plateau',
       note: 'Steep fjord walls below, a wide windswept tundra plateau above.',
+      landform: 'fjord',
       ground: ['#8a9078', '#6a7258', '#9ca488'],
       ambience: ['snow', 'mist'],
       plants: [

@@ -66,6 +66,10 @@ export const patagonia: Region = {
       key: 'southern-beech',
       label: 'Southern beech forest',
       note: 'Lenga and ñire forest, turning red and gold in autumn.',
+      // Patagonian beech forest grows right at the foot of the Andes — Torres del Paine's
+      // own granite towers are the defining silhouette behind this ecosystem, matching the
+      // region's own "granite towers" backdrop.
+      landform: 'peaks',
       ground: ['#3a4a2e', '#2c3c22', '#4e6040'],
       ambience: ['mist'],
       plants: [
@@ -132,6 +136,7 @@ export const patagonia: Region = {
       key: 'steppe',
       label: 'Patagonian steppe',
       note: 'Open windswept grassland under a huge, fast-moving sky.',
+      landform: 'flat',
       ground: ['#8a8260', '#6e6848', '#9c9470'],
       ambience: ['heatShimmer'],
       plants: [

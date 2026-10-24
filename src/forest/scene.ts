@@ -297,7 +297,12 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
   const light = mix(hex(farColor), hex(groundColor), 0.18);
   const dark = mix(hex(farColor), hex(groundColor), 0.42);
   const base = horizonY + horizonY * 0.1;
-  const amp = horizonY * 0.14;
+  // Raised substantially from 0.14: a landform's whole point is to show through above the
+  // deep forest's own canopy line (drawn on top of this, right after) so a region's
+  // mountain, fjord wall or monolith actually reads as rising over the treeline rather
+  // than matching its height almost exactly and disappearing underneath it — which was
+  // happening for every landform before this change, "peaks" included.
+  const amp = horizonY * 0.34;
 
   const heightAt = (p: number): number => {
     switch (form) {
@@ -305,6 +310,15 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
         // one dominant symmetric cone, slightly off-centre
         const d = Math.abs(p - 0.42) * 2.6;
         return Math.max(0, 1 - d) ** 1.6;
+      }
+      case 'monolith': {
+        // A single large, smoothly rounded dome standing clear of an otherwise flat
+        // plain — an Uluru-type weathered inselberg, not a sharp volcanic cone (concave
+        // curve, >1 power) and not a flat-topped mesa: a wide, low, convex bulge (power
+        // < 1) is what actually reads as "one huge rounded rock," with the plain on
+        // either side almost perfectly flat so the monolith has nothing to compete with.
+        const d = Math.abs(p - 0.38) * 1.9;
+        return d < 1 ? Math.max(0, 1 - d) ** 0.55 * 0.8 : 0.03;
       }
       case 'peaks':
       case 'towers':
@@ -315,9 +329,13 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
         return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
       }
       case 'fjord': {
-        // steep near-vertical walls either side, a gap in the middle for the water
-        const walls = Math.max(0, 1 - Math.abs(p - 0.5) * 2.4);
-        return walls > 0.15 ? walls : 0.05;
+        // Steep walls either side, a gap in the middle for the water — this was inverted
+        // (peaking at the centre, falling to the edges) until caught against a render:
+        // it drew a plain symmetric triangle, nothing like a fjord. Edge distance now
+        // genuinely drives wall height, floored so the central gap reads as a valley, not
+        // a void.
+        const edgeDist = Math.abs(p - 0.5);
+        return Math.max(0.12, Math.min(1, edgeDist * 2.6));
       }
       case 'plateau': {
         // A flat-topped mesa/escarpment — smoothed into the plain at each end rather than
@@ -402,6 +420,7 @@ function drawGround(
   visual: ReturnType<typeof visualParamsFor>,
   biomeKey: string,
   hasWater: boolean,
+  biomeLandform: string,
 ): void {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
@@ -434,7 +453,13 @@ function drawGround(
 
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  drawHills(g, W, horizonY, farCol, g0, th.hillForm);
+  // The biome's own landform drives the hill silhouette, not the region backdrop's form —
+  // a backdrop is picked for sky/season variety and is shared across every biome in the
+  // region, so using it for terrain shape meant switching ecosystems never changed the
+  // land itself, only its colour. The biome's landform is geographically fixed; it doesn't
+  // change with the weather or time of day, so it stays constant while everything else
+  // (sky, lighting) keeps varying around it.
+  drawHills(g, W, horizonY, farCol, g0, biomeLandform);
 
   // Same per-pixel Bayer dither as the sky, not a per-row one — see the long comment on
   // drawSky for why that distinction actually matters visually.
@@ -877,7 +902,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
 
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
 
   const layout: Layout = layoutGrove(input.grove.plants);

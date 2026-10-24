@@ -84,6 +84,10 @@ export const japan: Region = {
       key: 'satoyama',
       label: 'Satoyama woodland',
       note: 'Cedar and maple over a worked woodland floor, with cherry in spring.',
+      // A single symmetrical volcanic cone standing clear on the skyline above the
+      // woodland — Honshu's satoyama countryside is, famously, exactly the vantage point
+      // Mt Fuji is seen from.
+      landform: 'volcano',
       ground: ['#6a7a4e', '#4e6038', '#7d9056'],
       ambience: ['mist', 'fireflies', 'butterflies'],
       plants: [
@@ -185,6 +189,9 @@ export const japan: Region = {
       hasWater: true,
       label: 'Northern snow country',
       note: 'Birch and spruce under deep snow, with cranes on the marsh.',
+      // Flat marsh country, not mountains — this is Kushiro-shitsugen-style wetland, the
+      // red-crowned crane's own habitat.
+      landform: 'flat',
       ground: ['#c6d0da', '#a6b4c2', '#dce4ec'],
       ambience: ['snow', 'mist'],
       plants: [

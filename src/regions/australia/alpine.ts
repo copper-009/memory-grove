@@ -6,6 +6,7 @@ export const alpine: Biome = {
   key: 'alpine',
   label: 'Alpine high country',
   note: 'Twisted snow gums over everlasting daisies and sphagnum bog, under snow in winter.',
+  landform: 'peaks',
   ground: ['#7f8a6e', '#5e6b52', '#8c9a72'],
   ambience: ['snow', 'mist'],
 

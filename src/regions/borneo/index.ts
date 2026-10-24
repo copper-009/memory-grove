@@ -57,6 +57,10 @@ export const borneo: Region = {
       key: 'dipterocarp',
       label: 'Lowland dipterocarp rainforest',
       note: 'Giant emergent trees towering over a dense, humid, multi-layered canopy.',
+      // Borneo's lowland dipterocarp forest climbs straight into real mountains — the
+      // granite massif around Kinabalu is the signature silhouette behind this exact
+      // ecosystem (matches the region's own "granite peak above cloud" backdrop).
+      landform: 'peaks',
       ground: ['#2e4228', '#22331e', '#3c5636'],
       ambience: ['mist', 'butterflies'],
       plants: [
@@ -130,6 +134,7 @@ export const borneo: Region = {
       hasWater: true,
       label: 'Mangrove river',
       note: 'A winding brown river through a tangle of mangrove roots.',
+      landform: 'flat',
       ground: ['#3a4a30', '#2a3822', '#4c603e'],
       ambience: ['mist'],
       plants: [

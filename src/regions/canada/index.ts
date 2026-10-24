@@ -60,6 +60,7 @@ export const canada: Region = {
       hasWater: true,
       label: 'Boreal forest and lakes',
       note: 'Black spruce and birch around cold, clear lakes.',
+      landform: 'rolling',
       ground: ['#2e3e2a', '#20301e', '#3c523a'],
       ambience: ['mist'],
       plants: [
@@ -126,6 +127,7 @@ export const canada: Region = {
       key: 'rocky-alpine',
       label: 'Rocky Mountain alpine',
       note: 'Rock, scree and wind above the treeline.',
+      landform: 'peaks',
       ground: ['#8a8a7e', '#6a6a5e', '#9c9c8e'],
       ambience: ['snow', 'mist'],
       plants: [

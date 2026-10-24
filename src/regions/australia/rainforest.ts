@@ -10,6 +10,11 @@ export const subtropicalRainforest: Biome = {
   key: 'rainforest',
   label: 'Subtropical rainforest',
   note: 'Closed green canopy, tree ferns in the gullies, mist that never quite lifts.',
+  // Australia's subtropical rainforest survives almost entirely on mountainous escarpment
+  // country — the McPherson and Border Ranges, Lamington's own plateau — where the
+  // altitude keeps it wet enough to hold on. A rainforest in flat, dry country wouldn't
+  // make ecological sense, which is exactly the distinction worth making visible.
+  landform: 'peaks',
   ground: ['#3c4a33', '#2d3b28', '#49603a'],
   ambience: ['mist', 'glowworms', 'butterflies'],
 

@@ -6,6 +6,11 @@ export const outback: Biome = {
   key: 'outback',
   label: 'Outback',
   note: 'Red sand and spinifex under desert oaks and ghost gums, with rock outcrops behind.',
+  // A single weathered sandstone dome standing clear of the surrounding plain — Uluru and
+  // Kata Tjuta are the defining landform of this exact ecosystem (red sand, spinifex,
+  // desert oak), so this is the one biome in the whole set that gets a named-landmark
+  // silhouette rather than a generic landform.
+  landform: 'monolith',
   ground: ['#b06a42', '#9a5433', '#c08a52'],
   ambience: ['heatShimmer', 'passingFlock'],
 

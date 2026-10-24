@@ -57,6 +57,7 @@ export const costaRica: Region = {
       key: 'cloud-forest',
       label: 'Cloud forest',
       note: 'Moss-draped highland forest, cool and almost always wrapped in mist.',
+      landform: 'peaks',
       ground: ['#2e4232', '#223428', '#3c5a3e'],
       ambience: ['mist', 'glowworms'],
       plants: [
@@ -124,6 +125,7 @@ export const costaRica: Region = {
       key: 'lowland-rainforest',
       label: 'Lowland rainforest',
       note: 'Hot, humid, and loud with insects and birdsong under a closed canopy.',
+      landform: 'flat',
       ground: ['#2e4228', '#22331e', '#3c5636'],
       ambience: ['mist', 'butterflies'],
       plants: [

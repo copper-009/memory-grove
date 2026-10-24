@@ -71,6 +71,7 @@ export const aotearoa: Region = {
       key: 'kauri-forest',
       label: 'Kauri and podocarp forest',
       note: 'Massive kauri trunks, tree ferns beneath, and birdsong all through it.',
+      landform: 'canopy',
       ground: ['#3a4a34', '#2b3a28', '#47603c'],
       ambience: ['mist', 'glowworms'],
       plants: [
@@ -169,6 +170,7 @@ export const aotearoa: Region = {
       key: 'southern-alps',
       label: 'Southern Alps',
       note: 'Golden snow tussock and scree under a hard line of snow and rock.',
+      landform: 'peaks',
       ground: ['#9a8e5e', '#7d7248', '#b0a068'],
       ambience: ['snow', 'mist'],
       plants: [

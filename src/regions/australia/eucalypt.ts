@@ -9,6 +9,10 @@ export const eucalyptWoodland: Biome = {
   key: 'eucalypt',
   label: 'Eucalypt woodland',
   note: 'Open forest of gums and wattle over kangaroo grass, with grass trees in the understory.',
+  // Gentle undulating foothill country — the Great Dividing Range's own lower slopes,
+  // not sharp peaks: this is the open, rolling woodland most of inland eastern Australia
+  // actually looks like.
+  landform: 'rolling',
   ground: ['#9a8f63', '#7d8a52', '#9bab63'],
   ambience: ['passingFlock', 'butterflies'],
 

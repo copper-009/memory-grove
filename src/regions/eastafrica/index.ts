@@ -58,6 +58,7 @@ export const eastAfrica: Region = {
       key: 'acacia-savanna',
       label: 'Acacia savanna',
       note: 'Flat-topped acacia scattered across open grassland.',
+      landform: 'flat',
       ground: ['#b3a060', '#9a8a4e', '#c6b878'],
       ambience: ['heatShimmer', 'passingFlock'],
       plants: [
@@ -125,6 +126,7 @@ export const eastAfrica: Region = {
       hasWater: true,
       label: 'Riverine woodland',
       note: 'A green ribbon of fig and fever tree following the only permanent water for miles.',
+      landform: 'flat',
       ground: ['#3c5636', '#2c3e28', '#4e6e46'],
       ambience: ['mist', 'passingFlock'],
       plants: [

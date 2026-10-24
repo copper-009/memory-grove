@@ -57,6 +57,10 @@ export const madagascar: Region = {
       key: 'eastern-rainforest',
       label: 'Eastern rainforest',
       note: 'Dense humid forest full of lemur calls at dawn and dusk.',
+      // Madagascar's eastern rainforest survives on the steep mountainous escarpment that
+      // runs the length of the island's east coast, where the rain actually falls —
+      // the same wet-needs-mountains logic as Australia's and Borneo's rainforest biomes.
+      landform: 'peaks',
       ground: ['#2e4228', '#22331e', '#3c5636'],
       ambience: ['mist', 'glowworms', 'butterflies'],
       plants: [
@@ -124,6 +128,7 @@ export const madagascar: Region = {
       key: 'spiny-forest',
       label: 'Spiny forest',
       note: 'Baobabs and octopus trees over red sand in the dry south-west.',
+      landform: 'flat',
       ground: ['#b3794a', '#8a5a36', '#c79660'],
       ambience: ['heatShimmer'],
       plants: [

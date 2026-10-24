@@ -1949,12 +1949,16 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
   const light = mix(hex(farColor), hex(groundColor), 0.18);
   const dark = mix(hex(farColor), hex(groundColor), 0.42);
   const base = horizonY + horizonY * 0.1;
-  const amp = horizonY * 0.14;
+  const amp = horizonY * 0.34;
   const heightAt = (p) => {
     switch (form) {
       case "volcano": {
         const d = Math.abs(p - 0.42) * 2.6;
         return Math.max(0, 1 - d) ** 1.6;
+      }
+      case "monolith": {
+        const d = Math.abs(p - 0.38) * 1.9;
+        return d < 1 ? Math.max(0, 1 - d) ** 0.55 * 0.8 : 0.03;
       }
       case "peaks":
       case "towers":
@@ -1964,8 +1968,8 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
         return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
       }
       case "fjord": {
-        const walls = Math.max(0, 1 - Math.abs(p - 0.5) * 2.4);
-        return walls > 0.15 ? walls : 0.05;
+        const edgeDist = Math.abs(p - 0.5);
+        return Math.max(0.12, Math.min(1, edgeDist * 2.6));
       }
       case "plateau": {
         const rise = 0.08;
@@ -2010,7 +2014,7 @@ function terrainStyleFor(biomeKey, hasWater) {
     return "reed";
   return "grass";
 }
-function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeKey, hasWater) {
+function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeKey, hasWater, biomeLandform) {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
   const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
@@ -2033,7 +2037,7 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeK
   }
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  drawHills(g, W, horizonY, farCol, g0, th.hillForm);
+  drawHills(g, W, horizonY, farCol, g0, biomeLandform);
   const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
@@ -2361,7 +2365,7 @@ function drawScene(g, W, H, input) {
   const frameBottomY = engineH * GROUND_BOTTOM;
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
@@ -2477,6 +2481,10 @@ var eucalyptWoodland = {
   key: "eucalypt",
   label: "Eucalypt woodland",
   note: "Open forest of gums and wattle over kangaroo grass, with grass trees in the understory.",
+  // Gentle undulating foothill country — the Great Dividing Range's own lower slopes,
+  // not sharp peaks: this is the open, rolling woodland most of inland eastern Australia
+  // actually looks like.
+  landform: "rolling",
   ground: ["#9a8f63", "#7d8a52", "#9bab63"],
   ambience: ["passingFlock", "butterflies"],
   plants: [
@@ -2655,6 +2663,11 @@ var subtropicalRainforest = {
   key: "rainforest",
   label: "Subtropical rainforest",
   note: "Closed green canopy, tree ferns in the gullies, mist that never quite lifts.",
+  // Australia's subtropical rainforest survives almost entirely on mountainous escarpment
+  // country — the McPherson and Border Ranges, Lamington's own plateau — where the
+  // altitude keeps it wet enough to hold on. A rainforest in flat, dry country wouldn't
+  // make ecological sense, which is exactly the distinction worth making visible.
+  landform: "peaks",
   ground: ["#3c4a33", "#2d3b28", "#49603a"],
   ambience: ["mist", "glowworms", "butterflies"],
   plants: [
@@ -2828,6 +2841,10 @@ var tropicalNorth = {
   hasWater: true,
   label: "Tropical north",
   note: "Fan palms and buttressed figs, a mangrove fringe, and a wet season that means it.",
+  // The Cape York/Daintree lowlands — a narrow coastal plain between the sea and the
+  // range, not the range itself (that mountainous wet rainforest is the separate
+  // `rainforest` biome above). Monsoon-flat, not peaked.
+  landform: "flat",
   ground: ["#35492e", "#273a24", "#426038"],
   ambience: ["mist", "rain", "butterflies"],
   plants: [
@@ -2973,6 +2990,7 @@ var coastalHeath = {
   hasWater: true,
   label: "Coastal heath and wetland",
   note: "Banksia and paperbark over still water, sedges, and waterlilies.",
+  landform: "flat",
   ground: ["#7d8a62", "#5e7250", "#8aa066"],
   ambience: ["fireflies", "butterflies", "passingFlock"],
   plants: [
@@ -3143,6 +3161,11 @@ var outback = {
   key: "outback",
   label: "Outback",
   note: "Red sand and spinifex under desert oaks and ghost gums, with rock outcrops behind.",
+  // A single weathered sandstone dome standing clear of the surrounding plain — Uluru and
+  // Kata Tjuta are the defining landform of this exact ecosystem (red sand, spinifex,
+  // desert oak), so this is the one biome in the whole set that gets a named-landmark
+  // silhouette rather than a generic landform.
+  landform: "monolith",
   ground: ["#b06a42", "#9a5433", "#c08a52"],
   ambience: ["heatShimmer", "passingFlock"],
   plants: [
@@ -3302,6 +3325,7 @@ var alpine = {
   key: "alpine",
   label: "Alpine high country",
   note: "Twisted snow gums over everlasting daisies and sphagnum bog, under snow in winter.",
+  landform: "peaks",
   ground: ["#7f8a6e", "#5e6b52", "#8c9a72"],
   ambience: ["snow", "mist"],
   plants: [
@@ -3594,6 +3618,7 @@ var aotearoa = {
       key: "kauri-forest",
       label: "Kauri and podocarp forest",
       note: "Massive kauri trunks, tree ferns beneath, and birdsong all through it.",
+      landform: "canopy",
       ground: ["#3a4a34", "#2b3a28", "#47603c"],
       ambience: ["mist", "glowworms"],
       plants: [
@@ -3768,6 +3793,7 @@ var aotearoa = {
       key: "southern-alps",
       label: "Southern Alps",
       note: "Golden snow tussock and scree under a hard line of snow and rock.",
+      landform: "peaks",
       ground: ["#9a8e5e", "#7d7248", "#b0a068"],
       ambience: ["snow", "mist"],
       plants: [
@@ -4004,6 +4030,10 @@ var japan = {
       key: "satoyama",
       label: "Satoyama woodland",
       note: "Cedar and maple over a worked woodland floor, with cherry in spring.",
+      // A single symmetrical volcanic cone standing clear on the skyline above the
+      // woodland — Honshu's satoyama countryside is, famously, exactly the vantage point
+      // Mt Fuji is seen from.
+      landform: "volcano",
       ground: ["#6a7a4e", "#4e6038", "#7d9056"],
       ambience: ["mist", "fireflies", "butterflies"],
       plants: [
@@ -4181,6 +4211,9 @@ var japan = {
       hasWater: true,
       label: "Northern snow country",
       note: "Birch and spruce under deep snow, with cranes on the marsh.",
+      // Flat marsh country, not mountains — this is Kushiro-shitsugen-style wetland, the
+      // red-crowned crane's own habitat.
+      landform: "flat",
       ground: ["#c6d0da", "#a6b4c2", "#dce4ec"],
       ambience: ["snow", "mist"],
       plants: [
@@ -4401,6 +4434,10 @@ var madagascar = {
       key: "eastern-rainforest",
       label: "Eastern rainforest",
       note: "Dense humid forest full of lemur calls at dawn and dusk.",
+      // Madagascar's eastern rainforest survives on the steep mountainous escarpment that
+      // runs the length of the island's east coast, where the rain actually falls —
+      // the same wet-needs-mountains logic as Australia's and Borneo's rainforest biomes.
+      landform: "peaks",
       ground: ["#2e4228", "#22331e", "#3c5636"],
       ambience: ["mist", "glowworms", "butterflies"],
       plants: [
@@ -4541,6 +4578,7 @@ var madagascar = {
       key: "spiny-forest",
       label: "Spiny forest",
       note: "Baobabs and octopus trees over red sand in the dry south-west.",
+      landform: "flat",
       ground: ["#b3794a", "#8a5a36", "#c79660"],
       ambience: ["heatShimmer"],
       plants: [
@@ -4741,6 +4779,7 @@ var costaRica = {
       key: "cloud-forest",
       label: "Cloud forest",
       note: "Moss-draped highland forest, cool and almost always wrapped in mist.",
+      landform: "peaks",
       ground: ["#2e4232", "#223428", "#3c5a3e"],
       ambience: ["mist", "glowworms"],
       plants: [
@@ -4883,6 +4922,7 @@ var costaRica = {
       key: "lowland-rainforest",
       label: "Lowland rainforest",
       note: "Hot, humid, and loud with insects and birdsong under a closed canopy.",
+      landform: "flat",
       ground: ["#2e4228", "#22331e", "#3c5636"],
       ambience: ["mist", "butterflies"],
       plants: [
@@ -5085,6 +5125,7 @@ var eastAfrica = {
       key: "acacia-savanna",
       label: "Acacia savanna",
       note: "Flat-topped acacia scattered across open grassland.",
+      landform: "flat",
       ground: ["#b3a060", "#9a8a4e", "#c6b878"],
       ambience: ["heatShimmer", "passingFlock"],
       plants: [
@@ -5225,6 +5266,7 @@ var eastAfrica = {
       hasWater: true,
       label: "Riverine woodland",
       note: "A green ribbon of fig and fever tree following the only permanent water for miles.",
+      landform: "flat",
       ground: ["#3c5636", "#2c3e28", "#4e6e46"],
       ambience: ["mist", "passingFlock"],
       plants: [
@@ -5417,6 +5459,7 @@ var canada = {
       hasWater: true,
       label: "Boreal forest and lakes",
       note: "Black spruce and birch around cold, clear lakes.",
+      landform: "rolling",
       ground: ["#2e3e2a", "#20301e", "#3c523a"],
       ambience: ["mist"],
       plants: [
@@ -5556,6 +5599,7 @@ var canada = {
       key: "rocky-alpine",
       label: "Rocky Mountain alpine",
       note: "Rock, scree and wind above the treeline.",
+      landform: "peaks",
       ground: ["#8a8a7e", "#6a6a5e", "#9c9c8e"],
       ambience: ["snow", "mist"],
       plants: [
@@ -5767,6 +5811,7 @@ var norway = {
       key: "taiga",
       label: "Taiga forest",
       note: "Pine, spruce and birch, with rowan berries turning red in autumn.",
+      landform: "rolling",
       ground: ["#2e3e28", "#20301e", "#3c523a"],
       ambience: ["mist", "snow"],
       plants: [
@@ -5931,6 +5976,7 @@ var norway = {
       hasWater: true,
       label: "Fjord coast and plateau",
       note: "Steep fjord walls below, a wide windswept tundra plateau above.",
+      landform: "fjord",
       ground: ["#8a9078", "#6a7258", "#9ca488"],
       ambience: ["snow", "mist"],
       plants: [
@@ -6141,6 +6187,7 @@ var nepal = {
       hasWater: true,
       label: "Terai lowland",
       note: "Tall elephant grass and sal forest along the floodplain.",
+      landform: "flat",
       ground: ["#6a7a3e", "#4e5e2c", "#8a9850"],
       ambience: ["mist", "heatShimmer"],
       plants: [
@@ -6266,6 +6313,7 @@ var nepal = {
       key: "himalaya",
       label: "High Himalaya",
       note: "Rhododendron forest giving way to alpine meadow and bare rock.",
+      landform: "peaks",
       ground: ["#8a8878", "#6a6858", "#9ca08a"],
       ambience: ["snow", "mist"],
       plants: [
@@ -6478,6 +6526,10 @@ var patagonia = {
       key: "southern-beech",
       label: "Southern beech forest",
       note: "Lenga and \xF1ire forest, turning red and gold in autumn.",
+      // Patagonian beech forest grows right at the foot of the Andes — Torres del Paine's
+      // own granite towers are the defining silhouette behind this ecosystem, matching the
+      // region's own "granite towers" backdrop.
+      landform: "peaks",
       ground: ["#3a4a2e", "#2c3c22", "#4e6040"],
       ambience: ["mist"],
       plants: [
@@ -6617,6 +6669,7 @@ var patagonia = {
       key: "steppe",
       label: "Patagonian steppe",
       note: "Open windswept grassland under a huge, fast-moving sky.",
+      landform: "flat",
       ground: ["#8a8260", "#6e6848", "#9c9470"],
       ambience: ["heatShimmer"],
       plants: [
@@ -6804,6 +6857,10 @@ var borneo = {
       key: "dipterocarp",
       label: "Lowland dipterocarp rainforest",
       note: "Giant emergent trees towering over a dense, humid, multi-layered canopy.",
+      // Borneo's lowland dipterocarp forest climbs straight into real mountains — the
+      // granite massif around Kinabalu is the signature silhouette behind this exact
+      // ecosystem (matches the region's own "granite peak above cloud" backdrop).
+      landform: "peaks",
       ground: ["#2e4228", "#22331e", "#3c5636"],
       ambience: ["mist", "butterflies"],
       plants: [
@@ -6958,6 +7015,7 @@ var borneo = {
       hasWater: true,
       label: "Mangrove river",
       note: "A winding brown river through a tangle of mangrove roots.",
+      landform: "flat",
       ground: ["#3a4a30", "#2a3822", "#4c603e"],
       ambience: ["mist"],
       plants: [

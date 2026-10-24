@@ -14,6 +14,10 @@ export const tropicalNorth: Biome = {
   hasWater: true,
   label: 'Tropical north',
   note: 'Fan palms and buttressed figs, a mangrove fringe, and a wet season that means it.',
+  // The Cape York/Daintree lowlands — a narrow coastal plain between the sea and the
+  // range, not the range itself (that mountainous wet rainforest is the separate
+  // `rainforest` biome above). Monsoon-flat, not peaked.
+  landform: 'flat',
   ground: ['#35492e', '#273a24', '#426038'],
   ambience: ['mist', 'rain', 'butterflies'],
 

@@ -173,6 +173,18 @@ export interface Biome {
   understory: Array<{ key: string; label: string; what: string; colour: string }>;
   /** Ambient flourishes this biome may show. */
   ambience?: Array<'mist' | 'heatShimmer' | 'glowworms' | 'fireflies' | 'butterflies' | 'passingFlock' | 'snow' | 'rain'>;
+  /**
+   * The actual shape of the land this biome stands on — this is what makes switching
+   * biomes change more than a colour, species list and creature roster: a mountainous wet
+   * rainforest has a real silhouette behind it, a flat arid plain has a different one
+   * again. Before this field existed, every biome in a region shared whatever landform its
+   * region's *backdrop* happened to be showing (picked for sky variety, not tied to any
+   * one biome), so switching ecosystems within a region never changed the terrain shape at
+   * all — exactly the "just a colour strip" complaint. `monolith` is a single large,
+   * weathered dome/rock standing clear of the plain around it (an Uluru-type landform);
+   * every other value matches `Backdrop['form']`.
+   */
+  landform: 'peaks' | 'fjord' | 'plateau' | 'rolling' | 'volcano' | 'flat' | 'canopy' | 'tsingy' | 'towers' | 'monolith';
 }
 
 /** How a region's seasons work. */

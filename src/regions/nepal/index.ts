@@ -68,6 +68,7 @@ export const nepal: Region = {
       hasWater: true,
       label: 'Terai lowland',
       note: 'Tall elephant grass and sal forest along the floodplain.',
+      landform: 'flat',
       ground: ['#6a7a3e', '#4e5e2c', '#8a9850'],
       ambience: ['mist', 'heatShimmer'],
       plants: [
@@ -129,6 +130,7 @@ export const nepal: Region = {
       key: 'himalaya',
       label: 'High Himalaya',
       note: 'Rhododendron forest giving way to alpine meadow and bare rock.',
+      landform: 'peaks',
       ground: ['#8a8878', '#6a6858', '#9ca08a'],
       ambience: ['snow', 'mist'],
       plants: [

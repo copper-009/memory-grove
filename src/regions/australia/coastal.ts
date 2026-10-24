@@ -7,6 +7,7 @@ export const coastalHeath: Biome = {
   hasWater: true,
   label: 'Coastal heath and wetland',
   note: 'Banksia and paperbark over still water, sedges, and waterlilies.',
+  landform: 'flat',
   ground: ['#7d8a62', '#5e7250', '#8aa066'],
   ambience: ['fireflies', 'butterflies', 'passingFlock'],
 
