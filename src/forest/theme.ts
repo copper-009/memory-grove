@@ -99,6 +99,13 @@ const TIMES: Record<TimeOfDay, TimeSpec> = {
     orb: { kind: 'sun', x: 0.8, y: 0.13, r: 7, color: '#fffbe6', glow: '#fff3c4', halo: 5 },
     far: '#9ab0c4', near: '#7c9c96', ground0: '#6f9a58', ground1: '#446c3c', grass: '#86b068',
     haze: '#c6d8dc', hazeStep: 0.12, water: '#8fbcd8',
+    // A real, confirmed bug this had until now: every other daytime preset (dawn, golden
+    // hour, dusk) sets its own `shadow`, but plain 'day' never did, and `auto`/"follow the
+    // real sky" resolves to 'day' for every daylight hour — meaning shadows never rendered
+    // at all for what is very likely the single most common viewing condition. Midday sun
+    // sits higher overhead than golden hour's, so a shorter value than golden hour's own
+    // 0.9, not zero.
+    shadow: 0.45,
     clouds: { n: 5, top: '#ffffff', bot: '#dfe8ef', alpha: 240 },
   },
   goldenHour: {
@@ -123,6 +130,8 @@ const TIMES: Record<TimeOfDay, TimeSpec> = {
     far: '#1d2848', near: '#162140', ground0: '#1a2b2d', ground1: '#101b1d', grass: '#22383a',
     haze: '#2a3560', hazeStep: 0.1, water: '#1d2a4a',
     tint: '#141d3c', tintAmount: 0.45,
+    // Faint — real moonlight does cast a shadow, just a much softer one than sunlight.
+    shadow: 0.2,
     clouds: { n: 3, top: '#2c3766', bot: '#222b54', alpha: 200 },
     stars: 90,
   },

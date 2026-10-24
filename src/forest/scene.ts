@@ -998,10 +998,16 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const cabinDepth = 0.15 + 0.8 * ((hashStr(`cabin-depth|${input.biome.key}`) % 1000) / 1000);
     const top = horizonY + engineH * ROWS_TOP;
     const cy = top + (groundBottomY - top) * Math.pow(cabinDepth, 1.1);
-    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
+    // 0.55x on top of the plant-matching formula: against the reference, the cabin is a
+    // small background detail easily smaller than the trees around it, not a landmark
+    // competing with them for attention — "remember the trees are the most important part,
+    // not the animals and hut." The previous scale matched a plant's own size at the same
+    // depth exactly, including the full zoom boost a small grove gets (up to 2.4x), which
+    // is what actually made the hut read as oversized.
+    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom * 0.55;
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(0.6, cabinScale) * pixelScale;
+    const s = Math.max(0.4, cabinScale) * pixelScale;
     drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);

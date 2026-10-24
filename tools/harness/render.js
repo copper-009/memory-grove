@@ -1126,6 +1126,13 @@ var TIMES = {
     haze: "#c6d8dc",
     hazeStep: 0.12,
     water: "#8fbcd8",
+    // A real, confirmed bug this had until now: every other daytime preset (dawn, golden
+    // hour, dusk) sets its own `shadow`, but plain 'day' never did, and `auto`/"follow the
+    // real sky" resolves to 'day' for every daylight hour — meaning shadows never rendered
+    // at all for what is very likely the single most common viewing condition. Midday sun
+    // sits higher overhead than golden hour's, so a shorter value than golden hour's own
+    // 0.9, not zero.
+    shadow: 0.45,
     clouds: { n: 5, top: "#ffffff", bot: "#dfe8ef", alpha: 240 }
   },
   goldenHour: {
@@ -1175,6 +1182,8 @@ var TIMES = {
     water: "#1d2a4a",
     tint: "#141d3c",
     tintAmount: 0.45,
+    // Faint — real moonlight does cast a shadow, just a much softer one than sunlight.
+    shadow: 0.2,
     clouds: { n: 3, top: "#2c3766", bot: "#222b54", alpha: 200 },
     stars: 90
   }
@@ -2448,10 +2457,10 @@ function drawScene(g, W, H, input) {
     const cabinDepth = 0.15 + 0.8 * (hashStr(`cabin-depth|${input.biome.key}`) % 1e3 / 1e3);
     const top = horizonY + engineH * ROWS_TOP;
     const cy = top + (groundBottomY - top) * Math.pow(cabinDepth, 1.1);
-    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
+    const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom * 0.55;
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(0.6, cabinScale) * pixelScale;
+    const s = Math.max(0.4, cabinScale) * pixelScale;
     drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
