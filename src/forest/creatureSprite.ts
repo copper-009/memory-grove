@@ -91,9 +91,21 @@ const KIND_PROPORTIONS: Record<BodyPlan['kind'], { bodyTilt: number; headScale: 
  * creature is assembled by the same ellipse-based routine, so the whole roster stays
  * visually consistent.
  */
-export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex): [Frame, Frame] {
+/**
+ * `zoomScale` sizes the whole sprite directly, the same fix `plantSprite.ts`'s
+ * `buildToneMap` got earlier: a creature standing nearer the camera (or a small grove's
+ * zoom-in) gets an ASCII grid built bigger in the first place — genuinely more character
+ * cells, each one still painted at a small, fixed pixel size — rather than the same small
+ * grid blown up by a large per-character paint multiplier. The latter is what produced
+ * "pixels far too large to make out anything": blowing up a 12-character-wide grid by a
+ * factor of 6 gives a 72-pixel-wide creature made of only 12 giant flat squares, no matter
+ * how big that number gets. Building a 40-character-wide grid at zoomScale instead gives a
+ * 40-pixel-wide creature with 40 individual cells of actual shape detail — the resolution
+ * itself grows with size, the way a real sprite should.
+ */
+export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, zoomScale = 1): [Frame, Frame] {
   const plan = creature.body;
-  const scale = STAGE_SCALE[stage] ?? 1;
+  const scale = (STAGE_SCALE[stage] ?? 1) * zoomScale;
   const [bw, bh] = plan.size;
   const w = Math.max(3, Math.round(bw * scale));
   const h = Math.max(3, Math.round(bh * scale));

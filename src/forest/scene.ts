@@ -878,7 +878,6 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     pushBox('plant', plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }
 
-  const baseY = groundBottomY - 2;
   input.roster.creatures.forEach((save) => {
     const creature: Creature | undefined = input.biome.creatures.find((c) => c.slot === save.slot);
     if (!creature) return;
@@ -893,17 +892,27 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     });
     if (mood === 'hidden' || mood === 'asleep') return;
 
-    const [idle, busy] = buildCreatureFrames(creature, stageIdx);
+    // A stable per-creature depth (not just a fixed front-row position): every ground
+    // creature used to stand at the exact same `baseY`, always frontmost, regardless of
+    // species or slot — the user's own words were "they should be... present at different
+    // depth of the image instead of only in the foreground." Hashed from the slot and the
+    // grove's own seed, so it's fixed for a given creature rather than jittering frame to
+    // frame, the same way a cabin's depth is chosen.
+    const creatureDepth = 0.1 + 0.85 * ((hashStr(`creature-depth|${save.slot}|${input.grove.seed}`) % 1000) / 1000);
+    const depthTop = horizonY + engineH * ROWS_TOP;
+    const creatureBaseY = depthTop + (groundBottomY - depthTop) * Math.pow(creatureDepth, 1.1);
+    const depthScale = FAR_SCALE + NEAR_GAIN * creatureDepth;
+    const creatureHaze = Math.min(1, (1 - creatureDepth) * th.hazeStep * 5);
+    // The ASCII grid is now built at the real target size directly (zoomScale folds in
+    // the grove's own zoom, this resolution's pixelScale, and this creature's own depth),
+    // the same fix plantSprite.ts's tone maps got earlier — see buildCreatureFrames' own
+    // comment for why a flat per-character paint multiplier alone made every creature a
+    // handful of giant, detail-less squares. The paint multiplier below is now small and
+    // fixed: individual pixels stay crisp instead of ballooning into blocks.
+    const zoomScale = layout.zoom * pixelScale * depthScale * 0.45;
+    const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + (save.slot / 5) * 0.7;
-    // Capped, unlike the plant/cabin scale factors: a creature is a small *fixed* ASCII
-    // grid (its body plan doesn't get redrawn with more detail at a bigger size the way a
-    // plant's tone map does), so `k` here is a flat per-character block size. Left
-    // uncapped, the same pixelScale that correctly makes a plant's richly-detailed sprite
-    // bigger just turns a creature's dozen-or-so characters into a handful of giant solid
-    // squares with no shape left at all — exactly the shapeless dark blob the user's
-    // screenshot showed standing in the water. Capping keeps every creature recognisable
-    // regardless of how large pixelScale/zoom get for everything else.
-    const creatureScale = Math.min(6, Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale)));
+    const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
     // Creatures previously never received the scene's ambient tint at all — painted in raw
     // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
     // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint
@@ -928,13 +937,14 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }
     const x = motion.x * engineW;
-    const y0 = baseY - frame.length * creatureScale + dy;
-    // The shadow stays planted on the ground at `baseY` even while the creature itself
+    const y0 = creatureBaseY - frame.length * creatureScale + dy;
+    // The shadow stays planted on the ground at this creature's own depth even while it
     // bobs or hops above it (`dy`) — that's what actually sells a hop or a bounce as
     // leaving the ground, rather than the sprite just sliding up and down in place.
-    drawShadow(eg, x, baseY, fw * creatureScale, th, 0);
-    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? undefined);
-    pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
+    drawShadow(eg, x, creatureBaseY, fw * creatureScale, th, creatureHaze);
+    const creatureHazeOpt = creatureHaze > 0.02 ? { color: th.haze, amount: creatureHaze } : undefined;
+    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? undefined, creatureHazeOpt);
+    pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
 
   if (hasCabin(input.grove.stats)) {

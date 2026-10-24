@@ -1545,9 +1545,9 @@ var KIND_PROPORTIONS = {
   swimmer: { bodyTilt: 0, headScale: 0.5 },
   bulky: { bodyTilt: 0, headScale: 0.55 }
 };
-function buildCreatureFrames(creature, stage) {
+function buildCreatureFrames(creature, stage, zoomScale = 1) {
   const plan = creature.body;
-  const scale = STAGE_SCALE[stage] ?? 1;
+  const scale = (STAGE_SCALE[stage] ?? 1) * zoomScale;
   const [bw, bh] = plan.size;
   const w = Math.max(3, Math.round(bw * scale));
   const h = Math.max(3, Math.round(bh * scale));
@@ -1740,7 +1740,8 @@ function resolveTone(tm, x, y, crown, bark, ailing, opts) {
     return tone >= TRUNK_LIGHT ? n >= TRUNK_LIGHT : n >= 0 && n <= 4;
   };
   if (tone >= TRUNK_LIGHT) {
-    const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
+    const effectiveTone = opts.sunFromRight ? tone === TRUNK_LIGHT ? TRUNK_DARK : tone === TRUNK_DARK ? TRUNK_LIGHT : tone : tone;
+    const barkIndex = effectiveTone === TRUNK_LIGHT ? 0 : effectiveTone === TRUNK_MID ? 1 : 2;
     let col2 = hex(bark[Math.min(2, barkIndex)]);
     if (opts.tint && opts.tintAmount)
       col2 = mix(col2, hex(opts.tint), opts.tintAmount);
@@ -1786,7 +1787,7 @@ function paintPlant(g, tm, species, opts, x0, y0, k) {
     }
   }
 }
-function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint, rim) {
+function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint, rim, haze) {
   const w = Math.max(...rows.map((r) => r.length));
   const filled = (x, y) => {
     const row = rows[y];
@@ -1807,6 +1808,8 @@ function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint, rim) {
       }
       if (tint)
         col = mix(col, hex(tint.color), tint.amount);
+      if (haze)
+        col = mix(col, hex(haze.color), haze.amount);
       g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
       const px = flip ? w - 1 - x : x;
       g.fillRect(Math.round(x0 + px * k), Math.round(y0 + y * k), k, k);
@@ -2328,11 +2331,11 @@ function drawScene(g, W, H, input) {
       tint: th.tint ?? void 0,
       tintAmount: th.tintAmount,
       snow: th.snow,
-      rim: th.rim ?? void 0
+      rim: th.rim ?? void 0,
+      sunFromRight: !!th.orb && th.orb.x > 0.5
     }, x0, y0, 1);
     pushBox("plant", plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }
-  const baseY = groundBottomY - 2;
   input.roster.creatures.forEach((save) => {
     const creature = input.biome.creatures.find((c) => c.slot === save.slot);
     if (!creature)
@@ -2348,9 +2351,15 @@ function drawScene(g, W, H, input) {
     });
     if (mood === "hidden" || mood === "asleep")
       return;
-    const [idle, busy] = buildCreatureFrames(creature, stageIdx);
+    const creatureDepth = 0.1 + 0.85 * (hashStr(`creature-depth|${save.slot}|${input.grove.seed}`) % 1e3 / 1e3);
+    const depthTop = horizonY + engineH * ROWS_TOP;
+    const creatureBaseY = depthTop + (groundBottomY - depthTop) * Math.pow(creatureDepth, 1.1);
+    const depthScale = FAR_SCALE + NEAR_GAIN * creatureDepth;
+    const creatureHaze = Math.min(1, (1 - creatureDepth) * th.hazeStep * 5);
+    const zoomScale = layout.zoom * pixelScale * depthScale * 0.45;
+    const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + save.slot / 5 * 0.7;
-    const creatureScale = Math.min(6, Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale)));
+    const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
     const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
@@ -2368,10 +2377,11 @@ function drawScene(g, W, H, input) {
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }
     const x = motion.x * engineW;
-    const y0 = baseY - frame.length * creatureScale + dy;
-    drawShadow(eg, x, baseY, fw * creatureScale, th, 0);
-    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? void 0);
-    pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
+    const y0 = creatureBaseY - frame.length * creatureScale + dy;
+    drawShadow(eg, x, creatureBaseY, fw * creatureScale, th, creatureHaze);
+    const creatureHazeOpt = creatureHaze > 0.02 ? { color: th.haze, amount: creatureHaze } : void 0;
+    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? void 0, creatureHazeOpt);
+    pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
   if (hasCabin(input.grove.stats)) {
     const onRight = hashStr(`cabin-side|${input.biome.key}`) % 2 === 0;

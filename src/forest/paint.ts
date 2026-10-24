@@ -151,6 +151,7 @@ export function paintCreature(
   flip = false,
   tint?: { color: string; amount: number },
   rim?: string,
+  haze?: { color: string; amount: number },
 ): void {
   const w = Math.max(...rows.map((r) => r.length));
   const filled = (x: number, y: number): boolean => {
@@ -173,6 +174,7 @@ export function paintCreature(
         col = mix(col, hex(rim), 0.4);
       }
       if (tint) col = mix(col, hex(tint.color), tint.amount);
+      if (haze) col = mix(col, hex(haze.color), haze.amount);
       g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
       const px = flip ? w - 1 - x : x;
       g.fillRect(Math.round(x0 + px * k), Math.round(y0 + y * k), k, k);
