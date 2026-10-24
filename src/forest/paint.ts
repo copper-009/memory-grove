@@ -27,6 +27,12 @@ export interface PaintOptions {
   tint?: string;
   tintAmount?: number;
   snow?: boolean;
+  /** A warm sunrise/golden-hour/dusk edge colour (`Theme.rim`) — when set, the crown's own
+   * silhouette edge (whichever side of each row isn't filled by a neighbour) picks up a
+   * glow from it, in the upper part of the plant only. This was computed per-frame already
+   * (the cabin uses it) but never reached plants, which is exactly the backlit golden-hour
+   * tree-edge look the reference screenshots show and this renderer was missing. */
+  rim?: string;
 }
 
 const TONE_COUNT = 5;
@@ -39,7 +45,7 @@ const TONE_COUNT = 5;
  * (a trunk doesn't yellow, and snow caps only the canopy).
  */
 function resolveTone(
-  tone: number,
+  tm: ToneMap,
   x: number,
   y: number,
   crown: PlantSpecies['crown'],
@@ -47,6 +53,16 @@ function resolveTone(
   ailing: PlantSpecies['ailing'],
   opts: PaintOptions,
 ): RGB {
+  const tone = tm.tone[y * tm.w + x];
+  // A neighbour pixel counts as "filled" only within the same range (crown vs. trunk) as
+  // the pixel being resolved — otherwise a crown pixel sitting right above the trunk would
+  // see the trunk below it as "filled" and never read as a silhouette edge, and vice versa.
+  const filled = (nx: number, ny: number): boolean => {
+    if (nx < 0 || ny < 0 || nx >= tm.w || ny >= tm.h) return false;
+    const n = tm.tone[ny * tm.w + nx];
+    return tone >= TRUNK_LIGHT ? n >= TRUNK_LIGHT : n >= 0 && n <= 4;
+  };
+
   if (tone >= TRUNK_LIGHT) {
     const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
     let col = hex(bark[Math.min(2, barkIndex)]);
@@ -67,7 +83,21 @@ function resolveTone(
     else col = mix(col, hex('#9a8a40'), 0.5); // dry: dulled, dusty yellow-green
   }
 
-  if (opts.snow && tone >= 3) col = mix(col, [245, 248, 252], 0.5);
+  // Snow caps the pixels that actually face up (nothing filled directly above), not just
+  // whichever pixels happen to already carry the highlight tone — a flat "lighten anything
+  // bright" treatment doesn't read as snow sitting on top of the canopy, it just looks
+  // washed out.
+  if (opts.snow) {
+    if (!filled(x, y - 1)) col = [245, 248, 252];
+    else if (!filled(x, y - 2) && (x + y) % 2 === 0) col = mix(col, [245, 248, 252], 0.7);
+  }
+  // A golden-hour/dawn/dusk rim light catches the crown's own outer silhouette — whichever
+  // side of a row has no filled neighbour — in its upper reaches, the same backlit tree-edge
+  // glow the reference scenery shows. `theme.ts` already computes this per frame for the
+  // cabin; it never reached plants until now.
+  if (opts.rim && tone >= 1 && y < tm.h * 0.75 && (!filled(x - 1, y) || !filled(x + 1, y))) {
+    col = mix(col, hex(opts.rim), 0.55);
+  }
   if (opts.tint && opts.tintAmount) col = mix(col, hex(opts.tint), opts.tintAmount);
   if (opts.haze && opts.hazeColor) col = mix(col, hex(opts.hazeColor), opts.haze);
   return col;
@@ -89,9 +119,8 @@ export function paintPlant(
 ): void {
   for (let y = 0; y < tm.h; y++) {
     for (let x = 0; x < tm.w; x++) {
-      const tone = tm.tone[y * tm.w + x];
-      if (tone < 0) continue;
-      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.bark, species.ailing, opts);
+      if (tm.tone[y * tm.w + x] < 0) continue;
+      const [r, gg, b] = resolveTone(tm, x, y, species.crown, species.bark, species.ailing, opts);
       g.fillStyle = `rgb(${r | 0},${gg | 0},${b | 0})`;
       g.fillRect(Math.round(x0 + x * k), Math.round(y0 + y * k), k, k);
     }

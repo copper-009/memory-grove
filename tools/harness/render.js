@@ -1346,6 +1346,24 @@ function hummockCrown(tm, w, top, ch, cx, r) {
 function shrubCrown(tm, w, top, ch, cx, r) {
   roundCrown(tm, w, top, ch, cx, 4, r, 0.05);
 }
+function crownShade(tm, w, cx) {
+  for (let x = 0; x < tm.w; x++) {
+    if (Math.abs(x - cx) >= w * 0.34)
+      continue;
+    let low = -1;
+    for (let y = 0; y < tm.h; y++)
+      if (get(tm, x, y) >= 0 && get(tm, x, y) <= 4)
+        low = y;
+    if (low < 2)
+      continue;
+    const a = get(tm, x, low - 1);
+    if (a >= 0 && a <= 4)
+      set(tm, x, low - 1, 1);
+    const b = get(tm, x, low - 2);
+    if (b >= 0 && b <= 4)
+      set(tm, x, low - 2, Math.min(b, 2));
+  }
+}
 function bulbousTrunk(tm, trunkW, bulbW, top, trunkH, cx) {
   const bulgeH = Math.round(trunkH * 0.55);
   for (let y = top; y < top + trunkH; y++) {
@@ -1414,11 +1432,15 @@ function buildToneMap(plant, form, scale = 1) {
   const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {
     for (let x = tx0; x < tx0 + trunkW; x++) {
-      let tone = y <= trunkTop + 3 ? TRUNK_DARK : TRUNK_MID;
-      if (trunkW > 1 && x === tx0)
-        tone = TRUNK_LIGHT;
+      let tone = trunkW > 1 && x === tx0 ? TRUNK_LIGHT : trunkW > 1 && x === tx0 + trunkW - 1 ? TRUNK_DARK : TRUNK_MID;
+      if (y <= trunkTop + 3)
+        tone = TRUNK_DARK;
       set(tm, x, y, tone);
     }
+  }
+  if (plant.stage >= 3 /* Mature */) {
+    set(tm, tx0 - 1, base, TRUNK_DARK);
+    set(tm, tx0 + trunkW, base, TRUNK_DARK);
   }
   const hole = plant.health === 3 ? DYING_HOLES : 0;
   switch (form) {
@@ -1433,10 +1455,12 @@ function buildToneMap(plant, form, scale = 1) {
       break;
     case "columnar":
       roundCrown(tm, w, top, ch * 0.5, cx, 3, r, hole);
+      crownShade(tm, w, cx);
       break;
     case "bulbous":
       bulbousTrunk(tm, trunkW + 1, w, trunkTop - Math.round(ch * 0.5), trunkH + Math.round(ch * 0.5), cx);
       roundCrown(tm, Math.round(w * 0.5), top, ch * 0.4, cx, 2, r, hole);
+      crownShade(tm, Math.round(w * 0.5), cx);
       break;
     case "grasstree":
       grassTreeCrown(tm, w, top, ch, cx, r);
@@ -1450,6 +1474,7 @@ function buildToneMap(plant, form, scale = 1) {
     case "broadleaf":
     default:
       roundCrown(tm, w, top, ch, cx, ancient ? 7 : plant.stage >= 3 /* Mature */ ? 5 : 3, r, hole);
+      crownShade(tm, w, cx);
       break;
   }
   for (let y = 0; y < H; y++) {
@@ -1706,7 +1731,14 @@ function applyGroundHealth(baseColorHex, params) {
 
 // src/forest/paint.ts
 var TONE_COUNT = 5;
-function resolveTone(tone, x, y, crown, bark, ailing, opts) {
+function resolveTone(tm, x, y, crown, bark, ailing, opts) {
+  const tone = tm.tone[y * tm.w + x];
+  const filled = (nx, ny) => {
+    if (nx < 0 || ny < 0 || nx >= tm.w || ny >= tm.h)
+      return false;
+    const n = tm.tone[ny * tm.w + nx];
+    return tone >= TRUNK_LIGHT ? n >= TRUNK_LIGHT : n >= 0 && n <= 4;
+  };
   if (tone >= TRUNK_LIGHT) {
     const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
     let col2 = hex(bark[Math.min(2, barkIndex)]);
@@ -1728,8 +1760,15 @@ function resolveTone(tone, x, y, crown, bark, ailing, opts) {
     else
       col = mix(col, hex("#9a8a40"), 0.5);
   }
-  if (opts.snow && tone >= 3)
-    col = mix(col, [245, 248, 252], 0.5);
+  if (opts.snow) {
+    if (!filled(x, y - 1))
+      col = [245, 248, 252];
+    else if (!filled(x, y - 2) && (x + y) % 2 === 0)
+      col = mix(col, [245, 248, 252], 0.7);
+  }
+  if (opts.rim && tone >= 1 && y < tm.h * 0.75 && (!filled(x - 1, y) || !filled(x + 1, y))) {
+    col = mix(col, hex(opts.rim), 0.55);
+  }
   if (opts.tint && opts.tintAmount)
     col = mix(col, hex(opts.tint), opts.tintAmount);
   if (opts.haze && opts.hazeColor)
@@ -1739,10 +1778,9 @@ function resolveTone(tone, x, y, crown, bark, ailing, opts) {
 function paintPlant(g, tm, species, opts, x0, y0, k) {
   for (let y = 0; y < tm.h; y++) {
     for (let x = 0; x < tm.w; x++) {
-      const tone = tm.tone[y * tm.w + x];
-      if (tone < 0)
+      if (tm.tone[y * tm.w + x] < 0)
         continue;
-      const [r, gg, b] = resolveTone(tone, x, y, species.crown, species.bark, species.ailing, opts);
+      const [r, gg, b] = resolveTone(tm, x, y, species.crown, species.bark, species.ailing, opts);
       g.fillStyle = `rgb(${r | 0},${gg | 0},${b | 0})`;
       g.fillRect(Math.round(x0 + x * k), Math.round(y0 + y * k), k, k);
     }
@@ -2259,7 +2297,8 @@ function drawScene(g, W, H, input) {
       hazeColor: th.haze,
       tint: th.tint ?? void 0,
       tintAmount: th.tintAmount,
-      snow: th.snow
+      snow: th.snow,
+      rim: th.rim ?? void 0
     }, x0, y0, 1);
     pushBox("plant", plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }

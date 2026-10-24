@@ -139,6 +139,26 @@ function shrubCrown(tm: ToneMap, w: number, top: number, ch: number, cx: number,
   roundCrown(tm, w, top, ch, cx, 4, r, 0.05);
 }
 
+/**
+ * A broadleaf crown shades its own underside where it hangs over the trunk — the canopy
+ * blocks its own light there, so the lowest couple of filled rows near the centre read
+ * darker than the same tone elsewhere. Missing this was a real difference from the
+ * original: every crown read as uniformly front-lit, with no sense of the canopy casting
+ * shade on itself.
+ */
+function crownShade(tm: ToneMap, w: number, cx: number): void {
+  for (let x = 0; x < tm.w; x++) {
+    if (Math.abs(x - cx) >= w * 0.34) continue;
+    let low = -1;
+    for (let y = 0; y < tm.h; y++) if (get(tm, x, y) >= 0 && get(tm, x, y) <= 4) low = y;
+    if (low < 2) continue;
+    const a = get(tm, x, low - 1);
+    if (a >= 0 && a <= 4) set(tm, x, low - 1, 1);
+    const b = get(tm, x, low - 2);
+    if (b >= 0 && b <= 4) set(tm, x, low - 2, Math.min(b, 2));
+  }
+}
+
 /** A swollen, bottle-shaped trunk with a small crown: baobab. */
 function bulbousTrunk(tm: ToneMap, trunkW: number, bulbW: number, top: number, trunkH: number, cx: number): { tx0: number } {
   const bulgeH = Math.round(trunkH * 0.55);
@@ -238,11 +258,19 @@ export function buildToneMap(
   const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {
     for (let x = tx0; x < tx0 + trunkW; x++) {
-      // dark where it's shaded under the crown, lit on the left edge for a two-tone trunk
-      let tone = y <= trunkTop + 3 ? TRUNK_DARK : TRUNK_MID;
-      if (trunkW > 1 && x === tx0) tone = TRUNK_LIGHT;
+      // Lit on the left edge, dark on the right — even a two-pixel-wide trunk reads as a
+      // round stem catching light from one side, not a flat painted strip. Darkest of all
+      // in the crown's own shadow near the top, regardless of edge.
+      let tone = trunkW > 1 && x === tx0 ? TRUNK_LIGHT : trunkW > 1 && x === tx0 + trunkW - 1 ? TRUNK_DARK : TRUNK_MID;
+      if (y <= trunkTop + 3) tone = TRUNK_DARK;
       set(tm, x, y, tone);
     }
+  }
+  // Roots: a couple of dark pixels flanking the base for a mature tree, so the trunk
+  // doesn't just stop dead at the ground line.
+  if (plant.stage >= Stage.Mature) {
+    set(tm, tx0 - 1, base, TRUNK_DARK);
+    set(tm, tx0 + trunkW, base, TRUNK_DARK);
   }
 
   const hole = plant.health === 3 ? DYING_HOLES : 0;
@@ -258,10 +286,12 @@ export function buildToneMap(
       break;
     case 'columnar':
       roundCrown(tm, w, top, ch * 0.5, cx, 3, r, hole);
+      crownShade(tm, w, cx);
       break;
     case 'bulbous':
       bulbousTrunk(tm, trunkW + 1, w, trunkTop - Math.round(ch * 0.5), trunkH + Math.round(ch * 0.5), cx);
       roundCrown(tm, Math.round(w * 0.5), top, ch * 0.4, cx, 2, r, hole);
+      crownShade(tm, Math.round(w * 0.5), cx);
       break;
     case 'grasstree':
       grassTreeCrown(tm, w, top, ch, cx, r);
@@ -275,6 +305,7 @@ export function buildToneMap(
     case 'broadleaf':
     default:
       roundCrown(tm, w, top, ch, cx, ancient ? 7 : plant.stage >= Stage.Mature ? 5 : 3, r, hole);
+      crownShade(tm, w, cx);
       break;
   }
 
