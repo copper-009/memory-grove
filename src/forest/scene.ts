@@ -432,10 +432,7 @@ function drawGround(
   biomeLandform: string,
 ): void {
   const LIGHTING_WEIGHT = 0.3;
-  const [bFar, bNear] = biomeGround;
-  // Snow weather overrides every biome's own palette outright — every biome goes white
-  // under real snow, rather than blending snow-white with (say) red outback sand.
-  const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
+  const [, bNear] = biomeGround;
   // "I want just the simple 2 tone, with the two tones being shades of one another, or
   // closely related" — ground0 and ground1 used to be two *separately* blended colours
   // (one from the biome's grass tone, one from its near tone, each mixed with a different
@@ -450,54 +447,50 @@ function drawGround(
   const [groundLight, groundDark] = shadePair(groundBase, 0.24);
   const ground0 = toHex(groundLight);
   const ground1 = toHex(groundDark);
-
-  // Hills were reading as an arbitrary, unrelated colour dropped next to the sky — because
-  // they were: `far` above comes from the biome's own authored ground palette, blended only
-  // lightly (30%) with the theme, with nothing tying it to the sky gradient it sits directly
-  // under. A real horizon is lit by the same light as the sky right above it — distant land
-  // always reads as a continuation of the sky's own colour, not a separate hue family — so
-  // pull it most of the way toward the sky's own horizon-adjacent stop (`sky[5]`, the last
-  // of the six) before anything else touches it. This is what actually fixes "multiple very
-  // different colours": the hills no longer carry an independent hue at all.
-  const farCol = applyGroundHealth(toHex(mix(hex(far), hex(th.sky[5]), 0.55)), visual);
-  // A plain solid fillRect here was exactly "a weird box in the background" — a flat,
-  // untextured rectangle with hard edges, most visible wherever a gap between the deep
-  // forest's lobes (drawDeepForest, called right after this) let it show through
-  // unobscured. Dithered against a slightly darker tone, like every other flat area in
-  // this scene, so it has the same stippled texture instead of standing out as a block.
-  {
-    const farDark = hex(mixHex(farCol, '#000000', 0.12));
-    const farLight = hex(farCol);
-    const y0 = Math.round(horizonY);
-    const bandH = Math.round((landBottomY - horizonY) * 0.22);
-    for (let y = 0; y < bandH; y++) {
-      for (let x = 0; x < W; x++) {
-        const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
-        const c = 0.5 > threshold ? farLight : farDark;
-        g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
-        g.fillRect(x, y0 + y, 1, 1);
-      }
-    }
-  }
-
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  // The biome's own landform drives the hill silhouette, not the region backdrop's form —
-  // a backdrop is picked for sky/season variety and is shared across every biome in the
-  // region, so using it for terrain shape meant switching ecosystems never changed the
-  // land itself, only its colour. The biome's landform is geographically fixed; it doesn't
-  // change with the weather or time of day, so it stays constant while everything else
-  // (sky, lighting) keeps varying around it.
-  drawHills(g, W, horizonY, farCol, g0, biomeLandform);
 
+  // The hills and the background gap-filler strip used to share one colour, drawn from the
+  // biome's own *separately authored* "far" ground tone — a colour with no guaranteed hue
+  // relationship to `groundBase` above (eucalypt's is a tan/khaki `#9a8f63` against an
+  // olive-green `#7d8a52` near tone, for instance). Wherever the treeline had a gap, that put
+  // a visibly different-coloured, noticeably paler band sitting inside what should read as
+  // one ground — exactly "the ground being different colours." These two actually need
+  // different treatment, not one shared value: hills are a genuinely distant, atmospheric
+  // silhouette standing in front of the sky, so pulling them strongly toward the sky's own
+  // horizon colour is correct; the gap-filler strip is conceptually *the same ground*, just
+  // glimpsed through a canopy gap a little higher up the frame — it has to match the ground
+  // fill's own `g0` almost exactly or it reads as a third tone, not blend into the sky.
+  const hillBase = th.snow ? hex(th.far) : shadePair(groundBase, 0.6)[0];
+  const hillCol = applyGroundHealth(toHex(mix(hillBase, hex(th.sky[5]), 0.55)), visual);
+  // The biome's own landform drives the hill silhouette, not the region backdrop's form — a
+  // backdrop is picked for sky/season variety and is shared across every biome in the
+  // region, so using it for terrain shape meant switching ecosystems never changed the land
+  // itself, only its colour. The biome's landform is geographically fixed; it doesn't change
+  // with the weather or time of day, so it stays constant while everything else (sky,
+  // lighting) keeps varying around it.
+  drawHills(g, W, horizonY, hillCol, g0, biomeLandform);
+
+  // There used to be a *separate* "gap-filler" rectangle here, sized to a generous 22% of
+  // the ground's height on the theory that it was needed wherever the deep forest's canopy
+  // (drawn after this, on top) left a gap. It wasn't: the canopy's lobes only ever rise
+  // *upward* from a base fixed 2px below the horizon — they never reach anywhere near 22%
+  // of the way down — so that whole rectangle sat fully exposed as its own flat, separately
+  // toned band, which is exactly what read as "the ground being different colours": a pale
+  // strip with a hard line where it met the ground fill's own colour below. The ground fill
+  // below already has its own near-horizon-lighter, further-down-darker gradient (`g0` to
+  // `g1`, two true shades of one hue) — starting it right at the horizon instead of 18% into
+  // the frame covers the same area with that one continuous gradient instead of two
+  // separately-coloured zones stacked on top of each other.
+  //
   // Genuinely minimal now, not just "a different pattern from the sky": the reference's own
   // ground is close to two flat colour bands, full stop — texture only earns its place as a
   // narrow transition near the treeline, reading as distance, not as a dense pattern the
   // user has to look past to see the grass itself. Most of the ground band is flat solid
-  // colour; only a band roughly a fifth of its height actually dithers between the two
-  // tones, and even there the grain is sparse (most pixels keep whichever flat tone is
-  // nearer, only a minority flip), not an even 50/50 mix across every row.
-  const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
+  // colour; only a band near the top actually dithers between the two tones, and even there
+  // the grain is sparse (most pixels keep whichever flat tone is nearer, only a minority
+  // flip), not an even 50/50 mix across every row.
+  const top = Math.round(horizonY);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
   const transitionRows = Math.max(1, Math.round(rows * 0.22));

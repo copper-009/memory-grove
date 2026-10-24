@@ -2078,31 +2078,17 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
 }
 function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeLandform) {
   const LIGHTING_WEIGHT = 0.3;
-  const [bFar, bNear] = biomeGround;
-  const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
+  const [, bNear] = biomeGround;
   const groundBase = th.snow ? hex(th.ground1) : hex(vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35));
   const [groundLight, groundDark] = shadePair(groundBase, 0.24);
   const ground0 = toHex(groundLight);
   const ground1 = toHex(groundDark);
-  const farCol = applyGroundHealth(toHex(mix(hex(far), hex(th.sky[5]), 0.55)), visual);
-  {
-    const farDark = hex(mixHex(farCol, "#000000", 0.12));
-    const farLight = hex(farCol);
-    const y0 = Math.round(horizonY);
-    const bandH = Math.round((landBottomY - horizonY) * 0.22);
-    for (let y = 0; y < bandH; y++) {
-      for (let x = 0; x < W; x++) {
-        const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
-        const c = 0.5 > threshold ? farLight : farDark;
-        g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
-        g.fillRect(x, y0 + y, 1, 1);
-      }
-    }
-  }
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  drawHills(g, W, horizonY, farCol, g0, biomeLandform);
-  const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
+  const hillBase = th.snow ? hex(th.far) : shadePair(groundBase, 0.6)[0];
+  const hillCol = applyGroundHealth(toHex(mix(hillBase, hex(th.sky[5]), 0.55)), visual);
+  drawHills(g, W, horizonY, hillCol, g0, biomeLandform);
+  const top = Math.round(horizonY);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
   const transitionRows = Math.max(1, Math.round(rows * 0.22));
