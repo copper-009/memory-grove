@@ -894,7 +894,15 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + (save.slot / 5) * 0.7;
-    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale));
+    // Capped, unlike the plant/cabin scale factors: a creature is a small *fixed* ASCII
+    // grid (its body plan doesn't get redrawn with more detail at a bigger size the way a
+    // plant's tone map does), so `k` here is a flat per-character block size. Left
+    // uncapped, the same pixelScale that correctly makes a plant's richly-detailed sprite
+    // bigger just turns a creature's dozen-or-so characters into a handful of giant solid
+    // squares with no shape left at all — exactly the shapeless dark blob the user's
+    // screenshot showed standing in the water. Capping keeps every creature recognisable
+    // regardless of how large pixelScale/zoom get for everything else.
+    const creatureScale = Math.min(6, Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale)));
     // Creatures previously never received the scene's ambient tint at all — painted in raw
     // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
     // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint

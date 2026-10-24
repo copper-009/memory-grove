@@ -2350,7 +2350,7 @@ function drawScene(g, W, H, input) {
       return;
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + save.slot / 5 * 0.7;
-    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale));
+    const creatureScale = Math.min(6, Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale)));
     const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
