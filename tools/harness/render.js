@@ -2084,7 +2084,7 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeL
   const [groundLight, groundDark] = shadePair(groundBase, 0.24);
   const ground0 = toHex(groundLight);
   const ground1 = toHex(groundDark);
-  const farCol = applyGroundHealth(far, visual);
+  const farCol = applyGroundHealth(toHex(mix(hex(far), hex(th.sky[5]), 0.55)), visual);
   {
     const farDark = hex(mixHex(farCol, "#000000", 0.12));
     const farLight = hex(farCol);
@@ -2198,6 +2198,7 @@ function cabinStyleFor(biomeKey) {
 function drawCabin(g, cx, baseY, s, th, biomeKey, haze = 0) {
   const tintC = (col) => {
     let c = hex(col);
+    c = mix(c, hex(th.ground1), 0.25);
     if (th.tint && th.tintAmount)
       c = mix(c, hex(th.tint), th.tintAmount);
     if (haze > 0)
@@ -2262,8 +2263,8 @@ function drawCabin(g, cx, baseY, s, th, biomeKey, haze = 0) {
   } else {
     const roofH = (style === "stone" ? 7 : 6) * s;
     const peakY = y0 - roofH;
-    const roofDark = tintC(style === "stone" ? "#4a4a52" : "#6a241a");
-    const roofLight = tintC(style === "stone" ? "#6a6a72" : "#8a3a2e");
+    const roofDark = tintC(style === "stone" ? "#4a4a52" : "#5e3824");
+    const roofLight = tintC(style === "stone" ? "#6a6a72" : "#7a4c34");
     for (let y = 0; y < roofH; y++) {
       const t = y / roofH;
       const halfW = roofW / 2 * t;

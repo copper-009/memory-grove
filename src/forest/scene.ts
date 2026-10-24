@@ -451,7 +451,15 @@ function drawGround(
   const ground0 = toHex(groundLight);
   const ground1 = toHex(groundDark);
 
-  const farCol = applyGroundHealth(far, visual);
+  // Hills were reading as an arbitrary, unrelated colour dropped next to the sky — because
+  // they were: `far` above comes from the biome's own authored ground palette, blended only
+  // lightly (30%) with the theme, with nothing tying it to the sky gradient it sits directly
+  // under. A real horizon is lit by the same light as the sky right above it — distant land
+  // always reads as a continuation of the sky's own colour, not a separate hue family — so
+  // pull it most of the way toward the sky's own horizon-adjacent stop (`sky[5]`, the last
+  // of the six) before anything else touches it. This is what actually fixes "multiple very
+  // different colours": the hills no longer carry an independent hue at all.
+  const farCol = applyGroundHealth(toHex(mix(hex(far), hex(th.sky[5]), 0.55)), visual);
   // A plain solid fillRect here was exactly "a weird box in the background" — a flat,
   // untextured rectangle with hard edges, most visible wherever a gap between the deep
   // forest's lobes (drawDeepForest, called right after this) let it show through
@@ -646,6 +654,12 @@ function cabinStyleFor(biomeKey: string): CabinStyle {
 function drawCabin(g: CanvasRenderingContext2D, cx: number, baseY: number, s: number, th: Theme, biomeKey: string, haze = 0): void {
   const tintC = (col: string): string => {
     let c = hex(col);
+    // Every wall/roof tone below was a fully independent hardcoded hex, tied to nothing
+    // else onscreen — which is exactly what made the cabin read as a different picture
+    // pasted into the scene rather than a structure standing in it. Pull it toward the
+    // ground's own hue first, the same unifying step hills now get, before the existing
+    // time-of-day tint and haze.
+    c = mix(c, hex(th.ground1), 0.25);
     if (th.tint && th.tintAmount) c = mix(c, hex(th.tint), th.tintAmount);
     if (haze > 0) c = mix(c, hex(th.haze), haze);
     return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
@@ -723,8 +737,11 @@ function drawCabin(g: CanvasRenderingContext2D, cx: number, baseY: number, s: nu
   } else {
     const roofH = (style === 'stone' ? 7 : 6) * s;
     const peakY = y0 - roofH;
-    const roofDark = tintC(style === 'stone' ? '#4a4a52' : '#6a241a');
-    const roofLight = tintC(style === 'stone' ? '#6a6a72' : '#8a3a2e');
+    // Muted toward brown/terracotta rather than a saturated brick red, which read as a
+    // different hue family entirely next to a green-and-blue scene no matter how it was
+    // tinted afterward.
+    const roofDark = tintC(style === 'stone' ? '#4a4a52' : '#5e3824');
+    const roofLight = tintC(style === 'stone' ? '#6a6a72' : '#7a4c34');
     for (let y = 0; y < roofH; y++) {
       const t = y / roofH;
       const halfW = (roofW / 2) * t;
