@@ -86,6 +86,18 @@ export interface DrawResult {
  * with no other code changes needed.
  */
 const ENGINE_WIDTH = 420;
+/**
+ * A real regression from the 300 -> 420 bump above, caught by the user as "scaling doesn't
+ * seem to be preserved": `STAGE_HEIGHT`, creature `BodyPlan.size`, the cabin's wall/roof
+ * dimensions and the deep forest's crown/lobe sizes are all tuned as *absolute engine-pixel
+ * counts*, fixed at the old 300-wide baseline. Raising `ENGINE_WIDTH` alone made the canvas
+ * wider in engine-pixel terms without those fixed sizes growing to match, so every sprite
+ * quietly got smaller relative to the frame even though individual pixels got finer — the
+ * opposite of what "higher resolution" should do. This factor is applied everywhere one of
+ * those historically-300-tuned sizes is turned into pixels, so raising ENGINE_WIDTH again in
+ * future only changes pixel density, never apparent size.
+ */
+const PIXEL_SCALE = ENGINE_WIDTH / 300;
 
 const RABBIT_LIKE_HOP = 0.08;
 
@@ -447,58 +459,59 @@ function drawGround(
   }
   g.putImageData(img, 0, top);
 
-  // Ground texture by what's actually underfoot, not just a colour swap on the same
-  // grass-tuft pattern: a woodland's fine blades, an arid plain's sparse scrub and cracked
-  // earth, a wetland's reed clumps, a scree slope's scattered stones, a shoreline's ripples
-  // in the sand. Every biome previously got identical tufts regardless of what kind of
-  // ground it actually was.
+  // Ground texture by what's actually underfoot — but kept deliberately restrained. This
+  // is the background: the user's own words were "it only requires it minimally for shape
+  // definition, shading and depth, otherwise it takes away from what matters, which is the
+  // trees, animals and plants." An earlier pass here was far too dense and far too high-
+  // contrast for a background element, competing with the foreground instead of grounding
+  // it. Cut density roughly 3x across every style, pulled contrast from the ground's own
+  // tones (18%/15%) instead of pure white/black, and faded the whole pass out toward the
+  // front of frame — texture earns its keep near the treeline, where it reads as distance
+  // and depth, not right under where a tree or creature is standing.
   const style = terrainStyleFor(biomeKey, hasWater);
   const tr = rng(hashStr(`terrain|${biomeKey}`));
-  const light = hex(mixHex(g1, '#ffffff', 0.35));
-  const dark = hex(mixHex(g0, '#000000', 0.3));
+  const light = hex(mixHex(g1, '#ffffff', 0.18));
+  const dark = hex(mixHex(g0, '#000000', 0.15));
+  const fadeAt = (y: number): number => 1 - clamp((y - top) / Math.max(1, bottom - top), 0, 1) * 0.85;
   const fill = (x: number, y: number, c: RGB) => {
+    if (tr() > fadeAt(y)) return;
     g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
     g.fillRect(x, y, 1, 1);
   };
   if (style === 'grass') {
-    const n = Math.round(W * 0.9);
+    const n = Math.round(W * 0.3);
     for (let i = 0; i < n; i++) {
       const x = Math.round(tr() * W);
       const y = Math.round(top + 3 + tr() * (bottom - top - 3));
       const l = tr() > 0.4;
       fill(x, y, l ? light : dark);
-      fill(x - 1, y - 1, l ? light : dark);
-      if (l) fill(x + 1, y - 1, light);
     }
   } else if (style === 'arid') {
-    // Sparse scrub tufts, far fewer than grass, plus a scatter of darker cracked-earth
-    // fissures — the dry, broken-ground look rather than a lawn.
-    const n = Math.round(W * 0.22);
+    // Sparse scrub tufts, plus a light scatter of darker cracked-earth fissures — the dry,
+    // broken-ground look rather than a lawn, still restrained.
+    const n = Math.round(W * 0.08);
     for (let i = 0; i < n; i++) {
       const x = Math.round(tr() * W);
       const y = Math.round(top + 3 + tr() * (bottom - top - 3));
       fill(x, y, dark);
-      fill(x, y - 1, light);
     }
-    const cracks = Math.round(W * 0.05);
+    const cracks = Math.round(W * 0.02);
     for (let i = 0; i < cracks; i++) {
       const x0 = Math.round(tr() * W);
       const y0 = Math.round(top + 2 + tr() * (bottom - top - 4));
-      const len = 2 + Math.floor(tr() * 3);
+      const len = 2 + Math.floor(tr() * 2);
       for (let s = 0; s < len; s++) fill(x0 + s - Math.floor(len / 2), y0 + Math.round(Math.sin(s) * 0.6), dark);
     }
   } else if (style === 'reed') {
-    // Upright reed/sedge clumps rather than low tufts — a few pixels tall, in loose groups.
-    // A distinctly marsh-toned green (mixed toward teal, not just the grass dither's own
-    // light/dark) so clumps actually stand out against the ground instead of blending into
-    // it — reusing the plain grass tones here was barely visible at a glance.
-    const reedLight = hex(mixHex(mixHex(g1, '#5aa088', 0.45), '#ffffff', 0.15));
-    const reedDark = hex(mixHex(mixHex(g0, '#2a5048', 0.5), '#000000', 0.15));
-    const clumps = Math.round(W * 0.1);
+    // Upright reed/sedge clumps, sparse, in a marsh-toned green so the few that are there
+    // still read as reeds rather than noise.
+    const reedLight = hex(mixHex(mixHex(g1, '#5aa088', 0.3), '#ffffff', 0.1));
+    const reedDark = hex(mixHex(mixHex(g0, '#2a5048', 0.35), '#000000', 0.1));
+    const clumps = Math.round(W * 0.04);
     for (let i = 0; i < clumps; i++) {
       const cx2 = Math.round(tr() * W);
       const cy2 = Math.round(top + 3 + tr() * (bottom - top - 4));
-      const blades = 2 + Math.floor(tr() * 3);
+      const blades = 2 + Math.floor(tr() * 2);
       for (let b = 0; b < blades; b++) {
         const h = 2 + Math.floor(tr() * 2);
         const bx = cx2 + b - Math.floor(blades / 2);
@@ -506,21 +519,20 @@ function drawGround(
       }
     }
   } else if (style === 'scree') {
-    // Scattered small stones, two tones for a rounded pebble read, no blade texture at all.
-    const n = Math.round(W * 0.3);
+    // Scattered small stones, sparse — two tones for a rounded pebble read.
+    const n = Math.round(W * 0.1);
     for (let i = 0; i < n; i++) {
       const x = Math.round(tr() * W);
       const y = Math.round(top + 3 + tr() * (bottom - top - 3));
       fill(x, y, dark);
-      fill(x - 1, y, tr() > 0.5 ? light : dark);
     }
   } else {
-    // sand: fine ripple lines rather than individual marks.
-    const rows = Math.max(2, Math.round((bottom - top) / 4));
+    // sand: a few faint ripple lines rather than individual marks.
+    const rows = Math.max(1, Math.round((bottom - top) / 10));
     for (let i = 0; i < rows; i++) {
       const y = Math.round(top + 3 + (i / rows) * (bottom - top - 3));
       for (let x = 0; x < W; x++) {
-        if (((x + i * 3) % 7) === 0) fill(x, y, light);
+        if (((x + i * 3) % 11) === 0) fill(x, y, light);
       }
     }
   }
@@ -585,12 +597,12 @@ function drawDeepForest(g: CanvasRenderingContext2D, W: number, horizonY: number
     const c1 = tone(lightBase);
     const c2 = tone(darkBase);
     const rim = tone(th.snow ? [240, 248, 255] : rimBase);
-    const base = Math.round(far - k * DEEP_RISE);
-    const crown = DEEP_CROWN + k * DEEP_STEP;
+    const base = Math.round(far - k * DEEP_RISE * PIXEL_SCALE);
+    const crown = (DEEP_CROWN + k * DEEP_STEP) * PIXEL_SCALE;
 
     const top = new Float32Array(W).fill(base);
-    for (let cx = -2; cx <= W + 2; cx += Math.max(1, LOBE_GAP + R() * LOBE_GAP)) {
-      const r = LOBE_R + R() * LOBE_R_SPREAD;
+    for (let cx = -2; cx <= W + 2; cx += Math.max(1, (LOBE_GAP + R() * LOBE_GAP) * PIXEL_SCALE)) {
+      const r = (LOBE_R + R() * LOBE_R_SPREAD) * PIXEL_SCALE;
       const h = crown * (LOBE_H + R() * LOBE_H_SPREAD);
       for (let x = Math.ceil(cx - r); x <= cx + r; x++) {
         if (x < 0 || x >= W) continue;
@@ -879,7 +891,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const groundBottomFrac = input.biome.hasWater ? LAND_BOTTOM : GROUND_BOTTOM;
   for (const item of layout.items) {
     const placed = placeItem(item, engineW, engineH, horizonY, groundBottomFrac);
-    const zoomedScale = placed.scale * layout.zoom;
+    const zoomedScale = placed.scale * layout.zoom * PIXEL_SCALE;
     if (isPond(item)) {
       const pw = 10 * item.slots * zoomedScale;
       const ph = 3.4 * zoomedScale;
@@ -931,7 +943,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + (save.slot / 5) * 0.7;
-    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4));
+    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * PIXEL_SCALE));
     // Creatures previously never received the scene's ambient tint at all — painted in raw
     // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
     // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint
@@ -979,7 +991,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(0.6, cabinScale);
+    const s = Math.max(0.6, cabinScale) * PIXEL_SCALE;
     drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
