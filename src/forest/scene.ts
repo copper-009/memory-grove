@@ -164,10 +164,10 @@ function drawShadow(g: CanvasRenderingContext2D, cx: number, groundY: number, w:
  */
 function drawCloud(g: CanvasRenderingContext2D, cx: number, cy: number, w: number, color: string, alpha: number, seed: number): void {
   const r = rng(seed);
-  const baseR = w * 0.16;
+  const baseR = w * 0.2;
   g.globalAlpha = alpha;
   g.fillStyle = color;
-  const puffs = 3 + Math.floor(r() * 2);
+  const puffs = 4 + Math.floor(r() * 2);
   for (let i = 0; i < puffs; i++) {
     const t = puffs === 1 ? 0.5 : i / (puffs - 1);
     const px = cx + (t - 0.5) * w * 0.8;
@@ -215,7 +215,9 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
     for (let i = 0; i < th.clouds.n; i++) {
       const cx = ((hashStr(`cloud${i}${seedBase}`) % 1000) / 1000) * W;
       const cy = horizonY * (0.1 + ((hashStr(`cloudy${i}`) % 1000) / 1000) * 0.3);
-      const cw = W * (0.08 + ((hashStr(`cloudw${i}`) % 1000) / 1000) * 0.08);
+      // Bigger and fluffier against the reference: these read as small flat smudges before,
+      // nothing like the big voluminous puffs there.
+      const cw = W * (0.13 + ((hashStr(`cloudw${i}`) % 1000) / 1000) * 0.1);
       drawCloud(g, cx, cy, cw, th.clouds.top, th.clouds.alpha / 255, hashStr(`cloudshape${i}`));
     }
   }
@@ -330,11 +332,24 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
         const d = Math.abs(p - 0.38) * 1.9;
         return d < 1 ? Math.max(0, 1 - d) ** 0.55 * 0.8 : 0.03;
       }
-      case 'peaks':
       case 'towers':
       case 'tsingy': {
-        // sharp, higher-frequency jagged silhouette — ridgeline, not rolling hills
+        // A whole field of repeating spires/pinnacles — right for what these specifically
+        // model (a tsingy limestone forest genuinely is a repeating field of pinnacles),
+        // but not what 'peaks' needed to be.
         const n = form === 'tsingy' ? 9 : 6;
+        const saw = Math.abs(((p * n) % 1) - 0.5) * 2;
+        return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
+      }
+      case 'peaks': {
+        // A repeating jagged ridge after all — most of what this form models (the
+        // Himalaya, the Andes, the Southern Alps, the Rocky Mountains, the Kinabalu
+        // massif) are genuinely long ranges, not one isolated summit the way Fuji is
+        // (Fuji already gets its own correct single-cone treatment via 'volcano'). The
+        // reference's own single-peak scenes were an example of *rendering quality* —
+        // real ridge/rock shading, not a flat silhouette — not a request that every
+        // mountain biome render as one isolated peak regardless of what it's modelling.
+        const n = 6;
         const saw = Math.abs(((p * n) % 1) - 0.5) * 2;
         return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
       }
@@ -913,18 +928,22 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + (save.slot / 5) * 0.7;
     const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
-    // Creatures previously never received the scene's ambient tint at all — painted in raw
-    // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
-    // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint
-    // amount than plants get (0.6x) keeps fur/feather colour still readable as the
-    // species' own colour, rather than washing it out entirely.
-    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : undefined;
+    // Against the user's own reference: a fox or rabbit there is clean, simple, almost
+    // flat colour — one body tone, one accent (a white tail tip, a dark eye), nothing more.
+    // Stacking this scene's full tint + rim-light + haze treatment on a sprite that small
+    // was muddying exactly the simplicity that reads as "cute" — three separate colour
+    // blends fighting for the same handful of pixels just looks murky, not atmospheric.
+    // Tint stays (it's what makes a creature belong to the same moment as the trees around
+    // it) but much lighter than before, and rim-light is dropped entirely: a plant crown
+    // has dozens of pixels for a highlighted edge to read as an edge; a creature has a
+    // handful, and on that scale it just reads as a stray bright blotch.
+    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.35 } : undefined;
 
     if (creature.zone === 'sky') {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw = frame[0]?.length ?? 1;
-      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint, th.rim ?? undefined);
+      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint);
       pushBox('creature', save.slot, pos.x, pos.y - frame.length * creatureScale, fw * creatureScale, frame.length * creatureScale, 0);
       return;
     }
@@ -942,8 +961,11 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     // bobs or hops above it (`dy`) — that's what actually sells a hop or a bounce as
     // leaving the ground, rather than the sprite just sliding up and down in place.
     drawShadow(eg, x, creatureBaseY, fw * creatureScale, th, creatureHaze);
-    const creatureHazeOpt = creatureHaze > 0.02 ? { color: th.haze, amount: creatureHaze } : undefined;
-    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? undefined, creatureHazeOpt);
+    // Haze only once a creature is genuinely standing well back (depth fade still matters
+    // for the ones placed far from the camera), not as a blanket effect on every creature
+    // regardless of position.
+    const creatureHazeOpt = creatureHaze > 0.25 ? { color: th.haze, amount: creatureHaze * 0.6 } : undefined;
+    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, undefined, creatureHazeOpt);
     pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
 

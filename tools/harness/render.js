@@ -1845,10 +1845,10 @@ function drawShadow(g, cx, groundY, w, th, haze) {
 }
 function drawCloud(g, cx, cy, w, color, alpha, seed) {
   const r = rng(seed);
-  const baseR = w * 0.16;
+  const baseR = w * 0.2;
   g.globalAlpha = alpha;
   g.fillStyle = color;
-  const puffs = 3 + Math.floor(r() * 2);
+  const puffs = 4 + Math.floor(r() * 2);
   for (let i = 0; i < puffs; i++) {
     const t = puffs === 1 ? 0.5 : i / (puffs - 1);
     const px = cx + (t - 0.5) * w * 0.8;
@@ -1890,7 +1890,7 @@ function drawSky(g, W, horizonY, th, t) {
     for (let i = 0; i < th.clouds.n; i++) {
       const cx = hashStr(`cloud${i}${seedBase}`) % 1e3 / 1e3 * W;
       const cy = horizonY * (0.1 + hashStr(`cloudy${i}`) % 1e3 / 1e3 * 0.3);
-      const cw = W * (0.08 + hashStr(`cloudw${i}`) % 1e3 / 1e3 * 0.08);
+      const cw = W * (0.13 + hashStr(`cloudw${i}`) % 1e3 / 1e3 * 0.1);
       drawCloud(g, cx, cy, cw, th.clouds.top, th.clouds.alpha / 255, hashStr(`cloudshape${i}`));
     }
   }
@@ -1965,12 +1965,18 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
         const d = Math.abs(p - 0.38) * 1.9;
         return d < 1 ? Math.max(0, 1 - d) ** 0.55 * 0.8 : 0.03;
       }
-      case "peaks":
       case "towers":
       case "tsingy": {
         const n = form === "tsingy" ? 9 : 6;
         const saw = Math.abs(p * n % 1 - 0.5) * 2;
         return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
+      }
+      case "peaks": {
+        const massif = Math.abs(p - 0.5) * 1.7;
+        if (massif > 1)
+          return 0.04;
+        const summits = 0.55 + 0.45 * Math.abs(Math.sin(p * Math.PI * 5.3 + 1.1));
+        return Math.max(0, 1 - massif) ** 0.85 * summits;
       }
       case "fjord": {
         const edgeDist = Math.abs(p - 0.5);
@@ -2360,12 +2366,12 @@ function drawScene(g, W, H, input) {
     const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + save.slot / 5 * 0.7;
     const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
-    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : void 0;
+    const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.35 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame2 = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw2 = frame2[0]?.length ?? 1;
-      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint, th.rim ?? void 0);
+      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint);
       pushBox("creature", save.slot, pos.x, pos.y - frame2.length * creatureScale, fw2 * creatureScale, frame2.length * creatureScale, 0);
       return;
     }
@@ -2379,8 +2385,8 @@ function drawScene(g, W, H, input) {
     const x = motion.x * engineW;
     const y0 = creatureBaseY - frame.length * creatureScale + dy;
     drawShadow(eg, x, creatureBaseY, fw * creatureScale, th, creatureHaze);
-    const creatureHazeOpt = creatureHaze > 0.02 ? { color: th.haze, amount: creatureHaze } : void 0;
-    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? void 0, creatureHazeOpt);
+    const creatureHazeOpt = creatureHaze > 0.25 ? { color: th.haze, amount: creatureHaze * 0.6 } : void 0;
+    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, void 0, creatureHazeOpt);
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
   if (hasCabin(input.grove.stats)) {
