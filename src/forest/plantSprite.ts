@@ -74,7 +74,13 @@ function roundCrown(tm: ToneMap, w: number, top: number, ch: number, cx: number,
       }
       if (best === -9) continue;
       if (hole && r() < hole) continue;
-      const l = 0.55 * best + 0.45 * -((px - ccx) / rx * 0.5 + (py - ccy) / ry * 0.7) + (r() - 0.5) * 0.3;
+      // The per-pixel random term here used to be a much bigger share of `l` (+/-0.3 on a
+      // signal that otherwise only spans roughly -1..1) — scrambling individual pixels
+      // like that is what broke up what should read as 2-3 big, clean, deliberate colour
+      // patches (what the reference crowns actually show) into fine busy speckle instead.
+      // Cut to a small amount, just enough to keep a tone boundary from looking perfectly
+      // smooth/machined, not enough to fight the blob shading for control of the pixel.
+      const l = 0.55 * best + 0.45 * -((px - ccx) / rx * 0.5 + (py - ccy) / ry * 0.7) + (r() - 0.5) * 0.08;
       set(tm, x, y, l > 0.5 ? 4 : l > 0.15 ? 3 : l > -0.3 ? 2 : 1);
     }
   }
@@ -91,7 +97,9 @@ function pineCrown(tm: ToneMap, w: number, top: number, ch: number, cx: number, 
       const dx = x + 0.5 - (cx + 0.5);
       if (Math.abs(dx) > hw) continue;
       if (hole && r() < hole) continue;
-      const v = -(dx / Math.max(hw, 1)) * 0.7 + (tp - 0.5) * 0.35 + (r() - 0.5) * 0.3;
+      // Same cut as roundCrown's tone noise, and for the same reason — a conifer's tiers
+      // should read as clean banded shading, not speckle.
+      const v = -(dx / Math.max(hw, 1)) * 0.7 + (tp - 0.5) * 0.35 + (r() - 0.5) * 0.08;
       const tone = v > 0.5 ? 4 : v > 0.15 ? 3 : v > -0.3 ? 2 : 1;
       set(tm, x, y, under ? Math.max(1, tone - 2) : tone);
     }

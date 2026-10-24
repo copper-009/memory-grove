@@ -1287,7 +1287,7 @@ function roundCrown(tm, w, top, ch, cx, blobsN, r, hole) {
         continue;
       if (hole && r() < hole)
         continue;
-      const l = 0.55 * best + 0.45 * -((px - ccx) / rx * 0.5 + (py - ccy) / ry * 0.7) + (r() - 0.5) * 0.3;
+      const l = 0.55 * best + 0.45 * -((px - ccx) / rx * 0.5 + (py - ccy) / ry * 0.7) + (r() - 0.5) * 0.08;
       set(tm, x, y, l > 0.5 ? 4 : l > 0.15 ? 3 : l > -0.3 ? 2 : 1);
     }
   }
@@ -1304,7 +1304,7 @@ function pineCrown(tm, w, top, ch, cx, tiers, r, hole) {
         continue;
       if (hole && r() < hole)
         continue;
-      const v = -(dx / Math.max(hw, 1)) * 0.7 + (tp - 0.5) * 0.35 + (r() - 0.5) * 0.3;
+      const v = -(dx / Math.max(hw, 1)) * 0.7 + (tp - 0.5) * 0.35 + (r() - 0.5) * 0.08;
       const tone = v > 0.5 ? 4 : v > 0.15 ? 3 : v > -0.3 ? 2 : 1;
       set(tm, x, y, under ? Math.max(1, tone - 2) : tone);
     }
@@ -1510,7 +1510,7 @@ function hline(g, x0, x1, y, ch) {
   for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++)
     put(g, x, y, ch);
 }
-function ellipse(g, cx, cy, w, h, main, dark, light) {
+function ellipse(g, cx, cy, w, h, main, dark) {
   const rx = Math.max(0.6, w / 2);
   const ry = Math.max(0.6, h / 2);
   const y0 = Math.floor(cy - ry);
@@ -1524,10 +1524,8 @@ function ellipse(g, cx, cy, w, h, main, dark, light) {
       const q = nx * nx + ny * ny;
       if (q > 1)
         continue;
-      const edge = q > 0.72;
-      const top = ny < -0.25;
-      const ch = edge ? dark : top && light ? light : main;
-      put(g, x, y, ch);
+      const shadow = ny > 0.35 && q > 0.5;
+      put(g, x, y, shadow ? dark : main);
     }
   }
 }
@@ -1535,15 +1533,15 @@ function mainKey(palette) {
   return Object.keys(palette).find((k) => k !== "e") ?? Object.keys(palette)[0] ?? "b";
 }
 var KIND_PROPORTIONS = {
-  quadruped: { bodyTilt: 0, headScale: 0.6 },
-  hopper: { bodyTilt: -0.15, headScale: 0.55 },
-  bird: { bodyTilt: 0.1, headScale: 0.5 },
-  wader: { bodyTilt: 0.05, headScale: 0.4 },
-  flyer: { bodyTilt: 0, headScale: 0.45 },
-  frog: { bodyTilt: 0, headScale: 0.75 },
-  reptile: { bodyTilt: 0, headScale: 0.4 },
-  swimmer: { bodyTilt: 0, headScale: 0.5 },
-  bulky: { bodyTilt: 0, headScale: 0.55 }
+  quadruped: { bodyTilt: 0, headScale: 0.85, bodyRound: 0.8 },
+  hopper: { bodyTilt: -0.15, headScale: 0.8, bodyRound: 0.85 },
+  bird: { bodyTilt: 0.1, headScale: 0.7, bodyRound: 0.75 },
+  wader: { bodyTilt: 0.05, headScale: 0.55, bodyRound: 0.7 },
+  flyer: { bodyTilt: 0, headScale: 0.65, bodyRound: 0.75 },
+  frog: { bodyTilt: 0, headScale: 0.95, bodyRound: 0.9 },
+  reptile: { bodyTilt: 0, headScale: 0.55, bodyRound: 0.65 },
+  swimmer: { bodyTilt: 0, headScale: 0.7, bodyRound: 0.75 },
+  bulky: { bodyTilt: 0, headScale: 0.75, bodyRound: 0.85 }
 };
 function buildCreatureFrames(creature, stage, zoomScale = 1) {
   const plan = creature.body;
@@ -1607,10 +1605,10 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
       }
     }
     const bodyW = w * (plan.kind === "bird" || plan.kind === "wader" ? 0.85 : 1);
-    const bodyH = h * (plan.kind === "bird" || plan.kind === "wader" ? 0.8 : 1);
-    ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark, light);
-    if ((plan.kind === "bird" || plan.kind === "wader") && pal.w) {
-      ellipse(g, cx, bodyCy + bodyH * 0.25, bodyW * 0.55, bodyH * 0.45, "w", dark);
+    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (plan.kind === "bird" || plan.kind === "wader" ? 0.8 : 1));
+    ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark);
+    if (pal.w) {
+      ellipse(g, cx, bodyCy + bodyH * 0.22, Math.max(2.4, bodyW * 0.5), Math.max(2, bodyH * 0.42), "w", "w");
     }
     const head = headCentre();
     if (neck > 0) {
@@ -1972,11 +1970,9 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
         return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
       }
       case "peaks": {
-        const massif = Math.abs(p - 0.5) * 1.7;
-        if (massif > 1)
-          return 0.04;
-        const summits = 0.55 + 0.45 * Math.abs(Math.sin(p * Math.PI * 5.3 + 1.1));
-        return Math.max(0, 1 - massif) ** 0.85 * summits;
+        const n = 6;
+        const saw = Math.abs(p * n % 1 - 0.5) * 2;
+        return 0.5 + 0.5 * saw * (0.6 + 0.4 * Math.sin(p * Math.PI * 2.7 + 0.7));
       }
       case "fjord": {
         const edgeDist = Math.abs(p - 0.5);

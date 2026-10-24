@@ -42,12 +42,14 @@ function hline(g: string[][], x0: number, x1: number, y: number, ch: string): vo
 }
 
 /**
- * Fill an ellipse centred at `(cx, cy)`, `w` x `h`, shading each pixel by its position so
- * the silhouette reads as lit from above: `light` along the top rim, `main` through the
- * body, `dark` along the lower rim and any part beyond `darkFrom` (0..1, 1 = never dark —
- * used for a belly stripe or underside marking passed via `darkFrom`).
+ * Fill an ellipse centred at `(cx, cy)`, `w` x `h`. Flat `main` colour through almost the
+ * whole body, `dark` only along the lower-back rim — a ground-up redesign away from the
+ * previous 3-tone lit-from-above gradient (dark rim all round, light top, main through the
+ * middle). Against a simple hand-drawn reference, a creature is close to one flat colour
+ * with a single small shadow accent, not a shaded sphere; the gradient version was reading
+ * as muddy rather than "put together" at the handful of pixels a creature actually has.
  */
-function ellipse(g: string[][], cx: number, cy: number, w: number, h: number, main: string, dark: string, light?: string): void {
+function ellipse(g: string[][], cx: number, cy: number, w: number, h: number, main: string, dark: string): void {
   const rx = Math.max(0.6, w / 2);
   const ry = Math.max(0.6, h / 2);
   const y0 = Math.floor(cy - ry);
@@ -60,10 +62,10 @@ function ellipse(g: string[][], cx: number, cy: number, w: number, h: number, ma
       const ny = (y + 0.5 - cy) / ry;
       const q = nx * nx + ny * ny;
       if (q > 1) continue;
-      const edge = q > 0.72;
-      const top = ny < -0.25;
-      const ch = edge ? dark : top && light ? light : main;
-      put(g, x, y, ch);
+      // Only the lower-back quarter (below and slightly behind centre) gets the shadow
+      // tone; everywhere else is flat main colour.
+      const shadow = ny > 0.35 && q > 0.5;
+      put(g, x, y, shadow ? dark : main);
     }
   }
 }
@@ -73,16 +75,20 @@ function mainKey(palette: Record<string, string>): string {
   return Object.keys(palette).find((k) => k !== 'e') ?? Object.keys(palette)[0] ?? 'b';
 }
 
-const KIND_PROPORTIONS: Record<BodyPlan['kind'], { bodyTilt: number; headScale: number }> = {
-  quadruped: { bodyTilt: 0, headScale: 0.6 },
-  hopper: { bodyTilt: -0.15, headScale: 0.55 },
-  bird: { bodyTilt: 0.1, headScale: 0.5 },
-  wader: { bodyTilt: 0.05, headScale: 0.4 },
-  flyer: { bodyTilt: 0, headScale: 0.45 },
-  frog: { bodyTilt: 0, headScale: 0.75 },
-  reptile: { bodyTilt: 0, headScale: 0.4 },
-  swimmer: { bodyTilt: 0, headScale: 0.5 },
-  bulky: { bodyTilt: 0, headScale: 0.55 },
+// Head sizes raised noticeably across the board — a bigger head relative to the body is
+// the single clearest "cute" cue the reference's fox and rabbit use, and the previous
+// proportions (closer to realistic anatomy) read as plain rather than endearing at the
+// tiny sizes a creature is actually drawn at.
+const KIND_PROPORTIONS: Record<BodyPlan['kind'], { bodyTilt: number; headScale: number; bodyRound: number }> = {
+  quadruped: { bodyTilt: 0, headScale: 0.85, bodyRound: 0.8 },
+  hopper: { bodyTilt: -0.15, headScale: 0.8, bodyRound: 0.85 },
+  bird: { bodyTilt: 0.1, headScale: 0.7, bodyRound: 0.75 },
+  wader: { bodyTilt: 0.05, headScale: 0.55, bodyRound: 0.7 },
+  flyer: { bodyTilt: 0, headScale: 0.65, bodyRound: 0.75 },
+  frog: { bodyTilt: 0, headScale: 0.95, bodyRound: 0.9 },
+  reptile: { bodyTilt: 0, headScale: 0.55, bodyRound: 0.65 },
+  swimmer: { bodyTilt: 0, headScale: 0.7, bodyRound: 0.75 },
+  bulky: { bodyTilt: 0, headScale: 0.75, bodyRound: 0.85 },
 };
 
 /**
@@ -178,14 +184,23 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
       }
     }
 
-    // body: an ellipse, lit on top, shaded on the rim
+    // body: a compact, rounded ellipse — `bodyRound` pulls height up toward width instead
+    // of the more realistic (and less cute) elongated oval the old proportions gave every
+    // kind. Flat colour, shaded only at the lower-back rim (see ellipse()'s own comment).
     const bodyW = w * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.85 : 1);
-    const bodyH = h * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.8 : 1);
-    ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark, light);
+    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.8 : 1));
+    ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark);
 
-    // belly marking for a bird/wader (the common white-underside look)
-    if ((plan.kind === 'bird' || plan.kind === 'wader') && pal.w) {
-      ellipse(g, cx, bodyCy + bodyH * 0.25, bodyW * 0.55, bodyH * 0.45, 'w', dark);
+    // A bold, clearly visible accent patch — a belly, chest or tail-tip marking — on every
+    // kind that has one defined, not just birds. This is the single detail that turns a
+    // flat colour blob into a specific, recognisable little animal (the reference fox's
+    // white chest, the rabbit's white tail) rather than a uniform silhouette.
+    if (pal.w) {
+      // Same colour for both ellipse() params: a patch this small (often just a handful of
+      // pixels) picking up its own internal shadow sub-tone was exactly what produced a
+      // blocky diamond artefact instead of a soft accent marking — there's no room for two
+      // tones to read as shading at that size, only as noise.
+      ellipse(g, cx, bodyCy + bodyH * 0.22, Math.max(2.4, bodyW * 0.5), Math.max(2, bodyH * 0.42), 'w', 'w');
     }
 
     // neck, as a short thick line connecting body to head
