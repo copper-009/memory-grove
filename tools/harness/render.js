@@ -2044,8 +2044,8 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeL
   for (let y = 0; y < rows; y++) {
     const p = Math.min(1, y / Math.max(1, rows) * 1.15);
     for (let x = 0; x < W; x++) {
-      const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
-      const c = p > threshold ? g1rgb : g0rgb;
+      const grain = hashStr(`turf|${x}|${y}`) % 1e3 / 1e3;
+      const c = p > grain ? g1rgb : g0rgb;
       const idx = (y * W + x) * 4;
       d[idx] = c[0];
       d[idx + 1] = c[1];

@@ -470,8 +470,12 @@ function drawGround(
   // (sky, lighting) keeps varying around it.
   drawHills(g, W, horizonY, farCol, g0, biomeLandform);
 
-  // Same per-pixel Bayer dither as the sky, not a per-row one — see the long comment on
-  // drawSky for why that distinction actually matters visually.
+  // Deliberately *not* the sky's own ordered Bayer matrix — that was the literal cause of
+  // "the texture on grass is the same as the sky": using the identical regular 4x4 dither
+  // pattern for both an atmospheric gas and solid turf, just recoloured, reads as the same
+  // material twice. Grass gets a grainy, irregular hashed dither instead (threshold randomised
+  // per pixel rather than repeating on a fixed 4-pixel grid), which has the loose, organic
+  // texture of individual blades rather than the sky's smooth, regular screen-door gradient.
   const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
@@ -482,8 +486,8 @@ function drawGround(
   for (let y = 0; y < rows; y++) {
     const p = Math.min(1, (y / Math.max(1, rows)) * 1.15);
     for (let x = 0; x < W; x++) {
-      const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
-      const c = p > threshold ? g1rgb : g0rgb;
+      const grain = (hashStr(`turf|${x}|${y}`) % 1000) / 1000;
+      const c = p > grain ? g1rgb : g0rgb;
       const idx = (y * W + x) * 4;
       d[idx] = c[0];
       d[idx + 1] = c[1];
