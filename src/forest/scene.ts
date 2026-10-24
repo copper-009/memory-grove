@@ -299,12 +299,13 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
  * all collapse into the same generic bump.
  */
 function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string, form: string): void {
-  // Two tones, dithered, rather than one flat fill — a plain solid silhouette is exactly
-  // what made the escarpment's mesa read as "a weird box" instead of a cliff: no shading
-  // at all to suggest a rock face catching the light differently from the shadowed ground
-  // beneath it.
-  const light = mix(hex(farColor), hex(groundColor), 0.18);
-  const dark = mix(hex(farColor), hex(groundColor), 0.42);
+  // Nearly flat, matching the exact reference the user sent: that hill band is nowhere
+  // near as textured as the ground below it, essentially one solid silhouette colour. A
+  // narrow two-tone spread (not a single flat fill) still gives the escarpment's cliff
+  // face *some* shading — a plain fill there read as "a weird box" with no light/shadow
+  // distinction at all — but it's subtle enough now not to compete with the ground.
+  const light = mix(hex(farColor), hex(groundColor), 0.24);
+  const dark = mix(hex(farColor), hex(groundColor), 0.32);
   const base = horizonY + horizonY * 0.1;
   // Raised substantially from 0.14: a landform's whole point is to show through above the
   // deep forest's own canopy line (drawn on top of this, right after) so a region's
@@ -405,20 +406,6 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
  * low weight so the same biome still warms at golden hour and cools at dusk, and snow
  * weather overrides the blend entirely (every biome goes white under real snow).
  */
-type TerrainStyle = 'grass' | 'arid' | 'reed' | 'scree' | 'sand';
-
-/** Ground texture by what's actually underfoot — a keyword heuristic over the biome's own
- * key/water flag, same approach as `cabinStyleFor`. Every biome previously got identical
- * grass-tuft texture with only its 3 base colours changed, which is a colour swap at the
- * terrain level even where the plants and creatures above it differ a great deal more. */
-function terrainStyleFor(biomeKey: string, hasWater: boolean): TerrainStyle {
-  if (/outback|savanna|steppe|spiny|desert|arid/.test(biomeKey)) return 'arid';
-  if (/alpine|himalaya|rocky|scree|plateau/.test(biomeKey)) return 'scree';
-  if (/coastal|beach|dune/.test(biomeKey)) return 'sand';
-  if (hasWater || /wetland|mangrove|riverine|terai|swamp/.test(biomeKey)) return 'reed';
-  return 'grass';
-}
-
 function drawGround(
   g: CanvasRenderingContext2D,
   W: number,
@@ -427,8 +414,6 @@ function drawGround(
   biomeGround: readonly [string, string, string],
   th: Theme,
   visual: ReturnType<typeof visualParamsFor>,
-  biomeKey: string,
-  hasWater: boolean,
   biomeLandform: string,
 ): void {
   const LIGHTING_WEIGHT = 0.3;
@@ -493,83 +478,14 @@ function drawGround(
   }
   g.putImageData(img, 0, top);
 
-  // Ground texture by what's actually underfoot — but kept deliberately restrained. This
-  // is the background: the user's own words were "it only requires it minimally for shape
-  // definition, shading and depth, otherwise it takes away from what matters, which is the
-  // trees, animals and plants." An earlier pass here was far too dense and far too high-
-  // contrast for a background element, competing with the foreground instead of grounding
-  // it. Cut density roughly 3x across every style, pulled contrast from the ground's own
-  // tones (18%/15%) instead of pure white/black, and faded the whole pass out toward the
-  // front of frame — texture earns its keep near the treeline, where it reads as distance
-  // and depth, not right under where a tree or creature is standing.
-  const style = terrainStyleFor(biomeKey, hasWater);
-  const tr = rng(hashStr(`terrain|${biomeKey}`));
-  const light = hex(mixHex(g1, '#ffffff', 0.18));
-  const dark = hex(mixHex(g0, '#000000', 0.15));
-  const fadeAt = (y: number): number => 1 - clamp((y - top) / Math.max(1, bottom - top), 0, 1) * 0.85;
-  const fill = (x: number, y: number, c: RGB) => {
-    if (tr() > fadeAt(y)) return;
-    g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
-    g.fillRect(x, y, 1, 1);
-  };
-  if (style === 'grass') {
-    const n = Math.round(W * 0.3);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      const l = tr() > 0.4;
-      fill(x, y, l ? light : dark);
-    }
-  } else if (style === 'arid') {
-    // Sparse scrub tufts, plus a light scatter of darker cracked-earth fissures — the dry,
-    // broken-ground look rather than a lawn, still restrained.
-    const n = Math.round(W * 0.08);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      fill(x, y, dark);
-    }
-    const cracks = Math.round(W * 0.02);
-    for (let i = 0; i < cracks; i++) {
-      const x0 = Math.round(tr() * W);
-      const y0 = Math.round(top + 2 + tr() * (bottom - top - 4));
-      const len = 2 + Math.floor(tr() * 2);
-      for (let s = 0; s < len; s++) fill(x0 + s - Math.floor(len / 2), y0 + Math.round(Math.sin(s) * 0.6), dark);
-    }
-  } else if (style === 'reed') {
-    // Upright reed/sedge clumps, sparse, in a marsh-toned green so the few that are there
-    // still read as reeds rather than noise.
-    const reedLight = hex(mixHex(mixHex(g1, '#5aa088', 0.3), '#ffffff', 0.1));
-    const reedDark = hex(mixHex(mixHex(g0, '#2a5048', 0.35), '#000000', 0.1));
-    const clumps = Math.round(W * 0.04);
-    for (let i = 0; i < clumps; i++) {
-      const cx2 = Math.round(tr() * W);
-      const cy2 = Math.round(top + 3 + tr() * (bottom - top - 4));
-      const blades = 2 + Math.floor(tr() * 2);
-      for (let b = 0; b < blades; b++) {
-        const h = 2 + Math.floor(tr() * 2);
-        const bx = cx2 + b - Math.floor(blades / 2);
-        for (let s = 0; s < h; s++) fill(bx, cy2 - s, s === h - 1 ? reedLight : reedDark);
-      }
-    }
-  } else if (style === 'scree') {
-    // Scattered small stones, sparse — two tones for a rounded pebble read.
-    const n = Math.round(W * 0.1);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      fill(x, y, dark);
-    }
-  } else {
-    // sand: a few faint ripple lines rather than individual marks.
-    const rows = Math.max(1, Math.round((bottom - top) / 10));
-    for (let i = 0; i < rows; i++) {
-      const y = Math.round(top + 3 + (i / rows) * (bottom - top - 3));
-      for (let x = 0; x < W; x++) {
-        if (((x + i * 3) % 11) === 0) fill(x, y, light);
-      }
-    }
-  }
+  // No scattered ground texture here, on purpose. The user sent the exact reference they
+  // meant, "literally verbatim": the ground there is just two flat-ish colour bands with
+  // the same fine, uniform dither the sky itself uses — no individual tufts, cracks,
+  // reeds or stones scattered on top at all. An earlier pass added exactly that kind of
+  // scattered-mark texture (`terrainStyleFor`, now removed) and then tried to tune it by
+  // density and contrast; the real problem was that this category of texture shouldn't
+  // exist here at all. The dithered two-tone fill above (shared with every other flat
+  // area in this scene) is the entire ground treatment now.
 }
 
 const DEEP_TREES_PER_BAND = 60;
@@ -912,7 +828,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
 
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.landform);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed, pixelScale);
 
   const layout: Layout = layoutGrove(input.grove.plants);

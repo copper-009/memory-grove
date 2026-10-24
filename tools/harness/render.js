@@ -1948,8 +1948,8 @@ function drawSky(g, W, horizonY, th, t) {
   }
 }
 function drawHills(g, W, horizonY, farColor, groundColor, form) {
-  const light = mix(hex(farColor), hex(groundColor), 0.18);
-  const dark = mix(hex(farColor), hex(groundColor), 0.42);
+  const light = mix(hex(farColor), hex(groundColor), 0.24);
+  const dark = mix(hex(farColor), hex(groundColor), 0.32);
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.34;
   const heightAt = (p) => {
@@ -2005,18 +2005,7 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
     }
   }
 }
-function terrainStyleFor(biomeKey, hasWater) {
-  if (/outback|savanna|steppe|spiny|desert|arid/.test(biomeKey))
-    return "arid";
-  if (/alpine|himalaya|rocky|scree|plateau/.test(biomeKey))
-    return "scree";
-  if (/coastal|beach|dune/.test(biomeKey))
-    return "sand";
-  if (hasWater || /wetland|mangrove|riverine|terai|swamp/.test(biomeKey))
-    return "reed";
-  return "grass";
-}
-function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeKey, hasWater, biomeLandform) {
+function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeLandform) {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
   const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
@@ -2060,72 +2049,6 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeK
     }
   }
   g.putImageData(img, 0, top);
-  const style = terrainStyleFor(biomeKey, hasWater);
-  const tr = rng(hashStr(`terrain|${biomeKey}`));
-  const light = hex(mixHex(g1, "#ffffff", 0.18));
-  const dark = hex(mixHex(g0, "#000000", 0.15));
-  const fadeAt = (y) => 1 - clamp((y - top) / Math.max(1, bottom - top), 0, 1) * 0.85;
-  const fill = (x, y, c) => {
-    if (tr() > fadeAt(y))
-      return;
-    g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
-    g.fillRect(x, y, 1, 1);
-  };
-  if (style === "grass") {
-    const n = Math.round(W * 0.3);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      const l = tr() > 0.4;
-      fill(x, y, l ? light : dark);
-    }
-  } else if (style === "arid") {
-    const n = Math.round(W * 0.08);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      fill(x, y, dark);
-    }
-    const cracks = Math.round(W * 0.02);
-    for (let i = 0; i < cracks; i++) {
-      const x0 = Math.round(tr() * W);
-      const y0 = Math.round(top + 2 + tr() * (bottom - top - 4));
-      const len = 2 + Math.floor(tr() * 2);
-      for (let s = 0; s < len; s++)
-        fill(x0 + s - Math.floor(len / 2), y0 + Math.round(Math.sin(s) * 0.6), dark);
-    }
-  } else if (style === "reed") {
-    const reedLight = hex(mixHex(mixHex(g1, "#5aa088", 0.3), "#ffffff", 0.1));
-    const reedDark = hex(mixHex(mixHex(g0, "#2a5048", 0.35), "#000000", 0.1));
-    const clumps = Math.round(W * 0.04);
-    for (let i = 0; i < clumps; i++) {
-      const cx2 = Math.round(tr() * W);
-      const cy2 = Math.round(top + 3 + tr() * (bottom - top - 4));
-      const blades = 2 + Math.floor(tr() * 2);
-      for (let b = 0; b < blades; b++) {
-        const h = 2 + Math.floor(tr() * 2);
-        const bx = cx2 + b - Math.floor(blades / 2);
-        for (let s = 0; s < h; s++)
-          fill(bx, cy2 - s, s === h - 1 ? reedLight : reedDark);
-      }
-    }
-  } else if (style === "scree") {
-    const n = Math.round(W * 0.1);
-    for (let i = 0; i < n; i++) {
-      const x = Math.round(tr() * W);
-      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
-      fill(x, y, dark);
-    }
-  } else {
-    const rows2 = Math.max(1, Math.round((bottom - top) / 10));
-    for (let i = 0; i < rows2; i++) {
-      const y = Math.round(top + 3 + i / rows2 * (bottom - top - 3));
-      for (let x = 0; x < W; x++) {
-        if ((x + i * 3) % 11 === 0)
-          fill(x, y, light);
-      }
-    }
-  }
 }
 var DEEP_TREES_PER_BAND = 60;
 var DEEP_MAX_BANDS = 4;
@@ -2368,7 +2291,7 @@ function drawScene(g, W, H, input) {
   const frameBottomY = engineH * GROUND_BOTTOM;
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.landform);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed, pixelScale);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
