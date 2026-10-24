@@ -1778,6 +1778,25 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 var ENGINE_WIDTH = 300;
 var RABBIT_LIKE_HOP = 0.08;
 var LAND_BOTTOM = 0.78;
+function drawCloud(g, cx, cy, w, color, alpha, seed) {
+  const r = rng(seed);
+  const baseR = w * 0.16;
+  g.globalAlpha = alpha;
+  g.fillStyle = color;
+  const puffs = 3 + Math.floor(r() * 2);
+  for (let i = 0; i < puffs; i++) {
+    const t = puffs === 1 ? 0.5 : i / (puffs - 1);
+    const px = cx + (t - 0.5) * w * 0.8;
+    const edge = Math.sin(t * Math.PI);
+    const py = cy + baseR * 0.4 * (1 - edge) + (r() - 0.5) * baseR * 0.3;
+    const pr = baseR * (0.55 + edge * 0.55) * (0.85 + r() * 0.3);
+    g.beginPath();
+    g.ellipse(px, py, pr, pr * 0.78, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.fillRect(Math.round(cx - w * 0.42), Math.round(cy + baseR * 0.25), Math.round(w * 0.84), Math.max(1, Math.round(baseR * 0.5)));
+  g.globalAlpha = 1;
+}
 function drawSky(g, W, horizonY, th, t) {
   const stops = th.sky;
   const H = Math.ceil(horizonY);
@@ -1807,10 +1826,7 @@ function drawSky(g, W, horizonY, th, t) {
       const cx = hashStr(`cloud${i}${seedBase}`) % 1e3 / 1e3 * W;
       const cy = horizonY * (0.1 + hashStr(`cloudy${i}`) % 1e3 / 1e3 * 0.3);
       const cw = W * (0.08 + hashStr(`cloudw${i}`) % 1e3 / 1e3 * 0.08);
-      g.fillStyle = th.clouds.top;
-      g.globalAlpha = th.clouds.alpha / 255;
-      g.fillRect(Math.round(cx - cw / 2), Math.round(cy), Math.round(cw), Math.max(1, Math.round(cw * 0.22)));
-      g.globalAlpha = 1;
+      drawCloud(g, cx, cy, cw, th.clouds.top, th.clouds.alpha / 255, hashStr(`cloudshape${i}`));
     }
   }
   if (th.stars > 0) {
@@ -1870,8 +1886,8 @@ function drawSky(g, W, horizonY, th, t) {
   }
 }
 function drawHills(g, W, horizonY, farColor, groundColor, form) {
-  const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
-  g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
+  const light = mix(hex(farColor), hex(groundColor), 0.18);
+  const dark = mix(hex(farColor), hex(groundColor), 0.42);
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.14;
   const heightAt = (p) => {
@@ -1892,8 +1908,12 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
         return walls > 0.15 ? walls : 0.05;
       }
       case "plateau": {
-        const inPlateau = p > 0.25 && p < 0.75;
-        return inPlateau ? 0.85 : 0.25 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+        const rise = 0.08;
+        const left = clamp((p - (0.25 - rise)) / rise, 0, 1);
+        const right = clamp((0.75 + rise - p) / rise, 0, 1);
+        const top = 0.85 + 0.03 * Math.sin(p * Math.PI * 11 + 2.1);
+        const plain = 0.22 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+        return Math.max(plain, top * Math.min(left, right));
       }
       case "flat":
       case "canopy":
@@ -1905,9 +1925,18 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
   };
   for (let x = 0; x < W; x++) {
     const p = x / W;
-    const bump = heightAt(p) * 2 - 1;
+    const h = heightAt(p);
+    const bump = h * 2 - 1;
     const topY = Math.round(base - amp - amp * bump);
-    g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
+    const colH = Math.max(1, Math.round(base - topY));
+    const streakBias = form === "plateau" ? Math.sin(x * 1.3 + hashStr(`streak${x % 7}`) * 1e-3) * 0.12 : 0;
+    for (let i = 0; i < colH; i++) {
+      const y = topY + i;
+      const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
+      const c = h + streakBias > threshold ? light : dark;
+      g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+      g.fillRect(x, y, 1, 1);
+    }
   }
 }
 function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
@@ -1917,8 +1946,20 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
   const ground0 = th.snow ? th.ground0 : mixHex(bGrass, th.ground0, LIGHTING_WEIGHT);
   const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
   const farCol = applyGroundHealth(far, visual);
-  g.fillStyle = farCol;
-  g.fillRect(0, Math.round(horizonY), W, Math.round((landBottomY - horizonY) * 0.22));
+  {
+    const farDark = hex(mixHex(farCol, "#000000", 0.12));
+    const farLight = hex(farCol);
+    const y0 = Math.round(horizonY);
+    const bandH = Math.round((landBottomY - horizonY) * 0.22);
+    for (let y = 0; y < bandH; y++) {
+      for (let x = 0; x < W; x++) {
+        const threshold = (BAYER4[y % 4 * 4 + x % 4] + 0.5) / 16;
+        const c = 0.5 > threshold ? farLight : farDark;
+        g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+        g.fillRect(x, y0 + y, 1, 1);
+      }
+    }
+  }
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
   drawHills(g, W, horizonY, farCol, g0, th.hillForm);
@@ -1948,11 +1989,11 @@ var DEEP_MAX_BANDS = 4;
 var DEEP_RISE = 3;
 var DEEP_CROWN = 8;
 var DEEP_STEP = 6;
-var LOBE_GAP = 4;
-var LOBE_R = 4;
-var LOBE_R_SPREAD = 3.5;
-var LOBE_H = 0.55;
-var LOBE_H_SPREAD = 0.65;
+var LOBE_GAP = 3;
+var LOBE_R = 4.5;
+var LOBE_R_SPREAD = 2.5;
+var LOBE_H = 0.75;
+var LOBE_H_SPREAD = 0.35;
 function deepForestBands(totalPlants) {
   const n = Math.max(2, totalPlants / DEEP_TREES_PER_BAND);
   return Math.max(1, Math.min(DEEP_MAX_BANDS, Math.round(Math.log2(n))));

@@ -34,7 +34,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr, rng } from './rng';
-import { hex, mix, mixHex, luminance, rgba, BAYER4 } from './color';
+import { hex, mix, mixHex, luminance, rgba, clamp, BAYER4 } from './color';
 import type { RGB } from './color';
 
 export interface SceneInput {
@@ -107,6 +107,36 @@ const LAND_BOTTOM = 0.78;
  * by `x % 4` *and* `y % 4` per pixel is what turns a sharp two-colour edge into something
  * that reads as a smooth gradient once the whole scene is blitted up.
  */
+/**
+ * A small pixel-art cloud: a cluster of 3-4 overlapping round puffs rather than a single
+ * flat rectangle. Drawn with circles so the silhouette comes out rounded and bumpy even
+ * at this engine's small resolution — a plain `fillRect` always reads as a block no matter
+ * how it's scaled, which was exactly the complaint.
+ */
+function drawCloud(g: CanvasRenderingContext2D, cx: number, cy: number, w: number, color: string, alpha: number, seed: number): void {
+  const r = rng(seed);
+  const baseR = w * 0.16;
+  g.globalAlpha = alpha;
+  g.fillStyle = color;
+  const puffs = 3 + Math.floor(r() * 2);
+  for (let i = 0; i < puffs; i++) {
+    const t = puffs === 1 ? 0.5 : i / (puffs - 1);
+    const px = cx + (t - 0.5) * w * 0.8;
+    // Puffs are taller in the middle, lower toward the ends, with a little jitter — the
+    // "several bumps on a flat base" silhouette every pixel-art cloud uses.
+    const edge = Math.sin(t * Math.PI);
+    const py = cy + baseR * 0.4 * (1 - edge) + (r() - 0.5) * baseR * 0.3;
+    const pr = baseR * (0.55 + edge * 0.55) * (0.85 + r() * 0.3);
+    g.beginPath();
+    g.ellipse(px, py, pr, pr * 0.78, 0, 0, Math.PI * 2);
+    g.fill();
+  }
+  // A flat base strip ties the puffs together into one cloud rather than a row of separate
+  // blobs.
+  g.fillRect(Math.round(cx - w * 0.42), Math.round(cy + baseR * 0.25), Math.round(w * 0.84), Math.max(1, Math.round(baseR * 0.5)));
+  g.globalAlpha = 1;
+}
+
 function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, t: number): void {
   const stops = th.sky;
   const H = Math.ceil(horizonY);
@@ -137,10 +167,7 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
       const cx = ((hashStr(`cloud${i}${seedBase}`) % 1000) / 1000) * W;
       const cy = horizonY * (0.1 + ((hashStr(`cloudy${i}`) % 1000) / 1000) * 0.3);
       const cw = W * (0.08 + ((hashStr(`cloudw${i}`) % 1000) / 1000) * 0.08);
-      g.fillStyle = th.clouds.top;
-      g.globalAlpha = th.clouds.alpha / 255;
-      g.fillRect(Math.round(cx - cw / 2), Math.round(cy), Math.round(cw), Math.max(1, Math.round(cw * 0.22)));
-      g.globalAlpha = 1;
+      drawCloud(g, cx, cy, cw, th.clouds.top, th.clouds.alpha / 255, hashStr(`cloudshape${i}`));
     }
   }
 
@@ -223,8 +250,12 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
  * all collapse into the same generic bump.
  */
 function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string, form: string): void {
-  const hillColor = mix(hex(farColor), hex(groundColor), 0.3);
-  g.fillStyle = `rgb(${hillColor[0] | 0},${hillColor[1] | 0},${hillColor[2] | 0})`;
+  // Two tones, dithered, rather than one flat fill — a plain solid silhouette is exactly
+  // what made the escarpment's mesa read as "a weird box" instead of a cliff: no shading
+  // at all to suggest a rock face catching the light differently from the shadowed ground
+  // beneath it.
+  const light = mix(hex(farColor), hex(groundColor), 0.18);
+  const dark = mix(hex(farColor), hex(groundColor), 0.42);
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.14;
 
@@ -249,9 +280,16 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
         return walls > 0.15 ? walls : 0.05;
       }
       case 'plateau': {
-        // a flat-topped mesa
-        const inPlateau = p > 0.25 && p < 0.75;
-        return inPlateau ? 0.85 : 0.25 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+        // A flat-topped mesa/escarpment — smoothed into the plain at each end rather than
+        // a hard binary step, which read as a plain rectangular box sitting in the hills
+        // instead of a cliff line. A little high-frequency noise on the flat top keeps it
+        // from being a perfectly straight ruled edge too.
+        const rise = 0.08;
+        const left = clamp((p - (0.25 - rise)) / rise, 0, 1);
+        const right = clamp(((0.75 + rise) - p) / rise, 0, 1);
+        const top = 0.85 + 0.03 * Math.sin(p * Math.PI * 11 + 2.1);
+        const plain = 0.22 * Math.max(0, 1 - Math.abs(p - 0.5) * 2.2);
+        return Math.max(plain, top * Math.min(left, right));
       }
       case 'flat':
       case 'canopy':
@@ -264,11 +302,26 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
     }
   };
 
+  // A cliff face (plateau/escarpment) gets vertical streaks below — the rock striations
+  // that actually read as "cliff" rather than "flat painted block." Every other form keeps
+  // the plain two-tone dither.
   for (let x = 0; x < W; x++) {
     const p = x / W;
-    const bump = heightAt(p) * 2 - 1; // back to the -1..1 range the rest of the maths expects
+    const h = heightAt(p);
+    const bump = h * 2 - 1; // back to the -1..1 range the rest of the maths expects
     const topY = Math.round(base - amp - amp * bump);
-    g.fillRect(x, topY, 1, Math.max(1, Math.round(base - topY)));
+    const colH = Math.max(1, Math.round(base - topY));
+    const streakBias = form === 'plateau' ? Math.sin(x * 1.3 + hashStr(`streak${x % 7}`) * 0.001) * 0.12 : 0;
+    for (let i = 0; i < colH; i++) {
+      const y = topY + i;
+      // Higher ground (bigger `h`) leans toward the lit tone; every pixel still dithers
+      // against its neighbours by the Bayer matrix so the shading has texture rather than
+      // a single flat band per tone.
+      const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
+      const c = h + streakBias > threshold ? light : dark;
+      g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+      g.fillRect(x, y, 1, 1);
+    }
   }
 }
 
@@ -303,8 +356,25 @@ function drawGround(
   const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
 
   const farCol = applyGroundHealth(far, visual);
-  g.fillStyle = farCol;
-  g.fillRect(0, Math.round(horizonY), W, Math.round((landBottomY - horizonY) * 0.22));
+  // A plain solid fillRect here was exactly "a weird box in the background" — a flat,
+  // untextured rectangle with hard edges, most visible wherever a gap between the deep
+  // forest's lobes (drawDeepForest, called right after this) let it show through
+  // unobscured. Dithered against a slightly darker tone, like every other flat area in
+  // this scene, so it has the same stippled texture instead of standing out as a block.
+  {
+    const farDark = hex(mixHex(farCol, '#000000', 0.12));
+    const farLight = hex(farCol);
+    const y0 = Math.round(horizonY);
+    const bandH = Math.round((landBottomY - horizonY) * 0.22);
+    for (let y = 0; y < bandH; y++) {
+      for (let x = 0; x < W; x++) {
+        const threshold = (BAYER4[(y % 4) * 4 + (x % 4)] + 0.5) / 16;
+        const c = 0.5 > threshold ? farLight : farDark;
+        g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+        g.fillRect(x, y0 + y, 1, 1);
+      }
+    }
+  }
 
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
@@ -339,11 +409,17 @@ const DEEP_MAX_BANDS = 4;
 const DEEP_RISE = 3; // engine px a band stands higher than the one in front of it
 const DEEP_CROWN = 8; // engine px, nearest band's canopy height
 const DEEP_STEP = 6; // engine px taller per band further back
-const LOBE_GAP = 4;
-const LOBE_R = 4;
-const LOBE_R_SPREAD = 3.5;
-const LOBE_H = 0.55;
-const LOBE_H_SPREAD = 0.65;
+// Dense enough, and with a high enough floor on both radius and height, that a run of
+// several consecutive short lobes can never leave a wide, flat, under-covered gap in the
+// canopy — the shape of such a gap (a sharp rectangular notch bounded by the flat `base`
+// line) is exactly what read as "a weird box in the background": not a colour problem, a
+// coverage one. Tightened from a wider original spread after finding this by sampling the
+// actual rendered pixels of a reported gap and tracing it back to this RNG.
+const LOBE_GAP = 3;
+const LOBE_R = 4.5;
+const LOBE_R_SPREAD = 2.5;
+const LOBE_H = 0.75;
+const LOBE_H_SPREAD = 0.35;
 
 /** How many hazy canopy bands a grove of this size gets — ported from the original's
  * `clamp(round(log2(max(2, n/60))), 1, 4)`: even a brand-new grove gets one band, so the
