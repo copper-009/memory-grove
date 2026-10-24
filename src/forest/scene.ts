@@ -873,6 +873,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       tintAmount: th.tintAmount,
       snow: th.snow,
       rim: th.rim ?? undefined,
+      sunFromRight: !!th.orb && th.orb.x > 0.5,
     }, x0, y0, 1);
     pushBox('plant', plant.index, placed.x, y0, tone.w, tone.h, item.depth);
   }

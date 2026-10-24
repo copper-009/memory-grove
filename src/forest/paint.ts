@@ -8,7 +8,7 @@
  */
 
 import type { ToneMap } from './plantSprite';
-import { SICK_SHARE, HEALTH_MIN_STAGE, TRUNK_LIGHT, TRUNK_MID } from './plantSprite';
+import { SICK_SHARE, HEALTH_MIN_STAGE, TRUNK_LIGHT, TRUNK_MID, TRUNK_DARK } from './plantSprite';
 import type { PlantSpecies } from '../regions/types';
 import { Stage } from '../data/types';
 import { hex, mix, type RGB } from './color';
@@ -33,6 +33,15 @@ export interface PaintOptions {
    * (the cabin uses it) but never reached plants, which is exactly the backlit golden-hour
    * tree-edge look the reference screenshots show and this renderer was missing. */
   rim?: string;
+  /** Which side of frame the sun/moon actually sits on this frame — `true` once its x
+   * position is past the middle. `plantSprite.ts`'s trunk tone map is built light-on-the-
+   * left/dark-on-the-right unconditionally (it's a pure function with no theme access by
+   * design), which only reads as correct lighting when the sun happens to be on the left.
+   * Every other directional cue in this scene (the cast shadow's own direction) already
+   * follows the sun's real position; this swaps the trunk's two bark tones at resolve time
+   * so it agrees with them instead of being the one surface always lit from a fixed side
+   * regardless of where the light actually is. */
+  sunFromRight?: boolean;
 }
 
 const TONE_COUNT = 5;
@@ -64,7 +73,11 @@ function resolveTone(
   };
 
   if (tone >= TRUNK_LIGHT) {
-    const barkIndex = tone === TRUNK_LIGHT ? 0 : tone === TRUNK_MID ? 1 : 2;
+    // The tone map itself is built light-on-the-left (see plantSprite.ts); swap which bark
+    // tone each resolves to when the sun is actually on the right, so the trunk's own
+    // shading agrees with the shadow it's casting instead of contradicting it.
+    const effectiveTone = opts.sunFromRight ? (tone === TRUNK_LIGHT ? TRUNK_DARK : tone === TRUNK_DARK ? TRUNK_LIGHT : tone) : tone;
+    const barkIndex = effectiveTone === TRUNK_LIGHT ? 0 : effectiveTone === TRUNK_MID ? 1 : 2;
     let col = hex(bark[Math.min(2, barkIndex)]);
     if (opts.tint && opts.tintAmount) col = mix(col, hex(opts.tint), opts.tintAmount);
     if (opts.haze && opts.hazeColor) col = mix(col, hex(opts.hazeColor), opts.haze);
