@@ -905,7 +905,7 @@ var Y_JITTER = 0.6;
 var SINGLE_ROW_NEAREST = 0.15;
 var ZOOM_FULL_LOG = 7;
 var ZOOM_PER_LOG = 0.15;
-var ZOOM_MAX = 1.8;
+var ZOOM_MAX = 2.4;
 var ROW_SPREAD = 1.6;
 var ROW_MIN = 5;
 var ROW_MAX = 34;
@@ -1821,7 +1821,9 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 
 // src/forest/scene.ts
 var ENGINE_WIDTH = 420;
-var PIXEL_SCALE = ENGINE_WIDTH / 300;
+function pixelScaleFor(engineH) {
+  return engineH / 120 * 1.7;
+}
 var RABBIT_LIKE_HOP = 0.08;
 var LAND_BOTTOM = 0.78;
 function drawShadow(g, cx, groundY, w, th, haze) {
@@ -2139,7 +2141,7 @@ function deepForestBands(totalPlants) {
   const n = Math.max(2, totalPlants / DEEP_TREES_PER_BAND);
   return Math.max(1, Math.min(DEEP_MAX_BANDS, Math.round(Math.log2(n))));
 }
-function drawDeepForest(g, W, horizonY, th, bands, seed) {
+function drawDeepForest(g, W, horizonY, th, bands, seed, pixelScale) {
   const R = rng(seed ^ 24301);
   const haze = hex(th.haze);
   const tintC = th.tint ? hex(th.tint) : null;
@@ -2157,11 +2159,11 @@ function drawDeepForest(g, W, horizonY, th, bands, seed) {
     const c1 = tone(lightBase);
     const c2 = tone(darkBase);
     const rim = tone(th.snow ? [240, 248, 255] : rimBase);
-    const base = Math.round(far - k * DEEP_RISE * PIXEL_SCALE);
-    const crown = (DEEP_CROWN + k * DEEP_STEP) * PIXEL_SCALE;
+    const base = Math.round(far - k * DEEP_RISE * pixelScale);
+    const crown = (DEEP_CROWN + k * DEEP_STEP) * pixelScale;
     const top = new Float32Array(W).fill(base);
-    for (let cx = -2; cx <= W + 2; cx += Math.max(1, (LOBE_GAP + R() * LOBE_GAP) * PIXEL_SCALE)) {
-      const r = (LOBE_R + R() * LOBE_R_SPREAD) * PIXEL_SCALE;
+    for (let cx = -2; cx <= W + 2; cx += Math.max(1, (LOBE_GAP + R() * LOBE_GAP) * pixelScale)) {
+      const r = (LOBE_R + R() * LOBE_R_SPREAD) * pixelScale;
       const h = crown * (LOBE_H + R() * LOBE_H_SPREAD);
       for (let x = Math.ceil(cx - r); x <= cx + r; x++) {
         if (x < 0 || x >= W)
@@ -2351,6 +2353,7 @@ function drawScene(g, W, H, input) {
   const engineW = ENGINE_WIDTH;
   const engineH = Math.round(engineW / aspect);
   const blit = W / engineW;
+  const pixelScale = pixelScaleFor(engineH);
   const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
   const backdrop = input.backdrops?.length ? pickBackdrop(input.backdrops, input.mood.time === "night", input.grove.seed, input.season) : void 0;
@@ -2366,7 +2369,7 @@ function drawScene(g, W, H, input) {
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
   drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
-  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
+  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed, pixelScale);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
   const pushBox = (kind, ref, cx, topY, w, h, depth) => {
@@ -2375,7 +2378,7 @@ function drawScene(g, W, H, input) {
   const groundBottomFrac = input.biome.hasWater ? LAND_BOTTOM : GROUND_BOTTOM;
   for (const item of layout.items) {
     const placed = placeItem(item, engineW, engineH, horizonY, groundBottomFrac);
-    const zoomedScale = placed.scale * layout.zoom * PIXEL_SCALE;
+    const zoomedScale = placed.scale * layout.zoom * pixelScale;
     if (isPond(item)) {
       const pw = 10 * item.slots * zoomedScale;
       const ph = 3.4 * zoomedScale;
@@ -2424,7 +2427,7 @@ function drawScene(g, W, H, input) {
       return;
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + save.slot / 5 * 0.7;
-    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * PIXEL_SCALE));
+    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale));
     const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.6 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
@@ -2455,7 +2458,7 @@ function drawScene(g, W, H, input) {
     const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(0.6, cabinScale) * PIXEL_SCALE;
+    const s = Math.max(0.6, cabinScale) * pixelScale;
     drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);

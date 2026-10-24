@@ -87,17 +87,26 @@ export interface DrawResult {
  */
 const ENGINE_WIDTH = 420;
 /**
- * A real regression from the 300 -> 420 bump above, caught by the user as "scaling doesn't
- * seem to be preserved": `STAGE_HEIGHT`, creature `BodyPlan.size`, the cabin's wall/roof
- * dimensions and the deep forest's crown/lobe sizes are all tuned as *absolute engine-pixel
- * counts*, fixed at the old 300-wide baseline. Raising `ENGINE_WIDTH` alone made the canvas
- * wider in engine-pixel terms without those fixed sizes growing to match, so every sprite
- * quietly got smaller relative to the frame even though individual pixels got finer — the
- * opposite of what "higher resolution" should do. This factor is applied everywhere one of
- * those historically-300-tuned sizes is turned into pixels, so raising ENGINE_WIDTH again in
- * future only changes pixel density, never apparent size.
+ * `STAGE_HEIGHT`, creature `BodyPlan.size`, the cabin's wall/roof dimensions and the deep
+ * forest's crown/lobe sizes are all tuned as *absolute engine-pixel counts*. An earlier
+ * attempt at this scaled that against `ENGINE_WIDTH` alone and still looked too small live
+ * — because the live widget's *height* is fixed (`pane_widget` asks for 480) while its
+ * *width* tracks whatever the container happens to be, so the real aspect ratio (often
+ * under 2:1) is nothing like the 3:1 this file's own screenshot harness tests at. Engine
+ * height ends up taller than the harness ever exercised, which silently shrank every
+ * sprite as a share of frame — the harness itself was the wrong ruler the whole time this
+ * was being "verified."
+ *
+ * Scaling against `engineH` (vertical frame space, where a tree's height actually has to
+ * read) rather than `engineW` fixes that at the root: it no longer matters whether the
+ * frame is wide and short or narrow and tall. The reference height (120) and the extra
+ * 1.35x deliberately bias toward sprites reading as too large rather than too small again,
+ * given this is the third round of "still too small" feedback — easier to dial back a
+ * confirmed-too-big result than to keep guessing at a too-small one.
  */
-const PIXEL_SCALE = ENGINE_WIDTH / 300;
+function pixelScaleFor(engineH: number): number {
+  return (engineH / 120) * 1.7;
+}
 
 const RABBIT_LIKE_HOP = 0.08;
 
@@ -603,7 +612,7 @@ function deepForestBands(totalPlants: number): number {
  * tones in a checkerboard (matching the original) and faded toward the theme's haze
  * colour more heavily the further back the band stands.
  */
-function drawDeepForest(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, bands: number, seed: number): void {
+function drawDeepForest(g: CanvasRenderingContext2D, W: number, horizonY: number, th: Theme, bands: number, seed: number, pixelScale: number): void {
   const R = rng(seed ^ 0x5eed);
   const haze = hex(th.haze);
   const tintC = th.tint ? hex(th.tint) : null;
@@ -622,12 +631,12 @@ function drawDeepForest(g: CanvasRenderingContext2D, W: number, horizonY: number
     const c1 = tone(lightBase);
     const c2 = tone(darkBase);
     const rim = tone(th.snow ? [240, 248, 255] : rimBase);
-    const base = Math.round(far - k * DEEP_RISE * PIXEL_SCALE);
-    const crown = (DEEP_CROWN + k * DEEP_STEP) * PIXEL_SCALE;
+    const base = Math.round(far - k * DEEP_RISE * pixelScale);
+    const crown = (DEEP_CROWN + k * DEEP_STEP) * pixelScale;
 
     const top = new Float32Array(W).fill(base);
-    for (let cx = -2; cx <= W + 2; cx += Math.max(1, (LOBE_GAP + R() * LOBE_GAP) * PIXEL_SCALE)) {
-      const r = (LOBE_R + R() * LOBE_R_SPREAD) * PIXEL_SCALE;
+    for (let cx = -2; cx <= W + 2; cx += Math.max(1, (LOBE_GAP + R() * LOBE_GAP) * pixelScale)) {
+      const r = (LOBE_R + R() * LOBE_R_SPREAD) * pixelScale;
       const h = crown * (LOBE_H + R() * LOBE_H_SPREAD);
       for (let x = Math.ceil(cx - r); x <= cx + r; x++) {
         if (x < 0 || x >= W) continue;
@@ -881,6 +890,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const engineW = ENGINE_WIDTH;
   const engineH = Math.round(engineW / aspect);
   const blit = W / engineW;
+  const pixelScale = pixelScaleFor(engineH);
 
   const [ecv, eg] = getEngineCanvas(engineW, engineH);
   eg.clearRect(0, 0, engineW, engineH);
@@ -903,7 +913,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
   drawSky(eg, engineW, horizonY, th, input.t);
   drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater, input.biome.landform);
-  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
+  drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed, pixelScale);
 
   const layout: Layout = layoutGrove(input.grove.plants);
   // The hit boxes we report are in *real* canvas space, so every engine-space box drawn
@@ -916,7 +926,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const groundBottomFrac = input.biome.hasWater ? LAND_BOTTOM : GROUND_BOTTOM;
   for (const item of layout.items) {
     const placed = placeItem(item, engineW, engineH, horizonY, groundBottomFrac);
-    const zoomedScale = placed.scale * layout.zoom * PIXEL_SCALE;
+    const zoomedScale = placed.scale * layout.zoom * pixelScale;
     if (isPond(item)) {
       const pw = 10 * item.slots * zoomedScale;
       const ph = 3.4 * zoomedScale;
@@ -968,7 +978,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
 
     const [idle, busy] = buildCreatureFrames(creature, stageIdx);
     const home = 0.15 + (save.slot / 5) * 0.7;
-    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * PIXEL_SCALE));
+    const creatureScale = Math.max(1, Math.round(layout.zoom * 1.4 * pixelScale));
     // Creatures previously never received the scene's ambient tint at all — painted in raw
     // palette colour regardless of dawn pink, dusk plum or night blue, which is exactly why
     // they stood out as "the wrong look" next to tinted plants and sky. A lighter tint
@@ -1016,7 +1026,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const cabinScale = (FAR_SCALE + NEAR_GAIN * cabinDepth) * layout.zoom;
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
-    const s = Math.max(0.6, cabinScale) * PIXEL_SCALE;
+    const s = Math.max(0.6, cabinScale) * pixelScale;
     drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);

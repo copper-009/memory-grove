@@ -31,7 +31,10 @@ const Y_JITTER = 0.6;
 const SINGLE_ROW_NEAREST = 0.15;
 const ZOOM_FULL_LOG = 7;
 const ZOOM_PER_LOG = 0.15;
-const ZOOM_MAX = 1.8;
+// Raised from 1.8 alongside scene.ts's own pixelScaleFor fix — a small grove zooming in to
+// "only" 1.8x was still reading as too small once sprite scale was corrected to be
+// aspect-independent rather than tied to engine width alone.
+const ZOOM_MAX = 2.4;
 const ROW_SPREAD = 1.6;
 // Lowered from 10: a floor of 10 columns forced ANY grove of 10 plants or fewer — which is
 // most groves for their first weeks or months — into a single row with no real front/back
