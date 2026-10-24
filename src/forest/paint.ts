@@ -11,7 +11,7 @@ import type { ToneMap } from './plantSprite';
 import { SICK_SHARE, HEALTH_MIN_STAGE, TRUNK_LIGHT, TRUNK_MID, TRUNK_DARK } from './plantSprite';
 import type { PlantSpecies } from '../regions/types';
 import { Stage } from '../data/types';
-import { hex, mix, type RGB } from './color';
+import { hex, mix, vivify, type RGB } from './color';
 import { hashStr } from './rng';
 
 export interface PaintOptions {
@@ -113,6 +113,12 @@ function resolveTone(
   }
   if (opts.tint && opts.tintAmount) col = mix(col, hex(opts.tint), opts.tintAmount);
   if (opts.haze && opts.hazeColor) col = mix(col, hex(opts.hazeColor), opts.haze);
+  // Put back the saturation every one of the lerps above quietly strips out, scaled down
+  // by how deep in the haze this pixel already is — a hazy, distant tree legitimately
+  // should look muted (real atmospheric perspective desaturates with distance), but a
+  // near, healthy, well-lit one shouldn't read as washed-out khaki the way a flat RGB
+  // blend leaves it.
+  if (!opts.snow) col = vivify(col, 0.3 * (1 - (opts.haze ?? 0)));
   return col;
 }
 

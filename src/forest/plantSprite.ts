@@ -261,7 +261,12 @@ export function buildToneMap(
   const top = 1;
   const ch = h - trunkH + 2;
   const trunkTop = base - trunkH;
-  const trunkW = plant.stage >= Stage.Old ? 2 : 1;
+  // Scaled with the rest of the sprite, which it wasn't before — this was a real bug: `h`
+  // and `w` both grow with `scale` (a zoomed-in or near-depth tree gets a genuinely bigger
+  // crown), but the trunk stayed a fixed 1-2 raw pixels regardless, so a big zoomed-in tree
+  // ended up with a crown scaled way up and a trunk that looked pixel-thin by comparison —
+  // exactly "trunk sizes compared to the background" not matching.
+  const trunkW = Math.max(1, Math.round((plant.stage >= Stage.Old ? 2.2 : 1.3) * scale));
 
   const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {

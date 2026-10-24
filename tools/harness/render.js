@@ -888,6 +888,55 @@ var BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 function clamp(v, lo, hi) {
   return v < lo ? lo : v > hi ? hi : v;
 }
+function rgbToHsl([r, g, b]) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min)
+    return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h;
+  if (max === r)
+    h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g)
+    h = ((b - r) / d + 2) / 6;
+  else
+    h = ((r - g) / d + 4) / 6;
+  return [h, s, l];
+}
+function hslToRgb(h, s, l) {
+  if (s === 0)
+    return [l * 255, l * 255, l * 255];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const hue = (t) => {
+    let tt = t;
+    if (tt < 0)
+      tt += 1;
+    if (tt > 1)
+      tt -= 1;
+    if (tt < 1 / 6)
+      return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2)
+      return q;
+    if (tt < 2 / 3)
+      return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  return [hue(h + 1 / 3) * 255, hue(h) * 255, hue(h - 1 / 3) * 255];
+}
+function vivify(c, amount) {
+  const [h, s, l] = rgbToHsl(c);
+  const s2 = clamp(s + (1 - s) * amount, 0, 1);
+  return hslToRgb(h, s2, l);
+}
+function vivifyHex(hexColor, amount) {
+  return toHex(vivify(hex(hexColor), amount));
+}
 
 // src/forest/layout.ts
 var HORIZON = 0.42;
@@ -1428,7 +1477,7 @@ function buildToneMap(plant, form, scale = 1) {
   const top = 1;
   const ch = h - trunkH + 2;
   const trunkTop = base - trunkH;
-  const trunkW = plant.stage >= 4 /* Old */ ? 2 : 1;
+  const trunkW = Math.max(1, Math.round((plant.stage >= 4 /* Old */ ? 2.2 : 1.3) * scale));
   const tx0 = cx - Math.floor(trunkW / 2);
   for (let y = trunkTop; y <= base; y++) {
     for (let x = tx0; x < tx0 + trunkW; x++) {
@@ -1772,6 +1821,8 @@ function resolveTone(tm, x, y, crown, bark, ailing, opts) {
     col = mix(col, hex(opts.tint), opts.tintAmount);
   if (opts.haze && opts.hazeColor)
     col = mix(col, hex(opts.hazeColor), opts.haze);
+  if (!opts.snow)
+    col = vivify(col, 0.3 * (1 - (opts.haze ?? 0)));
   return col;
 }
 function paintPlant(g, tm, species, opts, x0, y0, k) {
@@ -2013,9 +2064,9 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
 function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeLandform) {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
-  const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
-  const ground0 = th.snow ? th.ground0 : mixHex(bGrass, th.ground0, LIGHTING_WEIGHT);
-  const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
+  const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
+  const ground0 = th.snow ? th.ground0 : vivifyHex(mixHex(bGrass, th.ground0, LIGHTING_WEIGHT), 0.35);
+  const ground1 = th.snow ? th.ground1 : vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35);
   const farCol = applyGroundHealth(far, visual);
   {
     const farDark = hex(mixHex(farCol, "#000000", 0.12));
@@ -2037,15 +2088,22 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeL
   const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
+  const transitionRows = Math.max(1, Math.round(rows * 0.22));
   const g0rgb = hex(g0);
   const g1rgb = hex(g1);
   const img = g.createImageData(W, rows);
   const d = img.data;
   for (let y = 0; y < rows; y++) {
-    const p = Math.min(1, y / Math.max(1, rows) * 1.15);
+    const inTransition = y < transitionRows;
+    const p = inTransition ? y / transitionRows : 1;
     for (let x = 0; x < W; x++) {
-      const grain = hashStr(`turf|${x}|${y}`) % 1e3 / 1e3;
-      const c = p > grain ? g1rgb : g0rgb;
+      let c;
+      if (!inTransition) {
+        c = g1rgb;
+      } else {
+        const grain = hashStr(`turf|${x}|${y}`) % 1e3 / 1e3;
+        c = Math.abs(grain - p) < 0.12 ? g0rgb : p > 0.5 ? g1rgb : g0rgb;
+      }
       const idx = (y * W + x) * 4;
       d[idx] = c[0];
       d[idx + 1] = c[1];

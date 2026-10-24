@@ -34,7 +34,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr, rng } from './rng';
-import { hex, mix, mixHex, luminance, rgba, clamp, BAYER4 } from './color';
+import { hex, mix, mixHex, luminance, rgba, clamp, vivifyHex, BAYER4 } from './color';
 import type { RGB } from './color';
 
 export interface SceneInput {
@@ -435,9 +435,13 @@ function drawGround(
   const [bFar, bNear, bGrass] = biomeGround;
   // Snow weather overrides every biome's own palette outright — every biome goes white
   // under real snow, rather than blending snow-white with (say) red outback sand.
-  const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
-  const ground0 = th.snow ? th.ground0 : mixHex(bGrass, th.ground0, LIGHTING_WEIGHT);
-  const ground1 = th.snow ? th.ground1 : mixHex(bNear, th.ground1, LIGHTING_WEIGHT);
+  // vivify() restores the saturation a weighted RGB blend always strips out — without it,
+  // every biome's own ground colour drifted toward a muddy, washed-out khaki once mixed
+  // with the theme's lighting, which is a real mechanism behind "colours aren't vibrant
+  // enough, it doesn't look real."
+  const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
+  const ground0 = th.snow ? th.ground0 : vivifyHex(mixHex(bGrass, th.ground0, LIGHTING_WEIGHT), 0.35);
+  const ground1 = th.snow ? th.ground1 : vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35);
 
   const farCol = applyGroundHealth(far, visual);
   // A plain solid fillRect here was exactly "a weird box in the background" — a flat,
@@ -470,24 +474,34 @@ function drawGround(
   // (sky, lighting) keeps varying around it.
   drawHills(g, W, horizonY, farCol, g0, biomeLandform);
 
-  // Deliberately *not* the sky's own ordered Bayer matrix — that was the literal cause of
-  // "the texture on grass is the same as the sky": using the identical regular 4x4 dither
-  // pattern for both an atmospheric gas and solid turf, just recoloured, reads as the same
-  // material twice. Grass gets a grainy, irregular hashed dither instead (threshold randomised
-  // per pixel rather than repeating on a fixed 4-pixel grid), which has the loose, organic
-  // texture of individual blades rather than the sky's smooth, regular screen-door gradient.
+  // Genuinely minimal now, not just "a different pattern from the sky": the reference's own
+  // ground is close to two flat colour bands, full stop — texture only earns its place as a
+  // narrow transition near the treeline, reading as distance, not as a dense pattern the
+  // user has to look past to see the grass itself. Most of the ground band is flat solid
+  // colour; only a band roughly a fifth of its height actually dithers between the two
+  // tones, and even there the grain is sparse (most pixels keep whichever flat tone is
+  // nearer, only a minority flip), not an even 50/50 mix across every row.
   const top = Math.round(horizonY + (landBottomY - horizonY) * 0.18);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
+  const transitionRows = Math.max(1, Math.round(rows * 0.22));
   const g0rgb = hex(g0);
   const g1rgb = hex(g1);
   const img = g.createImageData(W, rows);
   const d = img.data;
   for (let y = 0; y < rows; y++) {
-    const p = Math.min(1, (y / Math.max(1, rows)) * 1.15);
+    const inTransition = y < transitionRows;
+    const p = inTransition ? y / transitionRows : 1;
     for (let x = 0; x < W; x++) {
-      const grain = (hashStr(`turf|${x}|${y}`) % 1000) / 1000;
-      const c = p > grain ? g1rgb : g0rgb;
+      let c: RGB;
+      if (!inTransition) {
+        c = g1rgb;
+      } else {
+        const grain = (hashStr(`turf|${x}|${y}`) % 1000) / 1000;
+        // Sparse flips rather than an even dither: only pixels whose grain value falls in
+        // a narrow band around the transition point switch tone at all.
+        c = Math.abs(grain - p) < 0.12 ? g0rgb : p > 0.5 ? g1rgb : g0rgb;
+      }
       const idx = (y * W + x) * 4;
       d[idx] = c[0];
       d[idx + 1] = c[1];
