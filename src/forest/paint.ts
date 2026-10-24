@@ -137,8 +137,13 @@ export function paintCreature(
   k: number,
   flip = false,
   tint?: { color: string; amount: number },
+  rim?: string,
 ): void {
   const w = Math.max(...rows.map((r) => r.length));
+  const filled = (x: number, y: number): boolean => {
+    const row = rows[y];
+    return !!row && x >= 0 && x < row.length && row[x] !== '.';
+  };
   for (let y = 0; y < rows.length; y++) {
     const row = rows[y];
     for (let x = 0; x < row.length; x++) {
@@ -147,6 +152,13 @@ export function paintCreature(
       const base = palette[ch];
       if (!base) continue;
       let col: RGB = hex(base);
+      // Same golden-hour silhouette glow plants now get — a creature standing in the same
+      // light as the trees around it previously had none at all, which is exactly the
+      // "animals didn't get the same attention as plants" gap. Restricted to the upper
+      // two-thirds so it reads as a backlit rim on the back/head, not a glowing belly.
+      if (rim && y < rows.length * 0.67 && (!filled(x - 1, y) || !filled(x, y - 1))) {
+        col = mix(col, hex(rim), 0.4);
+      }
       if (tint) col = mix(col, hex(tint.color), tint.amount);
       g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
       const px = flip ? w - 1 - x : x;

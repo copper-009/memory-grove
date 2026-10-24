@@ -1786,8 +1786,12 @@ function paintPlant(g, tm, species, opts, x0, y0, k) {
     }
   }
 }
-function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint) {
+function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint, rim) {
   const w = Math.max(...rows.map((r) => r.length));
+  const filled = (x, y) => {
+    const row = rows[y];
+    return !!row && x >= 0 && x < row.length && row[x] !== ".";
+  };
   for (let y = 0; y < rows.length; y++) {
     const row = rows[y];
     for (let x = 0; x < row.length; x++) {
@@ -1798,6 +1802,9 @@ function paintCreature(g, rows, palette, x0, y0, k, flip = false, tint) {
       if (!base)
         continue;
       let col = hex(base);
+      if (rim && y < rows.length * 0.67 && (!filled(x - 1, y) || !filled(x, y - 1))) {
+        col = mix(col, hex(rim), 0.4);
+      }
       if (tint)
         col = mix(col, hex(tint.color), tint.amount);
       g.fillStyle = `rgb(${col[0] | 0},${col[1] | 0},${col[2] | 0})`;
@@ -1813,9 +1820,23 @@ function boxAt(kind, ref, cx, topY, w, h, depth) {
 }
 
 // src/forest/scene.ts
-var ENGINE_WIDTH = 300;
+var ENGINE_WIDTH = 420;
 var RABBIT_LIKE_HOP = 0.08;
 var LAND_BOTTOM = 0.78;
+function drawShadow(g, cx, groundY, w, th, haze) {
+  if (!th.shadow)
+    return;
+  const alpha = 0.32 * (1 - haze * 0.6);
+  if (alpha <= 0.02)
+    return;
+  const sunSide = th.orb ? th.orb.x - 0.5 : 0;
+  const lenW = Math.max(2, w * (0.55 + th.shadow * 0.35));
+  const offset = -sunSide * w * 0.5;
+  g.fillStyle = `rgba(14,18,14,${alpha.toFixed(3)})`;
+  g.beginPath();
+  g.ellipse(cx + offset, groundY, lenW / 2, Math.max(1, lenW * 0.14), 0, 0, Math.PI * 2);
+  g.fill();
+}
 function drawCloud(g, cx, cy, w, color, alpha, seed) {
   const r = rng(seed);
   const baseR = w * 0.16;
@@ -1977,7 +1998,18 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
     }
   }
 }
-function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
+function terrainStyleFor(biomeKey, hasWater) {
+  if (/outback|savanna|steppe|spiny|desert|arid/.test(biomeKey))
+    return "arid";
+  if (/alpine|himalaya|rocky|scree|plateau/.test(biomeKey))
+    return "scree";
+  if (/coastal|beach|dune/.test(biomeKey))
+    return "sand";
+  if (hasWater || /wetland|mangrove|riverine|terai|swamp/.test(biomeKey))
+    return "reed";
+  return "grass";
+}
+function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeKey, hasWater) {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
   const far = th.snow ? th.far : mixHex(bFar, th.far, LIGHTING_WEIGHT);
@@ -2021,6 +2053,72 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual) {
     }
   }
   g.putImageData(img, 0, top);
+  const style = terrainStyleFor(biomeKey, hasWater);
+  const tr = rng(hashStr(`terrain|${biomeKey}`));
+  const light = hex(mixHex(g1, "#ffffff", 0.35));
+  const dark = hex(mixHex(g0, "#000000", 0.3));
+  const fill = (x, y, c) => {
+    g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+    g.fillRect(x, y, 1, 1);
+  };
+  if (style === "grass") {
+    const n = Math.round(W * 0.9);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      const l = tr() > 0.4;
+      fill(x, y, l ? light : dark);
+      fill(x - 1, y - 1, l ? light : dark);
+      if (l)
+        fill(x + 1, y - 1, light);
+    }
+  } else if (style === "arid") {
+    const n = Math.round(W * 0.22);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      fill(x, y, dark);
+      fill(x, y - 1, light);
+    }
+    const cracks = Math.round(W * 0.05);
+    for (let i = 0; i < cracks; i++) {
+      const x0 = Math.round(tr() * W);
+      const y0 = Math.round(top + 2 + tr() * (bottom - top - 4));
+      const len = 2 + Math.floor(tr() * 3);
+      for (let s = 0; s < len; s++)
+        fill(x0 + s - Math.floor(len / 2), y0 + Math.round(Math.sin(s) * 0.6), dark);
+    }
+  } else if (style === "reed") {
+    const clumps = Math.round(W * 0.1);
+    for (let i = 0; i < clumps; i++) {
+      const cx2 = Math.round(tr() * W);
+      const cy2 = Math.round(top + 3 + tr() * (bottom - top - 4));
+      const blades = 2 + Math.floor(tr() * 3);
+      for (let b = 0; b < blades; b++) {
+        const h = 2 + Math.floor(tr() * 2);
+        const bx = cx2 + b - Math.floor(blades / 2);
+        for (let s = 0; s < h; s++)
+          fill(bx, cy2 - s, s === h - 1 ? light : dark);
+      }
+    }
+  } else if (style === "scree") {
+    const n = Math.round(W * 0.3);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      fill(x, y, dark);
+      fill(x - 1, y, tr() > 0.5 ? light : dark);
+    }
+  } else {
+    const rows2 = Math.max(2, Math.round((bottom - top) / 4));
+    for (let i = 0; i < rows2; i++) {
+      const y = Math.round(top + 3 + i / rows2 * (bottom - top - 3));
+      for (let x = 0; x < W; x++) {
+        if ((x + i * 3) % 7 === 0)
+          fill(x, y, light);
+      }
+    }
+  }
 }
 var DEEP_TREES_PER_BAND = 60;
 var DEEP_MAX_BANDS = 4;
@@ -2262,7 +2360,7 @@ function drawScene(g, W, H, input) {
   const frameBottomY = engineH * GROUND_BOTTOM;
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
   const layout = layoutGrove(input.grove.plants);
   const boxes = [];
@@ -2285,6 +2383,7 @@ function drawScene(g, W, H, input) {
     const tone = buildToneMap(plant, species.form, zoomedScale);
     const x0 = Math.round(placed.x - tone.w / 2);
     const y0 = Math.round(placed.y - tone.h);
+    drawShadow(eg, placed.x, placed.y, tone.w, th, placed.haze);
     paintPlant(eg, tone, species, {
       stage: plant.stage,
       health: plant.health,
@@ -2326,7 +2425,7 @@ function drawScene(g, W, H, input) {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame2 = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw2 = frame2[0]?.length ?? 1;
-      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint);
+      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint, th.rim ?? void 0);
       pushBox("creature", save.slot, pos.x, pos.y - frame2.length * creatureScale, fw2 * creatureScale, frame2.length * creatureScale, 0);
       return;
     }
@@ -2339,7 +2438,8 @@ function drawScene(g, W, H, input) {
     }
     const x = motion.x * engineW;
     const y0 = baseY - frame.length * creatureScale + dy;
-    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint);
+    drawShadow(eg, x, baseY, fw * creatureScale, th, 0);
+    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? void 0);
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
   if (hasCabin(input.grove.stats)) {
@@ -2351,6 +2451,7 @@ function drawScene(g, W, H, input) {
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
     const s = Math.max(0.6, cabinScale);
+    drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox("plant", -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
   }

@@ -78,8 +78,14 @@ export interface DrawResult {
  * 300 keeps the same pixel-art character at a noticeably finer grain. A plant's own size
  * in engine pixels (`STAGE_HEIGHT` et al.) didn't need to change alongside this: distance
  * from camera is what should decide how big something looks, not the buffer resolution.
+ *
+ * Raised again, 300 -> 420, after direct comparison against the reference screenshots:
+ * individual crown blobs, bark pixels and ground dither were all visibly coarser here at
+ * the same on-screen size. The dither patterns (sky, ground, hills) and sprite shape logic
+ * are all written in relative/fractional terms already, so this is a straight quality gain
+ * with no other code changes needed.
  */
-const ENGINE_WIDTH = 300;
+const ENGINE_WIDTH = 420;
 
 const RABBIT_LIKE_HOP = 0.08;
 
@@ -107,6 +113,28 @@ const LAND_BOTTOM = 0.78;
  * by `x % 4` *and* `y % 4` per pixel is what turns a sharp two-colour edge into something
  * that reads as a smooth gradient once the whole scene is blitted up.
  */
+/**
+ * A cast shadow at a sprite's feet — a flat dark ellipse, squashed and nudged toward the
+ * side away from the sun/moon, fading out with distance haze. `theme.ts` has computed
+ * `Theme.shadow` (a strength/length factor that goes to 0 for an overcast or night sky)
+ * since the very first pass at this renderer, but nothing ever read it: trees, the cabin
+ * and every creature were painted with nothing anchoring them to the ground at all, which
+ * is a large part of why they read as pasted onto the background rather than standing in
+ * it. One function, called at the foot of every sprite, fixes all three at once.
+ */
+function drawShadow(g: CanvasRenderingContext2D, cx: number, groundY: number, w: number, th: Theme, haze: number): void {
+  if (!th.shadow) return;
+  const alpha = 0.32 * (1 - haze * 0.6);
+  if (alpha <= 0.02) return;
+  const sunSide = th.orb ? th.orb.x - 0.5 : 0;
+  const lenW = Math.max(2, w * (0.55 + th.shadow * 0.35));
+  const offset = -sunSide * w * 0.5;
+  g.fillStyle = `rgba(14,18,14,${alpha.toFixed(3)})`;
+  g.beginPath();
+  g.ellipse(cx + offset, groundY, lenW / 2, Math.max(1, lenW * 0.14), 0, 0, Math.PI * 2);
+  g.fill();
+}
+
 /**
  * A small pixel-art cloud: a cluster of 3-4 overlapping round puffs rather than a single
  * flat rectangle. Drawn with circles so the silhouette comes out rounded and bumpy even
@@ -338,6 +366,20 @@ function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, far
  * low weight so the same biome still warms at golden hour and cools at dusk, and snow
  * weather overrides the blend entirely (every biome goes white under real snow).
  */
+type TerrainStyle = 'grass' | 'arid' | 'reed' | 'scree' | 'sand';
+
+/** Ground texture by what's actually underfoot — a keyword heuristic over the biome's own
+ * key/water flag, same approach as `cabinStyleFor`. Every biome previously got identical
+ * grass-tuft texture with only its 3 base colours changed, which is a colour swap at the
+ * terrain level even where the plants and creatures above it differ a great deal more. */
+function terrainStyleFor(biomeKey: string, hasWater: boolean): TerrainStyle {
+  if (/outback|savanna|steppe|spiny|desert|arid/.test(biomeKey)) return 'arid';
+  if (/alpine|himalaya|rocky|scree|plateau/.test(biomeKey)) return 'scree';
+  if (/coastal|beach|dune/.test(biomeKey)) return 'sand';
+  if (hasWater || /wetland|mangrove|riverine|terai|swamp/.test(biomeKey)) return 'reed';
+  return 'grass';
+}
+
 function drawGround(
   g: CanvasRenderingContext2D,
   W: number,
@@ -346,6 +388,8 @@ function drawGround(
   biomeGround: readonly [string, string, string],
   th: Theme,
   visual: ReturnType<typeof visualParamsFor>,
+  biomeKey: string,
+  hasWater: boolean,
 ): void {
   const LIGHTING_WEIGHT = 0.3;
   const [bFar, bNear, bGrass] = biomeGround;
@@ -402,6 +446,84 @@ function drawGround(
     }
   }
   g.putImageData(img, 0, top);
+
+  // Ground texture by what's actually underfoot, not just a colour swap on the same
+  // grass-tuft pattern: a woodland's fine blades, an arid plain's sparse scrub and cracked
+  // earth, a wetland's reed clumps, a scree slope's scattered stones, a shoreline's ripples
+  // in the sand. Every biome previously got identical tufts regardless of what kind of
+  // ground it actually was.
+  const style = terrainStyleFor(biomeKey, hasWater);
+  const tr = rng(hashStr(`terrain|${biomeKey}`));
+  const light = hex(mixHex(g1, '#ffffff', 0.35));
+  const dark = hex(mixHex(g0, '#000000', 0.3));
+  const fill = (x: number, y: number, c: RGB) => {
+    g.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+    g.fillRect(x, y, 1, 1);
+  };
+  if (style === 'grass') {
+    const n = Math.round(W * 0.9);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      const l = tr() > 0.4;
+      fill(x, y, l ? light : dark);
+      fill(x - 1, y - 1, l ? light : dark);
+      if (l) fill(x + 1, y - 1, light);
+    }
+  } else if (style === 'arid') {
+    // Sparse scrub tufts, far fewer than grass, plus a scatter of darker cracked-earth
+    // fissures — the dry, broken-ground look rather than a lawn.
+    const n = Math.round(W * 0.22);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      fill(x, y, dark);
+      fill(x, y - 1, light);
+    }
+    const cracks = Math.round(W * 0.05);
+    for (let i = 0; i < cracks; i++) {
+      const x0 = Math.round(tr() * W);
+      const y0 = Math.round(top + 2 + tr() * (bottom - top - 4));
+      const len = 2 + Math.floor(tr() * 3);
+      for (let s = 0; s < len; s++) fill(x0 + s - Math.floor(len / 2), y0 + Math.round(Math.sin(s) * 0.6), dark);
+    }
+  } else if (style === 'reed') {
+    // Upright reed/sedge clumps rather than low tufts — a few pixels tall, in loose groups.
+    // A distinctly marsh-toned green (mixed toward teal, not just the grass dither's own
+    // light/dark) so clumps actually stand out against the ground instead of blending into
+    // it — reusing the plain grass tones here was barely visible at a glance.
+    const reedLight = hex(mixHex(mixHex(g1, '#5aa088', 0.45), '#ffffff', 0.15));
+    const reedDark = hex(mixHex(mixHex(g0, '#2a5048', 0.5), '#000000', 0.15));
+    const clumps = Math.round(W * 0.1);
+    for (let i = 0; i < clumps; i++) {
+      const cx2 = Math.round(tr() * W);
+      const cy2 = Math.round(top + 3 + tr() * (bottom - top - 4));
+      const blades = 2 + Math.floor(tr() * 3);
+      for (let b = 0; b < blades; b++) {
+        const h = 2 + Math.floor(tr() * 2);
+        const bx = cx2 + b - Math.floor(blades / 2);
+        for (let s = 0; s < h; s++) fill(bx, cy2 - s, s === h - 1 ? reedLight : reedDark);
+      }
+    }
+  } else if (style === 'scree') {
+    // Scattered small stones, two tones for a rounded pebble read, no blade texture at all.
+    const n = Math.round(W * 0.3);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(tr() * W);
+      const y = Math.round(top + 3 + tr() * (bottom - top - 3));
+      fill(x, y, dark);
+      fill(x - 1, y, tr() > 0.5 ? light : dark);
+    }
+  } else {
+    // sand: fine ripple lines rather than individual marks.
+    const rows = Math.max(2, Math.round((bottom - top) / 4));
+    for (let i = 0; i < rows; i++) {
+      const y = Math.round(top + 3 + (i / rows) * (bottom - top - 3));
+      for (let x = 0; x < W; x++) {
+        if (((x + i * 3) % 7) === 0) fill(x, y, light);
+      }
+    }
+  }
 }
 
 const DEEP_TREES_PER_BAND = 60;
@@ -743,7 +865,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
   const groundBottomY = input.biome.hasWater ? landBottomY : frameBottomY;
 
   drawSky(eg, engineW, horizonY, th, input.t);
-  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual);
+  drawGround(eg, engineW, horizonY, groundBottomY, input.biome.ground, th, visual, input.biome.key, !!input.biome.hasWater);
   drawDeepForest(eg, engineW, horizonY, th, deepForestBands(input.grove.stats.plants), input.grove.seed);
 
   const layout: Layout = layoutGrove(input.grove.plants);
@@ -773,6 +895,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const tone = buildToneMap(plant, species.form, zoomedScale);
     const x0 = Math.round(placed.x - tone.w / 2);
     const y0 = Math.round(placed.y - tone.h);
+    drawShadow(eg, placed.x, placed.y, tone.w, th, placed.haze);
     paintPlant(eg, tone, species, {
       stage: plant.stage,
       health: plant.health,
@@ -820,7 +943,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw = frame[0]?.length ?? 1;
-      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint);
+      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint, th.rim ?? undefined);
       pushBox('creature', save.slot, pos.x, pos.y - frame.length * creatureScale, fw * creatureScale, frame.length * creatureScale, 0);
       return;
     }
@@ -834,7 +957,11 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     }
     const x = motion.x * engineW;
     const y0 = baseY - frame.length * creatureScale + dy;
-    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint);
+    // The shadow stays planted on the ground at `baseY` even while the creature itself
+    // bobs or hops above it (`dy`) — that's what actually sells a hop or a bounce as
+    // leaving the ground, rather than the sprite just sliding up and down in place.
+    drawShadow(eg, x, baseY, fw * creatureScale, th, 0);
+    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, th.rim ?? undefined);
     pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, -1);
   });
 
@@ -853,6 +980,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const cabinHaze = Math.min(1, (1 - cabinDepth) * th.hazeStep * 6.5);
     const cx = onRight ? engineW * 0.92 : engineW * 0.08;
     const s = Math.max(0.6, cabinScale);
+    drawShadow(eg, cx, cy, 16 * s, th, cabinHaze);
     drawCabin(eg, cx, cy, s, th, input.biome.key, cabinHaze);
     pushBox('plant', -1, cx, cy - 14 * s, 18 * s, 14 * s, cabinDepth);
   }
