@@ -937,6 +937,12 @@ function vivify(c, amount) {
 function vivifyHex(hexColor, amount) {
   return toHex(vivify(hex(hexColor), amount));
 }
+function shadePair(base, spread) {
+  const [h, s, l] = rgbToHsl(base);
+  const light = hslToRgb(h, s, clamp(l + spread / 2, 0, 1));
+  const dark = hslToRgb(h, s, clamp(l - spread / 2, 0, 1));
+  return [light, dark];
+}
 
 // src/forest/layout.ts
 var HORIZON = 0.42;
@@ -2072,10 +2078,12 @@ function drawHills(g, W, horizonY, farColor, groundColor, form) {
 }
 function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeLandform) {
   const LIGHTING_WEIGHT = 0.3;
-  const [bFar, bNear, bGrass] = biomeGround;
+  const [bFar, bNear] = biomeGround;
   const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
-  const ground0 = th.snow ? th.ground0 : vivifyHex(mixHex(bGrass, th.ground0, LIGHTING_WEIGHT), 0.35);
-  const ground1 = th.snow ? th.ground1 : vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35);
+  const groundBase = th.snow ? hex(th.ground1) : hex(vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35));
+  const [groundLight, groundDark] = shadePair(groundBase, 0.24);
+  const ground0 = toHex(groundLight);
+  const ground1 = toHex(groundDark);
   const farCol = applyGroundHealth(far, visual);
   {
     const farDark = hex(mixHex(farCol, "#000000", 0.12));

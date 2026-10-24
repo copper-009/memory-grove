@@ -34,7 +34,7 @@ import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster, CreatureMood } from '../data/milestones';
 import { creatureMood, creatureAge, lifeStageFor, hasCabin } from '../data/milestones';
 import { hashStr, rng } from './rng';
-import { hex, mix, mixHex, luminance, rgba, clamp, vivifyHex, BAYER4 } from './color';
+import { hex, mix, mixHex, luminance, rgba, clamp, vivifyHex, shadePair, toHex, BAYER4 } from './color';
 import type { RGB } from './color';
 
 export interface SceneInput {
@@ -432,16 +432,24 @@ function drawGround(
   biomeLandform: string,
 ): void {
   const LIGHTING_WEIGHT = 0.3;
-  const [bFar, bNear, bGrass] = biomeGround;
+  const [bFar, bNear] = biomeGround;
   // Snow weather overrides every biome's own palette outright — every biome goes white
   // under real snow, rather than blending snow-white with (say) red outback sand.
-  // vivify() restores the saturation a weighted RGB blend always strips out — without it,
-  // every biome's own ground colour drifted toward a muddy, washed-out khaki once mixed
-  // with the theme's lighting, which is a real mechanism behind "colours aren't vibrant
-  // enough, it doesn't look real."
   const far = th.snow ? th.far : vivifyHex(mixHex(bFar, th.far, LIGHTING_WEIGHT), 0.35);
-  const ground0 = th.snow ? th.ground0 : vivifyHex(mixHex(bGrass, th.ground0, LIGHTING_WEIGHT), 0.35);
-  const ground1 = th.snow ? th.ground1 : vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35);
+  // "I want just the simple 2 tone, with the two tones being shades of one another, or
+  // closely related" — ground0 and ground1 used to be two *separately* blended colours
+  // (one from the biome's grass tone, one from its near tone, each mixed with a different
+  // theme colour), which can drift apart in hue even when each individual blend looks fine
+  // on its own, reading as "still multiple colours" instead of one colour in two
+  // lightnesses. Derived from a single base colour via shadePair() instead, which can't
+  // drift: same hue, same saturation, only the lightness differs between them. The near
+  // tone is the anchor (it's what actually dominates the screen); the far tone is its
+  // lighter shade, which also happens to be the "lighter at the back" depth cue already in
+  // place.
+  const groundBase = th.snow ? hex(th.ground1) : hex(vivifyHex(mixHex(bNear, th.ground1, LIGHTING_WEIGHT), 0.35));
+  const [groundLight, groundDark] = shadePair(groundBase, 0.24);
+  const ground0 = toHex(groundLight);
+  const ground1 = toHex(groundDark);
 
   const farCol = applyGroundHealth(far, visual);
   // A plain solid fillRect here was exactly "a weird box in the background" — a flat,

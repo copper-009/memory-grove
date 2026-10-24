@@ -43,7 +43,7 @@ export function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-function rgbToHsl([r, g, b]: RGB): [number, number, number] {
+export function rgbToHsl([r, g, b]: RGB): [number, number, number] {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -58,7 +58,7 @@ function rgbToHsl([r, g, b]: RGB): [number, number, number] {
   return [h, s, l];
 }
 
-function hslToRgb(h: number, s: number, l: number): RGB {
+export function hslToRgb(h: number, s: number, l: number): RGB {
   if (s === 0) return [l * 255, l * 255, l * 255];
   const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
   const p = 2 * l - q;
@@ -91,4 +91,22 @@ export function vivify(c: RGB, amount: number): RGB {
 
 export function vivifyHex(hexColor: string, amount: number): string {
   return toHex(vivify(hex(hexColor), amount));
+}
+
+/**
+ * Two tones that are genuinely shades of each other — same hue, same saturation, only
+ * lightness differs — rather than two independently-computed colours that merely end up
+ * close. "I want just the simple 2 tone, with the two tones being shades of one another, or
+ * closely related": mixing a biome colour and a theme colour separately for each of a
+ * ground's two dither tones (the previous approach) can drift them toward subtly different
+ * hues even when each individual blend looks reasonable, which reads as "still multiple
+ * colours" rather than one colour in two lightnesses. This derives both tones from a single
+ * base colour, so that can't happen. `spread` is the lightness delta (0..1) between the two;
+ * the lighter tone comes first.
+ */
+export function shadePair(base: RGB, spread: number): [RGB, RGB] {
+  const [h, s, l] = rgbToHsl(base);
+  const light = hslToRgb(h, s, clamp(l + spread / 2, 0, 1));
+  const dark = hslToRgb(h, s, clamp(l - spread / 2, 0, 1));
+  return [light, dark];
 }
