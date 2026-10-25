@@ -107,6 +107,19 @@ export interface Plant {
   gapTo?: string;
   /** Visual variant 0..3. */
   variant: number;
+  /** Wild's fire: 1 while this plant blazes, falling to 0 as it heals. Set by `events.ts`'s
+   * `setFire`, never by `buildGrove`. */
+  burn?: number;
+  /** The day before Wild's fire breaks out, the plants it will take are marked `smoke`
+   * instead of `burn` — a one-day warning. */
+  smoke?: 1;
+  /** Set by `events.ts`'s `markBigDays`: the most new cards learned in the two weeks
+   * before, when this day's count was a big jump over it. */
+  big?: number;
+  /** Leeches planted this day, for the crows that perch on them — cleared by `calmPlants`
+   * under Peaceful nature. Shape is whatever `events.ts`'s caller attaches; not produced by
+   * `buildGrove` itself. */
+  leeches?: unknown;
 }
 
 /** Everything the renderer needs about the grove as a whole. */
