@@ -145,10 +145,14 @@ Kept honest here rather than glossed over:
   persist at all, or give the pane a stable identity independent of the build).
 - **RemNote commands only ever surface through the omnibar (Cmd/Ctrl+K)** — there is no
   plugin API for a persistent left-nav icon the way "Tutorials" or "Settings" have one.
-  `sidebar_widget.tsx` now has an "Open full view →" button that calls
-  `openWidgetInPane` directly, so the everyday route into the full pane doesn't need the
-  omnibar at all; the commands remain as the omnibar/keyboard path for anyone who prefers
-  it.
+  `sidebar_widget.tsx` and `learning_progress_widget.tsx` deliberately have **no** "Open
+  full view" button calling `openWidgetInPane` from inside themselves — an earlier version
+  of this did, and calling that API from inside an already-mounted widget corrupted
+  RemNote's own pane-layout state (the same "Cannot parse window string" failure mode as
+  the point above, but reliably, not just as a dev-server artifact). The omnibar commands
+  (`memory-grove.open`, `memory-grove.vendor-preview`) remain the one supported way into a
+  full pane, since they call it from a top-level command, never from inside a mounted
+  widget.
 
 None of these affect data correctness, the plugin's build, or its tests — they're rendering
 and settings-surface polish, left for a follow-up pass.
