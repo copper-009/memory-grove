@@ -29,6 +29,25 @@ function PaneWidget() {
         {bundle.biome.label}
         {bundle.biomeOverride == null && ' · following the season'}
       </p>
+      {/* Right at the top, before anything that might need scrolling past — no point
+          putting a toggle below a tall scene + heatmap if the pane doesn't scroll to it. */}
+      <div style={{ marginBottom: 14 }}>
+        <button
+          onClick={() => setShowEnginePreview((v) => !v)}
+          style={{
+            fontSize: 12, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
+            border: '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))',
+            background: 'transparent', opacity: 0.8,
+          }}
+        >
+          {showEnginePreview ? 'Hide' : 'Show'} Memory Forest engine preview (experimental)
+        </button>
+        {showEnginePreview && (
+          <div style={{ marginTop: 12 }}>
+            <MfEnginePreview grove={bundle.grove} roster={bundle.roster} />
+          </div>
+        )}
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;
@@ -91,23 +110,6 @@ function PaneWidget() {
           cellSize={9}
           daysBack={365}
         />
-      </div>
-      <div style={{ marginTop: 24, borderTop: '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))', paddingTop: 12 }}>
-        <button
-          onClick={() => setShowEnginePreview((v) => !v)}
-          style={{
-            fontSize: 12, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-            border: '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))',
-            background: 'transparent', opacity: 0.8,
-          }}
-        >
-          {showEnginePreview ? 'Hide' : 'Show'} Memory Forest engine preview (experimental)
-        </button>
-        {showEnginePreview && (
-          <div style={{ marginTop: 12 }}>
-            <MfEnginePreview grove={bundle.grove} roster={bundle.roster} />
-          </div>
-        )}
       </div>
     </div>
   );
