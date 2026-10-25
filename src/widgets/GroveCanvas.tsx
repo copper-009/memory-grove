@@ -5,10 +5,10 @@
  * § "Region packs" / "Phase 2" for the full account of the switch).
  *
  * Known gap, honestly: the vendored engine still always draws Golden Lake's own landscape/
- * weather/time — only the *trees* change per biome so far (`mfEnvs.ts`'s registry, Phase 3,
- * one region at a time), and only for biomes with an entry there; everything else still
- * gets the vendored engine's own default pine/round trees, same as before that registry
- * existed. Per-tree/per-creature tooltips and hover are the vendored engine's own
+ * weather/time — only the *trees* change per biome (`mfEnvs.ts`'s registry, Phase 3).
+ * Every biome in every region now has an entry there, though a few only cover one
+ * kind-slot's worth of real species (`mfEnvs.ts`'s own comment explains which, and why).
+ * Per-tree/per-creature tooltips and hover are the vendored engine's own
  * (`tooltips.js`, `hover.js`) — nothing to wire up here for those, unlike the old renderer's
  * `hitTest.ts`; the one addition is each tree's species name, carried through by
  * `mfAdapter.ts`'s `toMfTree` and spliced into the tooltip by `src/envs/species-tooltip.js`

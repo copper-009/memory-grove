@@ -21,12 +21,13 @@ function PaneWidget() {
         {bundle.biome.label}
         {bundle.biomeOverride == null && ' · following the season'}
       </p>
-      {/* Every Australian biome, and every other region's primary biome, now has real
-          trees through `mfEnvs.ts`'s registry (Phase 3). Everywhere else's *second* biome
-          (every region but Australia has two) still draws the vendored engine's own
-          default trees regardless of which is picked here. The choice is saved either way
-          (`useGrove.ts`'s biome override), ready as each remaining biome gets its own
-          environment. */}
+      {/* Every biome in every region now has real trees through `mfEnvs.ts`'s registry
+          (Phase 3) — picking anything here changes what's drawn. A few biomes
+          (`mg-spiny.js`, `bo-mangroveriver.js`, and the all-one-form `pt-beech.js`/
+          `ea-riverine.js`) only cover one kind-slot's worth of real species, the other
+          left on the engine's own generic default — see those files' own headers for why
+          (mostly `tree.body()`, not exercised yet, for palm/bulbous forms). Creatures,
+          ground and sky still don't change per biome yet — trees only, so far. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;

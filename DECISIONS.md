@@ -408,3 +408,38 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     render — no new bug class, since this just applies forms `_forms.js` already fixed
     (the frond-origin and short-crown-alignment bugs) to five more species pairings, not
     anything novel.
+- **Phase 3, every region's second biome — every biome in every region now has real trees.**
+  Same pattern again: `nz-alps` (mountain beech + snow tussock, `hummock`-formed),
+  `jp-hokkaido` (ezo spruce + shirakaba, both default-shaped), `cr-lowland` (ceiba +
+  heliconia, `shrub`-formed, its red-flower highlight its own), `ca-rockyalpine` (subalpine
+  fir, default-shaped, + alpine fleabane, `shrub`-formed — the default-shaped species is the
+  *pine*-kind one here, the one env this session where that's flipped), `no-fjordplateau`
+  (heather + dwarf birch, both `shrub` — neither kind-slot gets a default crown, tuned
+  slightly differently from each other so the two still read as different plants),
+  `np-himalaya` (juniper + rhododendron, both default-shaped), `pt-steppe` (coirón,
+  `hummock`-formed, + mata negra, `shrub`-formed — neither is `conifer`/`broadleaf`, so
+  both kind-slots are custom).
+  - Three biomes only had one form worth drawing distinctly, handled the same two ways
+    already established: `mg-spiny` (Madagascar) and `bo-mangroveriver` (Borneo) each have
+    exactly one non-deferred species (an octopus tree; a bakau mangrove) — drawn on the
+    round-kind slot only, pine-kind left on the engine's own generic default rather than
+    forced into a shape (a baobab; a nipa palm) `_forms.js` can't do yet. `ea-riverine`
+    (East Africa) has two species but both `broadleaf` — the same `pals.rounds` rotation
+    `pt-beech.js` uses, fever tree and sycamore fig, each with a seed-matched trunk colour;
+    pine-kind left generic, same as `pt-beech`. This time the `pals.bark` fallback for the
+    untouched pine-kind trees was simply left unset (relying on the engine's own global
+    default) rather than risking the `{l,m,d}`-object-vs-array mistake `pt-beech.js` made
+    the first time around.
+  - Verified the same two-tier way as the rest of tonight's work: isolated two-tree harness
+    renders for all ten, cropped and inspected directly — all clean on the first render.
+    `ea-riverine`'s rotation was checked a second way too (both palettes forced side by
+    side), since fever tree and sycamore fig share a very similar muted-green crown in the
+    source data — confirmed the mechanism picks a different, correctly seed-matched trunk
+    colour for each, even though the visual difference reads as genuinely subtle rather
+    than a bug, which matches how similar the two species actually look in Memory Grove's
+    own species data to begin with.
+  - What's left, stated plainly: `tree.body()` (unblocking every deferred palm and
+    baobab/bulbous species across every region), ground/sky/landscape per biome (still
+    always Golden Lake's regardless of which biome is picked), and region-specific
+    creatures (the hand-authored Phase 1 roster still sits unused in `src/regions/sprites/`
+    — `visitors.js`'s fixed stock roster is what actually renders).
