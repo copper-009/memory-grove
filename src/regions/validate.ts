@@ -35,8 +35,39 @@ function checkCreature(region: string, path: string, c: Creature, issues: Valida
   if (c.stages.length !== 4) issues.push({ region, path, message: `expected 4 life stages, got ${c.stages.length}` });
   if (c.slot < 0 || c.slot > 4) issues.push({ region, path, message: `slot ${c.slot} out of range 0-4` });
   if (!c.behaviour.trim()) issues.push({ region, path, message: 'missing behaviour description' });
-  for (const [key, hex] of Object.entries(c.palette)) {
-    if (!HEX_RE.test(hex)) issues.push({ region, path: `${path}.palette.${key}`, message: `invalid colour "${hex}"` });
+  // Every creature keeps `body`/`palette` as its underlying source data (the bake script's
+  // generator input, and the fallback `creatureSprite.ts` renders from directly) — `sprite`
+  // is attached on top of that, not instead of it, by `src/regions/index.ts`'s merge against
+  // `sprites/handAuthored.ts`/`sprites/baked.generated.ts`. So both present together is the
+  // normal, expected state; only neither is a real problem.
+  if (!c.sprite && !(c.body && c.palette)) {
+    issues.push({ region, path, message: 'needs either `sprite` or both `body` and `palette`' });
+  }
+  if (c.sprite) {
+    for (const [key, hex] of Object.entries(c.sprite.pal)) {
+      if (!HEX_RE.test(hex)) issues.push({ region, path: `${path}.sprite.pal.${key}`, message: `invalid colour "${hex}"` });
+    }
+    const chars = new Set(c.sprite.pal ? Object.keys(c.sprite.pal) : []);
+    for (const [fi, pair] of [c.sprite.frames, c.sprite.young].entries()) {
+      if (!pair) continue;
+      for (const [pi, frame] of pair.entries()) {
+        const w = frame[0]?.length ?? 0;
+        for (const [ri, row] of frame.entries()) {
+          if (row.length !== w) {
+            issues.push({ region, path: `${path}.sprite.${fi === 0 ? 'frames' : 'young'}[${pi}]`, message: `row ${ri} is ${row.length} wide, expected ${w} (every row in a frame must be the same width)` });
+          }
+          for (const ch of row) {
+            if (ch !== '.' && !chars.has(ch)) {
+              issues.push({ region, path: `${path}.sprite.${fi === 0 ? 'frames' : 'young'}[${pi}]`, message: `row ${ri} uses "${ch}", not in pal` });
+            }
+          }
+        }
+      }
+    }
+  } else if (c.palette) {
+    for (const [key, hex] of Object.entries(c.palette)) {
+      if (!HEX_RE.test(hex)) issues.push({ region, path: `${path}.palette.${key}`, message: `invalid colour "${hex}"` });
+    }
   }
 }
 

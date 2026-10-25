@@ -83,11 +83,41 @@ export interface SpeciesFact {
 export type Palette = Record<string, string>;
 
 /**
- * How a creature's body is put together.
- *
- * The engine builds the sprite from this rather than from hand-drawn frames. One hundred
- * and thirty species could not be hand-drawn to a consistent standard, and consistency is
- * the whole point — see `DECISIONS.md` § "Art and assets".
+ * One frame of a hand-authored creature sprite: a row of characters, `.` transparent, every
+ * other character a key into the sprite's own `pal`. The format `reference/memory-forest`'s
+ * `web/visitors.js` uses for every one of its animals (`VISITORS`) — see `DECISIONS.md`
+ * § "Art and assets" for why Memory Grove now does the same instead of generating bodies
+ * from a `BodyPlan`.
+ */
+export type SpriteFrame = readonly string[];
+
+/**
+ * A hand-authored creature sprite, Memory Forest's own technique: a small fixed palette (4–8
+ * hex colours, one picked as the darkest/outline tone), two frames (a resting pose and a
+ * step/glance), and — since Memory Grove tracks four life stages where the original drew
+ * only adults — an optional smaller `young` pair for the early stages, a separate hand-drawn
+ * grid rather than the adult frames scaled down.
+ */
+export interface CreatureSprite {
+  pal: Palette;
+  /** [resting/idle, step or busy second frame]. */
+  frames: readonly [SpriteFrame, SpriteFrame];
+  /** A smaller, separately drawn pair for the early life stages (joey/chick-equivalent). */
+  young?: readonly [SpriteFrame, SpriteFrame];
+  /** Drawn in the sky on a circling path, with the second frame as a wings-up beat. */
+  flies?: boolean;
+  /** This sprite is drawn facing left by default (most face right). */
+  facesLeft?: boolean;
+  /** Moves in fixed-length bounces (rabbit-style) rather than a walk-frame cycle. */
+  hop?: boolean;
+}
+
+/**
+ * How a creature's body is put together, for the species not yet given a hand-authored
+ * `CreatureSprite` (see below). The engine builds a sprite from this procedurally — the
+ * original stopgap for covering 140+ species before each one had its own hand-drawn frames.
+ * Kept only as the fallback `creatureSprite.ts` falls back to when `Creature.sprite` is
+ * absent; every migrated species should prefer `sprite` instead.
  */
 export interface BodyPlan {
   /** Which routine draws it. */
@@ -122,8 +152,17 @@ export interface Creature extends SpeciesFact {
   zone: Zone;
   /** Life-stage names, youngest first. Correct local terms: joey, puggle, fledgling... */
   stages: [string, string, string, string];
-  body: BodyPlan;
-  palette: Palette;
+  /** Hand-authored sprite (preferred). Every migrated species carries this. */
+  sprite?: CreatureSprite;
+  /**
+   * The old procedural body description, read only by `creatureSprite.ts`'s fallback path
+   * when `sprite` is absent — a species not yet given hand-drawn frames. `body`/`palette`
+   * are both required together with each other, so this is `body: BodyPlan; palette: Palette`
+   * in spirit; TypeScript can't express "both or neither" cleanly as separate optional
+   * fields, so both stay optional and the fallback path checks for both at once.
+   */
+  body?: BodyPlan;
+  palette?: Palette;
   /** Mostly sleeps wherever it is — koalas, sloths. */
   sleepy?: boolean;
   /** Barely moves — crocodiles. */

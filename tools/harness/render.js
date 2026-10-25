@@ -1554,6 +1554,10 @@ function buildToneMap(plant, form, scale = 1) {
 }
 
 // src/forest/creatureSprite.ts
+function framesFor(sprite, stage) {
+  const pair = stage <= 1 && sprite.young ? sprite.young : sprite.frames;
+  return [[...pair[0]], [...pair[1]]];
+}
 var STAGE_SCALE = { 0: 0.45, 1: 0.68, 2: 1, 3: 1 };
 function grid(w, h) {
   return Array.from({ length: h }, () => Array(w).fill("."));
@@ -1607,8 +1611,14 @@ var KIND_PROPORTIONS = {
   swimmer: { bodyTilt: 0, headScale: 0.7, bodyRound: 0.75 },
   bulky: { bodyTilt: 0, headScale: 0.75, bodyRound: 0.85 }
 };
-function buildCreatureFrames(creature, stage, zoomScale = 1) {
+function buildProceduralFrames(creature, stage, zoomScale = 1) {
   const plan = creature.body;
+  const pal = creature.palette;
+  if (!plan || !pal) {
+    return [["."], ["."]];
+  }
+  const bodyPlan = plan;
+  const bodyPal = pal;
   const scale = (STAGE_SCALE[stage] ?? 1) * zoomScale;
   const [bw, bh] = plan.size;
   const w = Math.max(3, Math.round(bw * scale));
@@ -1620,7 +1630,6 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
   const ears = Math.round((plan.ears ?? 0) * scale);
   const crest = Math.round((plan.crest ?? 0) * scale);
   const proportions = KIND_PROPORTIONS[plan.kind];
-  const pal = creature.palette;
   const main = mainKey(pal);
   const dark = pal.d ? "d" : main;
   const light = pal.l ? "l" : void 0;
@@ -1641,7 +1650,7 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
     const g = grid(totalW, totalH);
     const bodyCy = baseY - h / 2 - legs + proportions.bodyTilt * h;
     if (legs > 0) {
-      const legN = plan.kind === "bird" || plan.kind === "wader" ? 2 : 4;
+      const legN = bodyPlan.kind === "bird" || bodyPlan.kind === "wader" ? 2 : 4;
       for (let i = 0; i < legN; i++) {
         const lx = cx - w * 0.3 + i * w * 0.6 / Math.max(1, legN - 1);
         const offset = legPhase && i % 2 === 0 ? 1 : 0;
@@ -1653,7 +1662,7 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
       ellipse(g, cx, baseY + 0.5, w * 0.8, 1.4, dark, dark);
     }
     if (tailLen > 0) {
-      const style = plan.tail?.style ?? "down";
+      const style = bodyPlan.tail?.style ?? "down";
       const tx = cx - w / 2 - 1;
       const ty = bodyCy + (style === "up" || style === "fan" ? -h * 0.2 : h * 0.15);
       for (let i = 0; i < tailLen; i++) {
@@ -1668,10 +1677,10 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
           put(g, tx - i, Math.round(ty + dy) - 1, tcol);
       }
     }
-    const bodyW = w * (plan.kind === "bird" || plan.kind === "wader" ? 0.85 : 1);
-    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (plan.kind === "bird" || plan.kind === "wader" ? 0.8 : 1));
+    const bodyW = w * (bodyPlan.kind === "bird" || bodyPlan.kind === "wader" ? 0.85 : 1);
+    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (bodyPlan.kind === "bird" || bodyPlan.kind === "wader" ? 0.8 : 1));
     ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark);
-    if (pal.w) {
+    if (bodyPal.w) {
       ellipse(g, cx, bodyCy + bodyH * 0.22, Math.max(2.4, bodyW * 0.5), Math.max(2, bodyH * 0.42), "w", "w");
     }
     const head = headCentre();
@@ -1698,7 +1707,7 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
         put(g, Math.round(head.x), Math.round(head.y - headR - 1 - i), beakCol);
       }
     }
-    if (plan.spines) {
+    if (bodyPlan.spines) {
       for (let x = -bodyW / 2; x <= bodyW / 2; x += 1.6) {
         put(g, Math.round(cx + x), Math.round(bodyCy - bodyH / 2 - 1), dark);
       }
@@ -1706,6 +1715,11 @@ function buildCreatureFrames(creature, stage, zoomScale = 1) {
     return rowsOf(g);
   }
   return [drawCommon(0), drawCommon(1)];
+}
+function buildCreatureFrames(creature, stage, zoomScale = 1) {
+  if (creature.sprite)
+    return framesFor(creature.sprite, stage);
+  return buildProceduralFrames(creature, stage, zoomScale);
 }
 
 // src/forest/creatureMotion.ts
@@ -2421,13 +2435,15 @@ function drawScene(g, W, H, input) {
     const zoomScale = layout.zoom * pixelScale * depthScale * 0.45;
     const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + save.slot / 5 * 0.7;
-    const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
+    const creatureScale = creature.sprite ? Math.max(1, Math.round(zoomScale * 2.6)) : Math.max(1, Math.round(pixelScale * 0.5));
+    const pal = creature.sprite?.pal ?? creature.palette ?? {};
+    const isHopper = creature.sprite ? !!creature.sprite.hop : creature.body?.kind === "hopper";
     const creatureTint = th.tint ? { color: th.tint, amount: th.tintAmount * 0.35 } : void 0;
     if (creature.zone === "sky") {
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame2 = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw2 = frame2[0]?.length ?? 1;
-      paintCreature(eg, frame2, creature.palette, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint);
+      paintCreature(eg, frame2, pal, Math.round(pos.x - fw2 * creatureScale / 2), Math.round(pos.y - frame2.length * creatureScale), creatureScale, false, creatureTint);
       pushBox("creature", save.slot, pos.x, pos.y - frame2.length * creatureScale, fw2 * creatureScale, frame2.length * creatureScale, 0);
       return;
     }
@@ -2435,14 +2451,16 @@ function drawScene(g, W, H, input) {
     const frame = motion.moving ? busy : idle;
     const fw = frame[0]?.length ?? 1;
     let dy = -motion.idleBob * 0.6 * creatureScale;
-    if (creature.body.kind === "hopper" && motion.moving) {
+    if (isHopper && motion.moving) {
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }
     const x = motion.x * engineW;
     const y0 = creatureBaseY - frame.length * creatureScale + dy;
     drawShadow(eg, x, creatureBaseY, fw * creatureScale, th, creatureHaze);
     const creatureHazeOpt = creatureHaze > 0.25 ? { color: th.haze, amount: creatureHaze * 0.6 } : void 0;
-    paintCreature(eg, frame, creature.palette, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, void 0, creatureHazeOpt);
+    const baseFlip = motion.facing < 0;
+    const flip = creature.sprite?.facesLeft ? !baseFlip : baseFlip;
+    paintCreature(eg, frame, pal, Math.round(x - fw * creatureScale / 2), Math.round(y0), creatureScale, flip, creatureTint, void 0, creatureHazeOpt);
     pushBox("creature", save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
   if (hasCabin(input.grove.stats)) {
@@ -7140,6 +7158,239 @@ var borneo = {
   ]
 };
 
+// src/regions/sprites/handAuthored.ts
+var HAND_SPRITES = {
+  // Heavy dagger bill, dark eye-stripe through a pale head, barred rufous tail. Perched
+  // still, head cocked — the kookaburra's whole character is stillness, not motion, so the
+  // second frame is only the tail flicking.
+  "australia:kookaburra": {
+    pal: { b: "#e8e0cf", d: "#6b5a44", e: "#20180f", r: "#9a6a3a", w: "#4a7fa8", k: "#2e2416" },
+    frames: [
+      ["...bbb..", "..beebd.", ".bbbbbd.", ".wwbbdd.", "..bbbrr.", "..bbrrr.", "...kk..."],
+      ["...bbb..", "..beebd.", ".bbbbbd.", ".wwbbdd.", "..bbrrr.", "..brrr..", "...kk..."]
+    ],
+    young: [
+      ["..bbb..", ".beebd.", "bbbbdd.", ".bbbrr.", "..kk..."],
+      ["..bbb..", ".beebd.", "bbbbdd.", ".bbrrr.", "..kk..."]
+    ]
+  },
+  // White body, a forward-curving sulphur crest it raises when startled (the second frame),
+  // heavy dark bill.
+  "australia:cockatoo": {
+    pal: { b: "#f6f4ee", d: "#c9c3b4", e: "#1a1510", y: "#f0d060", k: "#5a5248" },
+    frames: [
+      ["...y....", "..bbbk..", ".bbbbbk.", ".bbebbd.", ".bbbbbd.", "..dkdk.."],
+      ["..yyy...", "..bbbk..", ".bbbbbk.", ".bbebbd.", ".bbbbbd.", "..dkdk.."]
+    ],
+    young: [
+      ["..y....", ".bbbk..", "bbebbd.", "bbbbbd.", ".dkdk.."],
+      [".yyy...", ".bbbk..", "bbebbd.", "bbbbbd.", ".dkdk.."]
+    ]
+  },
+  // Redone after the first pass read as a generic grey blob rather than a kangaroo — the
+  // one unmistakable kangaroo cue is the silhouette: upright head and shoulders, a distinct
+  // thick tail propped down and back (not just another leg), one heavy foot forward. Each
+  // of those is now its own deliberate stroke rather than folded into one amorphous body.
+  "australia:eastern-grey-kangaroo": {
+    pal: { b: "#9a9383", d: "#6c6557", l: "#c4bdab", e: "#17130d", n: "#2a241c" },
+    frames: [
+      ["...nn........", "..nbbn.......", "..ebbld......", "...bbd.......", "..lbbbbd.....", ".lbbbbbbbd...", ".lbbbbbbbbbd.", "..bb.....bbd.", "..b.......bdd", "..d........dd"],
+      ["...nn........", "..nbbn.......", "..ebbld......", "...bbd.......", "..lbbbbd.....", ".lbbbbbbbd...", ".lbbbbbbbbbd.", "..bb....bbdd.", "..b......bdd.", "...d......ddd"]
+    ],
+    young: [
+      ["..nn.....", ".nbbn....", ".ebbld...", "..lbbbd..", ".lbbbbbd.", "..bb...bd", "..b.....d"],
+      ["..nn.....", ".nbbn....", ".ebbld...", "..lbbbd..", ".lbbbbbd.", "..bb..bd.", "..b....d."]
+    ]
+  },
+  // Dark body banded pale cream, long tapering tail — clinging head-up to a trunk. Banding
+  // is the single identifying mark, so it carries most of the pixel budget.
+  "australia:lace-monitor": {
+    pal: { b: "#4a4238", d: "#2a251e", l: "#c8bb9a", e: "#0d0a06", y: "#d8c88a" },
+    frames: [
+      ["..e..............", ".dy..............", "dbly.bly.bly.bly.", ".dbly.bly.bly.bl.", "....dd..........."],
+      ["..e..............", ".dy..............", "dbly.bly.bly.bly.", ".dbly.bly.bly.bl.", ".....dd.........."]
+    ],
+    young: [
+      [".e.........", "dy.........", "bly.bly.bly", ".dd........"],
+      [".e.........", "dy.........", "bly.bly.bly", "..dd......."]
+    ]
+  },
+  // Large fluffy ears, a big dark nose, wedged asleep in a fork — the nose is the signature
+  // mark the user named directly, so it's the single largest dark feature on the face.
+  "australia:koala": {
+    pal: { b: "#9aa0a4", d: "#6a7175", l: "#d6dade", e: "#120f0c", n: "#1d1813" },
+    frames: [
+      [".d....d.", "ddllllld", ".lllllld", "l.le.el.", ".l.nn.l.", ".lllllb.", ".bbbbbb.", "..bbbb.."],
+      [".d....d.", "ddllllld", ".lllllld", "l.l..el.", ".l.nn.l.", ".lllllb.", ".bbbbbb.", "..bbbb.."]
+    ],
+    young: [
+      ["d....d", "dlllld", "l.ee.l", ".lnnl.", "lllllb", ".bbbb."],
+      ["d....d", "dlllld", "l....l", ".lnnl.", "lllllb", ".bbbb."]
+    ]
+  },
+  // Tall horny casque, blue neck shading to red lower down over a glossy black body — the
+  // cassowary's whole identity is that neck colour, so it gets the tallest, most deliberate
+  // share of the grid; everything else (body, legs) stays a plain dark silhouette under it.
+  "australia:southern-cassowary": {
+    pal: { b: "#161418", d: "#0a090c", l: "#2e2a30", e: "#d8c060", y: "#8a6a30", w: "#3a7fc8", r: "#c0392b" },
+    frames: [
+      ["....y...", "...ylyl.", "...wey..", "....w...", "....w...", "....r...", "....r...", "..bbbbb.", ".bbbbbbb", ".bbbbbbb", ".bbbbbbb", "..bbbbb.", "...d.d..", "...d.d.."],
+      ["....y...", "...ylyl.", "....wey.", "....w...", "....w...", "....r...", "....r...", "..bbbbb.", ".bbbbbbb", ".bbbbbbb", ".bbbbbbb", "..bbbbb.", "..d.d...", "..d.d..."]
+    ],
+    young: [
+      ["...y..", "..wey.", "...w..", "...r..", ".bbbb.", "bbbbbb", "bbbbbb", ".bbbb.", "..d.d."],
+      ["...y..", "..wye.", "...w..", "...r..", ".bbbb.", "bbbbbb", "bbbbbb", ".bbbb.", ".d.d.."]
+    ]
+  },
+  // Soft duck-like bill and a flat paddle tail, low in the water — a swimmer's whole
+  // silhouette is horizontal, no legs visible, the bill doing all the identifying work.
+  "australia:platypus": {
+    pal: { b: "#4a3a2a", d: "#2a2018", l: "#6e5a42", e: "#0c0806", w: "#8a7258" },
+    frames: [
+      ["..e.........", ".wwbbbbbbbdd", "..bbbbbbbbdd", "...d.....dd."],
+      ["..e.........", ".wwbbbbbbbdd", "..bbbbbbbbd.", "....d.....dd"]
+    ],
+    young: [
+      [".e........", "wwbbbbbbdd", ".bbbbbbbd."],
+      [".e........", "wwbbbbbbd.", ".bbbbbbbdd"]
+    ]
+  }
+};
+
+// src/regions/sprites/baked.generated.ts
+var BAKED_SPRITES = {
+  "australia:kookaburra": { pal: { "b": "#e8e0cf", "d": "#6b5a44", "e": "#20180f", "r": "#9a6a3a", "w": "#4a7fa8", "y": "#2e2416" }, frames: [["....b..", "...bbb.", "...dbyy", ".ww....", "dww....", ".dd...."], ["....b..", "...bbb.", "...dbyy", ".ww....", "dww....", ".dd...."]], young: [["...b.", "..bbb", "..dbe", "ww...", "ww...", "dd..."], ["...b.", "..bbb", "..dbe", "ww...", "ww...", "dd..."]] },
+  "australia:cockatoo": { pal: { "b": "#f6f4ee", "d": "#c9c3b4", "e": "#1a1510", "y": "#f0d060", "k": "#5a5248" }, frames: [["....y.", "....b.", "...bbb", "...dbe", ".bb...", "dbb...", ".dd..."], ["....y.", "....b.", "...bbb", "...dbe", ".bb...", "dbb...", ".dd..."]], young: [["....b.", "...bbb", "...dbe", ".bb...", "dbb...", ".dd..."], ["....b.", "...bbb", "...dbe", ".bb...", "dbb...", ".dd..."]] },
+  "australia:eastern-grey-kangaroo": { pal: { "b": "#9a9383", "d": "#6c6557", "l": "#c4bdab", "e": "#17130d", "n": "#2a241c" }, frames: [["....bb..dd", "...bbbblll", "...bbbbdle", ".dddbbd...", "d.........", "....dddd..", "....dddd.."], ["....bb..dd", "...bbbblll", "...bbbbdle", ".dddbbd...", "d.........", ".....d.d..", "....dddd.."]], young: [["....l.", ".bblll", ".bbdle", "d.....", ".ddd..", ".ddd.."], ["....l.", ".bblll", ".bbdle", "d.....", "..dd..", ".ddd.."]], hop: true },
+  "australia:lace-monitor": { pal: { "b": "#4a4238", "d": "#2a251e", "l": "#c8bb9a", "e": "#0d0a06", "y": "#d8c88a" }, frames: [["...........bd...", "...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", "........ddddd.d."], ["...........bd...", "...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", "........ddddd.d."]], young: [[".....bd", "....ll.", "...blle", "ddd.dd.", "....ddd", "....ddd"], [".....bd", "....ll.", "...blle", "ddd.dd.", ".....dd", "....ddd"]] },
+  "australia:koala": { pal: { "b": "#9aa0a4", "d": "#6a7175", "l": "#d6dade", "e": "#120f0c", "n": "#1d1813" }, frames: [["....dd.", "...lll.", ".bb.lde", "bbbb...", "bbbb...", ".dd....", "dddd..."], ["....dd.", "...lll.", ".bb.lde", "bbbb...", "bbbb...", ".dd....", "dddd..."]], young: [["....dd", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....dd", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "australia:green-tree-frog": { pal: { "b": "#6fae4e", "d": "#43752f", "l": "#a8d474", "e": "#141a0c", "w": "#e8f0d8" }, frames: [["....l..", "bbblll.", "bwwblde", "dwwd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bwwblde", "dwwd...", "..dd...", ".ddd..."]], young: [["....l.", ".bblll", "bwwdle", ".ww...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bwwdle", ".ww...", "..dd..", ".ddd.."]] },
+  "australia:pademelon": { pal: { "b": "#8a6a4e", "d": "#5c4634", "l": "#b89878", "e": "#15100a", "n": "#9a4e32" }, frames: [[".....dd", "..bblll", "..bbdle", "dd.....", "..ddd..", "..ddd.."], [".....dd", "..bblll", "..bbdle", "dd.....", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", ".bb...", "d.....", ".dd..."], ["....l.", "...lll", ".bbdle", ".bb...", "d.....", ".dd..."]], hop: true },
+  "australia:richmond-birdwing": { pal: { "d": "#15170f", "b": "#1e2415", "g": "#3fa05a", "y": "#d8c24a", "r": "#b83a2e" }, frames: [["....d..", "...ddd.", ".dd.ddd", "dddd...", ".dd....", "dddd..."], ["....d..", "...ddd.", ".dd.ddd", "dddd...", ".dd....", "dddd..."]], young: [["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."], ["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."]], flies: true },
+  "australia:satin-bowerbird": { pal: { "b": "#1b1a2e", "d": "#0d0c18", "l": "#3a3860", "e": "#6a5ad8", "y": "#c8c0a0", "g": "#4a6a3a" }, frames: [["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."], ["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."]], young: [["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."], ["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."]] },
+  "australia:alberts-lyrebird": { pal: { "b": "#7a4a2e", "d": "#4a2c1a", "l": "#b08a5e", "e": "#120c06", "w": "#d8c8a8", "s": "#8a6a44" }, frames: [["........l.", ".......lll", "...ddwwdle", "..l..ww...", "llll.d.d..", ".....d.d.."], ["........l.", ".......lll", "...ddwwdle", "..l..ww...", "llll...d..", ".....d.d.."]], young: [["......l.", ".....lll", ".....dle", "..lww...", "lllww...", "...dd..."], ["......l.", ".....lll", ".....dle", "..lww...", "lllww...", "...dd..."]] },
+  "australia:ulysses-butterfly": { pal: { "d": "#0d0f1a", "b": "#141828", "g": "#2f7fe0", "y": "#6ab4ff", "r": "#1a3a7a" }, frames: [["....d..", "...ddd.", ".dd.ddd", "dddd...", ".dd....", "dddd..."], ["....d..", "...ddd.", ".dd.ddd", "dddd...", ".dd....", "dddd..."]], young: [["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."], ["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."]], flies: true },
+  "australia:spectacled-flying-fox": { pal: { "d": "#2a2018", "b": "#3e3024", "g": "#1a1410", "y": "#d8c89a", "r": "#6a5438" }, frames: [["........ddd", ".......dddd", ".dddddddddd", "dddddddd...", "dddddddd...", "dddddddd...", ".dddddd....", ".dddddd...."], ["........ddd", ".......dddd", ".dddddddddd", "dddddddd...", "dddddddd...", "dddddddd...", ".dddddd....", ".dddddd...."]], young: [["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."], ["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."]] },
+  "australia:bennetts-tree-kangaroo": { pal: { "b": "#5a4030", "d": "#3a2a1e", "l": "#8a6a4e", "e": "#120c08", "n": "#2a1e14" }, frames: [["......dd", "...bblll", "..bbbdle", "ddddd...", "...ddd..", "...ddd.."], ["......dd", "...bblll", "..bbbdle", "ddddd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "australia:saltwater-crocodile": { pal: { "b": "#4a4e38", "d": "#2a2e20", "l": "#6e7250", "e": "#0a0c06", "y": "#9a9460" }, frames: [["...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", ".........dddd..."], ["...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", ".........dddd..."]], young: [["........l.", ".......lll", "...bbbbdle", "..bbbbbb..", "ddddbbd...", "...dddd..."], ["........l.", ".......lll", "...bbbbdle", "..bbbbbb..", "ddddbbd...", "...dddd..."]] },
+  "australia:southern-cassowary": { pal: { "b": "#161418", "d": "#0a090c", "l": "#2e2a30", "e": "#d8c060", "y": "#8a6a30", "w": "#3a7fc8", "r": "#c0392b" }, frames: [[".....bd...", ".....bd...", ".....yd...", "...bbyb...", "..bbbybb..", ".bbbbybbb.", ".bbbllbbb.", "bbbllllbbb", "bbblllyybb", "bbbwddwbbb", ".dbwwwwbd.", ".ddwwwwdd.", "..dwwwwd..", "...dddd...", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."], [".....bd...", ".....bd...", ".....yd...", "...bbyb...", "..bbbybb..", ".bbbbybbb.", ".bbbllbbb.", "bbbllllbbb", "bbblllyybb", "bbbwddwbbb", ".dbwwwwbd.", ".ddwwwwdd.", "..dwwwwd..", "...dddd...", "........d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."]], young: [["..bd.", "..yd.", ".by..", "bllb.", "bllyy", "dwwd.", ".ww..", ".d..d", ".d..d", ".d..d"], ["..bd.", "..yd.", ".by..", "bllb.", "bllyy", "dwwd.", ".ww..", "....d", ".d..d", ".d..d"]] },
+  "australia:black-swan": { pal: { "b": "#1c1a20", "d": "#0e0d12", "l": "#3a3742", "e": "#c0392b", "w": "#e8e4dc" }, frames: [[".....bd...", ".....bd...", "...llll...", "...llle...", "...dllll..", ".bbbbbbbb.", ".bbbbbbbb.", "bbbbbbbbbb", ".bbwwwwbb.", ".ddwwwwdd.", ".dddddddd."], [".....bd...", ".....bd...", "...llll...", "...llle...", "...dllll..", ".bbbbbbbb.", ".bbbbbbbb.", "bbbbbbbbbb", ".bbwwwwbb.", ".ddwwwwdd.", ".dddddddd."]], young: [[".lld", ".lle", ".dd.", "bwwb", ".ww.", "dddd"], [".lld", ".lle", ".dd.", "bwwb", ".ww.", "dddd"]] },
+  "australia:rainbow-bee-eater": { pal: { "b": "#4aa05a", "d": "#2a6a3a", "l": "#8ad078", "e": "#15120a", "y": "#d8a83a", "k": "#1a1a1a", "w": "#4a8ad8" }, frames: [[".....l..", "....lll.", "....dlyy", "..ww....", ".dww....", "d.dd...."], [".....l..", "....lll.", "....dlyy", "..ww....", ".dww....", "d.dd...."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]], flies: true },
+  "australia:long-necked-turtle": { pal: { "b": "#4a4232", "d": "#2a251c", "l": "#6e6448", "e": "#0c0a06", "y": "#c8c0a0" }, frames: [["....bd.", "...lld.", "...lle.", "...ddd.", ".bbbbbb", ".bbbbbb", "dddbbdd", "..dd.dd", "..dd.dd"], ["....bd.", "...lld.", "...lle.", "...ddd.", ".bbbbbb", ".bbbbbb", "dddbbdd", "...d..d", "..dd.dd"]], young: [[".lld", ".lle", ".dd.", "bbbb", "ddd.", ".dd."], [".lld", ".lle", ".dd.", "bbbb", "ddd.", ".dd."]] },
+  "australia:brolga": { pal: { "b": "#9aa0a6", "d": "#6a7076", "l": "#c8ccd2", "e": "#141414", "r": "#c0392b", "k": "#3a3a3a" }, frames: [["....bd.", "....bd.", "...bb..", "..bllb.", "..blle.", "..bddll", "dddbbd.", "...dd..", "...d..d", "...d..d", "...d..d", "...d..d"], ["....bd.", "....bd.", "...bb..", "..bllb.", "..blle.", "..bddll", "dddbbd.", "...dd..", "......d", "...d..d", "...d..d", "...d..d"]], young: [["..bd", ".ll.", ".lle", "ddd.", ".d.d", ".d.d"], ["..bd", ".ll.", ".lle", "ddd.", "...d", ".d.d"]] },
+  "australia:platypus": { pal: { "b": "#4a3a2a", "d": "#2a2018", "l": "#6e5a42", "e": "#0c0806", "w": "#8a7258" }, frames: [["....l..", "...lll.", ".bbdlll", "bwwb...", "dww....", ".dd...."], ["....l..", "...lll.", ".bbdlll", "bwwb...", "dww....", ".dd...."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "australia:emu": { pal: { "b": "#6a6052", "d": "#443d33", "l": "#948878", "e": "#120f0b", "w": "#5a7a96", "y": "#8a8070" }, frames: [[".....bd...", ".....bd...", ".....bd...", "..bbbbbb..", ".bbbbbbbb.", ".bbbbbbbb.", "bbbllllbbb", "bbblllebbb", "bbbdllyybb", ".bbwwwwbb.", ".ddwwwwdd.", "..dwwwwd..", "...dddd...", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."], [".....bd...", ".....bd...", ".....bd...", "..bbbbbb..", ".bbbbbbbb.", ".bbbbbbbb.", "bbbllllbbb", "bbblllebbb", "bbbdllyybb", ".bbwwwwbb.", ".ddwwwwdd.", "..dwwwwd..", "...dddd...", "........d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."]], young: [["..bd.", "..bd.", ".bb..", "bbbb.", "bllb.", "dllyy", ".ww..", ".d..d", ".d..d", ".d..d", ".d..d"], ["..bd.", "..bd.", ".bb..", "bbbb.", "bllb.", "dllyy", ".ww..", "....d", ".d..d", ".d..d", ".d..d"]] },
+  "australia:red-kangaroo": { pal: { "b": "#a8613c", "d": "#74402a", "l": "#cf8f60", "e": "#160f09", "n": "#2c1c12" }, frames: [["....bb....", "...bbbbdd.", "...bbblll.", ".dddbbdlde", "d.........", "....ddd...", "....ddd...", "....ddd..."], ["....bb....", "...bbbbdd.", "...bbblll.", ".dddbbdlde", "d.........", ".....dd...", "....ddd...", "....ddd..."]], young: [["....l.", ".bblll", ".bbdle", "d.....", ".ddd..", ".ddd.."], ["....l.", ".bblll", ".bbdle", "d.....", "..dd..", ".ddd.."]], hop: true },
+  "australia:thorny-devil": { pal: { "b": "#b08048", "d": "#7a5430", "l": "#d8b478", "e": "#120c06", "y": "#e8d0a0" }, frames: [["..dd.l.", "..bblll", ".bbbdle", "dddd...", "..ddd..", "..ddd.."], ["..dd.l.", "..bblll", ".bbbdle", "dddd...", "...dd..", "..ddd.."]], young: [["....l.", ".ddlll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", ".ddlll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "australia:wedge-tailed-eagle": { pal: { "d": "#2a2018", "b": "#44352a", "g": "#1a1410", "y": "#d8a83a", "r": "#6a5238" }, frames: [["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."], ["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."]], young: [["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."], ["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."]], flies: true },
+  "australia:bilby": { pal: { "b": "#b0a496", "d": "#7a6f62", "l": "#dcd4c6", "e": "#14100c", "n": "#1a1a1a", "w": "#f0ece2" }, frames: [[".....dd", ".....l.", "..bblll", ".bwwdle", "ddww...", "..ddd..", "..ddd.."], [".....dd", ".....l.", "..bblll", ".bwwdle", "ddww...", "...dd..", "..ddd.."]], young: [["....dd", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....dd", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "australia:crimson-rosella": { pal: { "b": "#c0202c", "d": "#7a1018", "l": "#e85a52", "e": "#120808", "w": "#2a4a9a", "k": "#1a1a2a" }, frames: [[".....l.", "....lll", "....dle", "..ww...", ".dww...", "d.dd..."], [".....l.", "....lll", "....dle", "..ww...", ".dww...", "d.dd..."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "australia:wombat": { pal: { "b": "#7a6a52", "d": "#50452f", "l": "#a2927a", "e": "#120e08", "n": "#241c14" }, frames: [["........d.d", ".bbbbbb.lll", "bbbbbbbllle", "bbbbbbbdlld", "bbbbbbbb...", "ddbbbbdd...", ".dddddd....", "..dd.dd...."], ["........d.d", ".bbbbbb.lll", "bbbbbbbllle", "bbbbbbbdlld", "bbbbbbbb...", "ddbbbbdd...", ".dddddd....", "..dd.dd...."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "australia:echidna": { pal: { "b": "#4a3a28", "d": "#2a2018", "l": "#c8a860", "e": "#0e0a06", "n": "#1a1410" }, frames: [["....l..", ".ddlll.", ".bbdlll", "bbbb...", ".dd....", ".dd...."], ["....l..", ".ddlll.", ".bbdlll", "bbbb...", ".dd....", ".dd...."]], young: [["....l.", ".ddlll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", ".ddlll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "australia:corroboree-frog": { pal: { "b": "#e8c81e", "d": "#141410", "l": "#f4e468", "e": "#0a0a06", "w": "#2a2a1e" }, frames: [["....l..", "bbblll.", "bwwblde", "dwwd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bwwblde", "dwwd...", "..dd...", ".ddd..."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."]] },
+  "australia:mountain-pygmy-possum": { pal: { "b": "#8a7a68", "d": "#5a4e40", "l": "#c4b8a4", "e": "#120e0a", "n": "#e0d8c8" }, frames: [[".....dd", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."], [".....dd", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "aotearoa:tui": { pal: { "b": "#16202a", "d": "#0a1016", "l": "#2c4a40", "e": "#f4f2ec", "w": "#1c5a4a", "y": "#2a2a2a" }, frames: [["....l..", "...lll.", "...dlyy", ".ww....", "dww....", ".dd...."], ["....l..", "...lll.", "...dlyy", ".ww....", "dww....", ".dd...."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "aotearoa:kereru": { pal: { "b": "#2e4a44", "d": "#1a2e2a", "l": "#4a6e5e", "e": "#f2f0ea", "w": "#8a2a3a", "y": "#c03030" }, frames: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "aotearoa:wetapunga": { pal: { "b": "#6a5436", "d": "#3e2f1c", "l": "#9a8050", "e": "#120c06", "y": "#c0a060" }, frames: [[".dd.l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], [".dd.l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]], young: [["....l.", ".ddlll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", ".ddlll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "aotearoa:tuatara": { pal: { "b": "#6a6a50", "d": "#3e4030", "l": "#92906e", "e": "#0c0c06", "y": "#d8d4b8" }, frames: [[".......yd.", "....bbllbb", "....bblleb", ".ddddddddd", "d....dd.dd", ".....dd.dd"], [".......yd.", "....bbllbb", "....bblleb", ".ddddddddd", "d.....d..d", ".....dd.dd"]], young: [[".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."], [".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."]] },
+  "aotearoa:kiwi": { pal: { "b": "#6a5a46", "d": "#44382a", "l": "#8e7c62", "e": "#120e08", "y": "#d8cdb4", "w": "#2a2218" }, frames: [["...l..", "..lll.", "wwdlyy", "ww....", "d.d...", "d.d..."], ["...l..", "..lll.", "wwdlyy", "ww....", "..d...", "d.d..."]], young: [["...l..", "..lll.", "..dlyy", "ww....", "ww....", "dd...."], ["...l..", "..lll.", "..dlyy", "ww....", "ww....", "dd...."]] },
+  "aotearoa:kea": { pal: { "b": "#5a6a34", "d": "#3a4620", "l": "#7f8e4e", "e": "#120e08", "y": "#e07a28", "w": "#4a4438" }, frames: [["........l..", ".......lll.", "...bbbbdlyy", "...bwwb....", ".dddwwd....", "d...d..d...", "....d..d..."], ["........l..", ".......lll.", "...bbbbdlyy", "...bwwb....", ".dddwwd....", "d......d...", "....d..d..."]], young: [["....l..", "...lll.", "...dlyy", ".ww....", "dww....", ".dd...."], ["....l..", "...lll.", "...dlyy", ".ww....", "dww....", ".dd...."]] },
+  "aotearoa:pihoihoi": { pal: { "b": "#8a7656", "d": "#5a4c34", "l": "#bfae8c", "e": "#120e08", "y": "#d8cdb0", "w": "#3a3024" }, frames: [[".....l.", "....lll", "..wwdle", ".dww...", "d.d.d..", "..d.d.."], [".....l.", "....lll", "..wwdle", ".dww...", "d...d..", "..d.d.."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "aotearoa:piwauwau": { pal: { "b": "#6a7a44", "d": "#44502a", "l": "#9aa868", "e": "#100c06", "y": "#d8c060", "w": "#3a4020" }, frames: [["....l..", "...lll.", "dwwdlyy", ".ww....", ".d.d...", ".d.d..."], ["....l..", "...lll.", "dwwdlyy", ".ww....", "...d...", ".d.d..."]], young: [["...l.", "..lll", "..dle", "ww...", "ww...", "dd..."], ["...l.", "..lll", "..dle", "ww...", "ww...", "dd..."]] },
+  "aotearoa:karearea": { pal: { "d": "#3a2e22", "b": "#55432f", "g": "#241c14", "y": "#d8c060", "r": "#8a7250" }, frames: [[".......d..", "......ddd.", "..ddddddyy", ".dddddd...", "dddddd....", "..dddd...."], [".......d..", "......ddd.", "..ddddddyy", ".dddddd...", "dddddd....", "..dddd...."]], young: [["....d.", "...ddd", ".ddddd", "dddd..", "ddd...", ".dd..."], ["....d.", "...ddd", ".ddddd", "dddd..", "ddd...", ".dd..."]], flies: true },
+  "aotearoa:takahe": { pal: { "b": "#20467a", "d": "#142c52", "l": "#3a6a9a", "e": "#c0302a", "y": "#e04a30", "w": "#2a6a4a" }, frames: [[".......bd..", ".......bd..", "d...bbbbbb.", ".d.bbbllbbb", "...bbllllbb", "...bblllyyy", "...ddwddwdd", ".....dwwd..", "....d.....d", "....d.....d", "....d.....d", "....d.....d"], [".......bd..", ".......bd..", "d...bbbbbb.", ".d.bbbllbbb", "...bbllllbb", "...bblllyyy", "...ddwddwdd", ".....dwwd..", "..........d", "....d.....d", "....d.....d", "....d.....d"]], young: [["...bd.", "..ll..", "dbllyy", "..ww..", "..d.d.", "..d.d."], ["...bd.", "..ll..", "dbllyy", "..ww..", "....d.", "..d.d."]] },
+  "japan:macaque": { pal: { "b": "#9a8a70", "d": "#6a5c48", "l": "#c2b299", "e": "#140f0a", "n": "#d4766a" }, frames: [["....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "japan:sika": { pal: { "b": "#a0744a", "d": "#6e4c2e", "l": "#c89a66", "e": "#140e08", "n": "#f0ece0" }, frames: [["........dl.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", ".dbbbbddll.", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], ["........dl.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", ".dbbbbddll.", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....dd", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", "....dd", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "japan:tanuki": { pal: { "b": "#8a7458", "d": "#4e4030", "l": "#b8a284", "e": "#0e0a06", "n": "#241c14" }, frames: [["........dd", "...bbbblll", "ldbbbbbdle", "ldddbbd...", "....dddd..", "....dddd.."], ["........dd", "...bbbblll", "ldbbbbbdle", "ldddbbd...", ".....d.d..", "....dddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "japan:serow": { pal: { "b": "#9a9284", "d": "#655e52", "l": "#ccc6ba", "e": "#120f0a", "n": "#2a2419" }, frames: [["..bbbb..dl.", ".bbbbbblll.", ".bbbbbbllle", ".bbbbbbdll.", "ddbbbbd....", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], ["..bbbb..dl.", ".bbbbbblll.", ".bbbbbbllle", ".bbbbbbdll.", "ddbbbbd....", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....dd", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", "....dd", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "japan:giant-salamander": { pal: { "b": "#5a5444", "d": "#36322a", "l": "#7e7660", "e": "#0a0a06", "w": "#9a9078" }, frames: [[".........l..", ".....bb.lll.", "...bbbbbblde", "...bbbbbb...", "ddddbwwbd...", "....dddd...."], [".........l..", ".....bb.lll.", "...bbbbbblde", "...bbbbbb...", "ddddbwwbd...", "....dddd...."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "japan:ezo-red-fox": { pal: { "b": "#c8702a", "d": "#8a4718", "l": "#e8a05a", "e": "#120a04", "n": "#f4f0e8", "k": "#2a2018" }, frames: [[".......dd.", "...bbblll.", "lddbbbblde", "ldddbbd...", "....ddd...", "....ddd..."], [".......dd.", "...bbblll.", "lddbbbblde", "ldddbbd...", ".....dd...", "....ddd..."]], young: [["....dd", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....dd", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "japan:ezo-momonga": { pal: { "b": "#a8a69c", "d": "#6e6c64", "l": "#d8d6cc", "e": "#0c0a08", "n": "#f2f0e8" }, frames: [[".....l.", "....lll", "..bbdle", "lbbbb..", "lddd...", "..dd..."], [".....l.", "....lll", "..bbdle", "lbbbb..", "lddd...", "..dd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "japan:red-crowned-crane": { pal: { "b": "#f4f2ec", "d": "#c8c4bc", "l": "#ffffff", "e": "#141414", "r": "#c0302a", "k": "#2a2a2a" }, frames: [[".......bd..", ".......bd..", ".......bd..", ".....bbbb..", "....bbbbbb.", "....bbbbbb.", "...bbbllbbb", "...bbblllll", "...bbbbbbbb", "..dddbbbbdd", "dd..ddbbdd.", ".....dddd..", "...........", "....d.....d", "....d.....d", "....d.....d", "....d.....d", "....d.....d", "....d.....d"], [".......bd..", ".......bd..", ".......bd..", ".....bbbb..", "....bbbbbb.", "....bbbbbb.", "...bbbllbbb", "...bbblllll", "...bbbbbbbb", "..dddbbbbdd", "dd..ddbbdd.", ".....dddd..", "...........", "..........d", "....d.....d", "....d.....d", "....d.....d", "....d.....d", "....d.....d"]], young: [["...bd.", "...bd.", "..ll..", ".blle.", ".dddll", "d.dd..", "..d.d.", "..d.d.", "..d.d."], ["...bd.", "...bd.", "..ll..", ".blle.", ".dddll", "d.dd..", "....d.", "..d.d.", "..d.d."]] },
+  "japan:stellers-sea-eagle": { pal: { "d": "#1a1814", "b": "#2c2820", "g": "#f2efe8", "y": "#f0a020", "r": "#6a6258" }, frames: [["...........ddd..", "....dddddddddd..", "...dddddddddddyy", ".dddddddddd.....", "d.ddddddddd.....", "....dddddd......"], ["...........ddd..", "....dddddddddd..", "...dddddddddddyy", ".dddddddddd.....", "d.ddddddddd.....", "....dddddd......"]], young: [["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."], ["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."]], flies: true },
+  "japan:blakistons-fish-owl": { pal: { "b": "#8a7458", "d": "#4e4030", "l": "#bca888", "e": "#f0c030", "y": "#2a2018", "w": "#d8cdb4" }, frames: [[".......y..", ".......l..", "......lll.", "...bb.dlyy", "..bbbb....", "..bwwb....", "dd.ww.....", "...d..d...", "...d..d..."], [".......y..", ".......l..", "......lll.", "...bb.dlyy", "..bbbb....", "..bwwb....", "dd.ww.....", "......d...", "...d..d..."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "madagascar:red-fronted-lemur": { pal: { "b": "#8a7a5a", "d": "#5c5038", "l": "#b4a480", "e": "#140e08", "n": "#9a5a30" }, frames: [["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "...ddd..", "...ddd.."], ["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "madagascar:panther-chameleon": { pal: { "b": "#2e9050", "d": "#1a5c30", "l": "#6ad880", "e": "#0a0a06", "y": "#e0d030", "r": "#c03030" }, frames: [["d....l.", "..bblll", ".bbbdle", ".ddd...", "..ddd..", "..ddd.."], ["d....l.", "..bblll", ".bbbdle", ".ddd...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "madagascar:leaf-tailed-gecko": { pal: { "b": "#6a5436", "d": "#3e2f1c", "l": "#9a8050", "e": "#0c0906" }, frames: [["d....l.", "..bblll", ".bbbdle", ".ddd...", "..ddd..", "..ddd.."], ["d....l.", "..bblll", ".bbbdle", ".ddd...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "madagascar:fossa": { pal: { "b": "#8a5438", "d": "#5c3722", "l": "#b07a54", "e": "#100a06", "n": "#1a1410" }, frames: [["d..........", ".d......l..", "..d.bbblll.", "...dbbbblde", "....dbbd...", ".....ddd...", ".....ddd..."], ["d..........", ".d......l..", "..d.bbblll.", "...dbbbblde", "....dbbd...", "......dd...", ".....ddd..."]], young: [[".....l.", "....lll", "d.bbdle", ".bbbb..", "..dd...", "..dd..."], [".....l.", "....lll", "d.bbdle", ".bbbb..", "..dd...", "..dd..."]] },
+  "madagascar:indri": { pal: { "b": "#1a1814", "d": "#0a0908", "l": "#f0ece2", "e": "#d8c060", "n": "#2a2622" }, frames: [["........dd.", ".......lll.", "..bbbb.llle", ".bbbbbbdll.", ".bbbbbb....", "bbbbbbbb...", ".bbbbbb....", ".ddbbdd....", "..dddd.....", "..dd.dd....", "..dd.dd...."], ["........dd.", ".......lll.", "..bbbb.llle", ".bbbbbbdll.", ".bbbbbb....", "bbbbbbbb...", ".bbbbbb....", ".ddbbdd....", "..dddd.....", "...d..d....", "..dd.dd...."]], young: [["....dd", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....dd", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "madagascar:radiated-tortoise": { pal: { "b": "#e0c04a", "d": "#9a7a28", "l": "#f0dc80", "e": "#120e08" }, frames: [[".bb.l..", "bbblll.", ".dd.lde", ".ddd...", ".ddd...", ".ddd..."], [".bb.l..", "bbblll.", ".dd.lde", "..dd...", ".ddd...", ".ddd..."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "madagascar:ring-tailed-lemur": { pal: { "b": "#b0a890", "d": "#7a7260", "l": "#e0dcc8", "e": "#1a1410", "n": "#181818" }, frames: [["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "...ddd..", "...ddd.."], ["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "madagascar:sifaka": { pal: { "b": "#f0ece0", "d": "#c8c0a8", "l": "#ffffff", "e": "#140f0a", "n": "#2a2018" }, frames: [[".....l.", "..bblll", ".bbbdle", "dddd...", "..ddd..", "..ddd.."], [".....l.", "..bblll", ".bbbdle", "dddd...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "madagascar:oustalets-chameleon": { pal: { "b": "#5a6a44", "d": "#38402a", "l": "#8a9868", "e": "#0a0a06" }, frames: [[".d.......l.", "d.d.bbbblll", "...bbbbbdle", "...ddbbd...", ".....dddd..", ".....dddd.."], [".d.......l.", "d.d.bbbblll", "...bbbbbdle", "...ddbbd...", "......d.d..", ".....dddd.."]], young: [[".....l.", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."], [".....l.", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."]] },
+  "madagascar:aye-aye": { pal: { "b": "#4a3e2c", "d": "#2a221a", "l": "#6e5c40", "e": "#0a0806", "n": "#8a7a56" }, frames: [["......dd", "...bblll", "ldbbbdle", "ldddd...", "...ddd..", "...ddd.."], ["......dd", "...bblll", "ldbbbdle", "ldddd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "costarica:glass-frog": { pal: { "b": "#9ad87a", "d": "#5a9048", "l": "#d0f0b0", "e": "#141a0c" }, frames: [["....l..", "bbblll.", "bbbblde", "dbbd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bbbblde", "dbbd...", "..dd...", ".ddd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "costarica:quetzal": { pal: { "b": "#1a6a46", "d": "#0e3e2a", "l": "#3aa06a", "e": "#120e08", "r": "#c0302a", "w": "#f0ece2" }, frames: [[".......l.", ".......l.", "......lll", "......dle", "....ww...", "...dww...", "ddd.dd..."], [".......l.", ".......l.", "......lll", "......dle", "....ww...", "...dww...", "ddd.dd..."]], young: [[".....l.", "....lll", "....dle", "..ww...", ".dww...", "d.dd..."], [".....l.", "....lll", "....dle", "..ww...", ".dww...", "d.dd..."]] },
+  "costarica:tapir": { pal: { "b": "#2a2622", "d": "#161412", "l": "#4a4640", "e": "#0a0806", "w": "#9a948a" }, frames: [["..bbbb.....", ".bbbbbbl...", ".bbbbblll..", "ddbwwbdldll", "..dwwdd....", "..dd.dd....", "..dd.dd...."], ["..bbbb.....", ".bbbbbbl...", ".bbbbblll..", "ddbwwbdldll", "..dwwdd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", ".bblll", "bwwdle", ".ww...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bwwdle", ".ww...", "..dd..", ".ddd.."]] },
+  "costarica:three-toed-sloth": { pal: { "b": "#8a8a6e", "d": "#5e5e46", "l": "#b4b494", "e": "#1a1810", "n": "#4a5438" }, frames: [["....l..", "bbblll.", "bbbblde", "dbbd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bbbblde", "dbbd...", "..dd...", ".ddd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "costarica:bare-necked-umbrellabird": { pal: { "b": "#1a1814", "d": "#0a0908", "l": "#34302a", "e": "#120e08", "r": "#c0302a" }, frames: [["....l.", "....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."], ["....l.", "....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."]], young: [["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."], ["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."]] },
+  "costarica:red-eyed-tree-frog": { pal: { "b": "#4ec850", "d": "#2a8a30", "l": "#80e880", "e": "#c0302a", "w": "#2a4ac0" }, frames: [["....l..", "bbblll.", "bwwblde", "dwwd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bwwblde", "dwwd...", "..dd...", ".ddd..."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."]] },
+  "costarica:blue-morpho": { pal: { "d": "#120f1a", "b": "#1a1828", "g": "#2050d0", "y": "#6a90f0" }, frames: [["........ddd", ".......dddd", "..dddd.dddd", ".dddddd....", "dddddddd...", "dddddddd...", ".dddddd....", "..dddd.....", ".dddddd...."], ["........ddd", ".......dddd", "..dddd.dddd", ".dddddd....", "dddddddd...", "dddddddd...", ".dddddd....", "..dddd.....", ".dddddd...."]], young: [["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."], ["....d.", "...ddd", ".ddddd", "dddd..", ".dd...", ".dd..."]], flies: true },
+  "costarica:scarlet-macaw": { pal: { "b": "#d8302a", "d": "#9a201c", "l": "#f05a4a", "e": "#140e08", "w": "#3a5ac0", "y": "#e8c030" }, frames: [["......l..", ".....lll.", ".....dlyy", "...ww....", "..dww....", "dd.dd...."], ["......l..", ".....lll.", ".....dlyy", "...ww....", "..dww....", "dd.dd...."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "costarica:poison-dart-frog": { pal: { "b": "#d8302a", "d": "#2a2028", "l": "#f0605a", "e": "#0a0a06" }, frames: [["....l..", "bbblll.", "bbbblde", "dbbd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bbbblde", "dbbd...", "..dd...", ".ddd..."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "costarica:spider-monkey": { pal: { "b": "#8a5a38", "d": "#5c3a22", "l": "#b0825a", "e": "#120c06", "n": "#2a1c12" }, frames: [[".d.....l.", "d.d.bblll", "...bbbdle", "...ddd...", "....ddd..", "....ddd.."], [".d.....l.", "d.d.bblll", "...bbbdle", "...ddd...", ".....dd..", "....ddd.."]], young: [[".....l.", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."], [".....l.", "d...lll", "..bbdle", ".bbbb..", ".ddd...", "..dd..."]] },
+  "eastafrica:plains-zebra": { pal: { "b": "#f0ece0", "d": "#1a1814", "l": "#ffffff", "e": "#0a0806" }, frames: [["........dld", "...bbbb.lll", "..bbbbbllle", "..bbbbbdlld", ".ddbbbbd...", "d..dddd....", "...dd.dd...", "...dd.dd...", "...dd.dd..."], ["........dld", "...bbbb.lll", "..bbbbbllle", "..bbbbbdlld", ".ddbbbbd...", "d..dddd....", "....d..d...", "...dd.dd...", "...dd.dd..."]], young: [["....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "eastafrica:lilac-breasted-roller": { pal: { "b": "#2a7ac0", "d": "#154a7a", "l": "#6ab0e8", "e": "#120e08", "p": "#c088d0", "g": "#4a9a50" }, frames: [[".....l.", "....lll", "....dle", "..bb...", ".dbb...", "d.dd..."], [".....l.", "....lll", "....dle", "..bb...", ".dbb...", "d.dd..."]], young: [["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."], ["....l.", "...lll", "...dle", ".bb...", "dbb...", ".dd..."]] },
+  "eastafrica:secretary-bird": { pal: { "b": "#d8d4c8", "d": "#9a968a", "l": "#f0ece0", "e": "#120e08", "k": "#2a2a2a", "y": "#e8c868" }, frames: [["....bd.", "...bb..", "..bbbb.", "..bbyb.", "dd.ll..", "...llyy", "...d.d.", "...d.d.", "...d.d.", "...d.d."], ["....bd.", "...bb..", "..bbbb.", "..bbyb.", "dd.ll..", "...llyy", ".....d.", "...d.d.", "...d.d.", "...d.d."]], young: [["..yd", ".ll.", ".lle", "ddd.", ".d.d", ".d.d"], ["..yd", ".ll.", ".lle", "ddd.", "...d", ".d.d"]] },
+  "eastafrica:masai-giraffe": { pal: { "b": "#c89850", "d": "#6a4a26", "l": "#e0c080", "e": "#120e08", "n": "#f0e8d4" }, frames: [["......bd..", ".....bb...", "....bbbb..", "...bbbbbb.", "...bbddbb.", "...bllllb.", "..bblllebb", "...bdlldb.", ".dddbbbbd.", "d..dbbbbd.", "....dddd..", ".....dd...", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd."], ["......bd..", ".....bb...", "....bbbb..", "...bbbbbb.", "...bbddbb.", "...bllllb.", "..bblllebb", "...bdlldb.", ".dddbbbbd.", "d..dbbbbd.", "....dddd..", ".....dd...", ".....d..d.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd.", "....dd.dd."]], young: [["..bd", ".bb.", ".dd.", "blle", "ddd.", ".dd.", ".ddd", ".ddd", ".ddd", ".ddd"], ["..bd", ".bb.", ".dd.", "blle", "ddd.", ".dd.", "..dd", ".ddd", ".ddd", ".ddd"]] },
+  "eastafrica:lion": { pal: { "b": "#b0864a", "d": "#6a4e26", "l": "#d8b070", "e": "#120e08", "n": "#3a2a18" }, frames: [["........l.", "........dd", "...bbbblll", "..bbbbbdle", "ddddbbd...", "....dddd..", "....dddd.."], ["........l.", "........dd", "...bbbblll", "..bbbbbdle", "ddddbbd...", ".....d.d..", "....dddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "eastafrica:hippo": { pal: { "b": "#6a5c50", "d": "#3e342c", "l": "#8a7c6e", "e": "#0c0a06", "n": "#d89080" }, frames: [["........d.d", "........lll", ".bbbbbbllle", "bbbbbbbdlld", "bbbbbbbb...", "bbbbbbbb...", ".ddbbdd...."], ["........d.d", "........lll", ".bbbbbbllle", "bbbbbbbdlld", "bbbbbbbb...", "bbbbbbbb...", ".ddbbdd...."]], young: [["....l..", "...lll.", ".bb.lde", "bbbb...", ".dd....", "dddd..."], ["....l..", "...lll.", ".bb.lde", "bbbb...", ".dd....", "dddd..."]] },
+  "eastafrica:african-elephant": { pal: { "b": "#8a8680", "d": "#5a5650", "l": "#aca89e", "e": "#120e08", "n": "#f0ece0" }, frames: [["...........dd...", "................", "...bbbbbb.lll...", "..bbbbbbbbllle..", "..bbbbbbbbdlllll", ".bbbbbbbbbb.....", "..bbbbbbbb......", "ddddbbbbdd......", "...dddddd.......", "...d.d.d.d......", "...d.d.d.d......", "...d.d.d.d......"], ["...........dd...", "................", "...bbbbbb.lll...", "..bbbbbbbbllle..", "..bbbbbbbbdlllll", ".bbbbbbbbbb.....", "..bbbbbbbb......", "ddddbbbbdd......", "...dddddd.......", ".....d...d......", "...d.d.d.d......", "...d.d.d.d......"]], young: [[".....dd..", ".bbblll..", ".bbbbldll", "ddbbd....", "..ddd....", "..ddd...."], [".....dd..", ".bbblll..", ".bbbbldll", "ddbbd....", "...dd....", "..ddd...."]] },
+  "eastafrica:nile-crocodile": { pal: { "b": "#4a4e38", "d": "#2a2e20", "l": "#6e7250", "e": "#0a0c06", "y": "#9a9460" }, frames: [["..........bd...", "........bbbb...", "......bbbbbbbb.", ".....bbbllllbbb", ".....bbblllebbb", "..dddbbbdlldbbb", "dd....ddbbbbdd.", ".......ddddd.d."], ["..........bd...", "........bbbb...", "......bbbbbbbb.", ".....bbbllllbbb", ".....bbblllebbb", "..dddbbbdlldbbb", "dd....ddbbbbdd.", ".......ddddd.d."]], young: [["......l..", ".....lll.", "...bb.lde", "..bbbb...", "dd.dd....", "..dddd..."], ["......l..", ".....lll.", "...bb.lde", "..bbbb...", "dd.dd....", "..dddd..."]] },
+  "eastafrica:vervet-monkey": { pal: { "b": "#8a8470", "d": "#5e5a48", "l": "#b0ac96", "e": "#120e08", "n": "#1a1814" }, frames: [["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "...ddd..", "...ddd.."], ["d.....l.", ".d.bblll", "..bbbdle", "...dd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "eastafrica:african-fish-eagle": { pal: { "d": "#1a1814", "b": "#2c2820", "g": "#f2efe8", "y": "#d89a3a", "r": "#8a4a30" }, frames: [[".........d.", "........ddd", "....ddddddd", "..ddddddd..", "dddddddd...", "....dddd..."], [".........d.", "........ddd", "....ddddddd", "..ddddddd..", "dddddddd...", "....dddd..."]], young: [["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."], ["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."]], flies: true },
+  "canada:common-loon": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#3a3a3e", "e": "#140e08", "w": "#f0ece0" }, frames: [[".....bd...", ".....bd...", "...llll...", "...llle...", ".bbdlllll.", ".bbbbbbbb.", "bbbbbbbbbb", ".bbwwwwbb.", ".ddwwwwdd.", ".dddddddd."], [".....bd...", ".....bd...", "...llll...", "...llle...", ".bbdlllll.", ".bbbbbbbb.", "bbbbbbbbbb", ".bbwwwwbb.", ".ddwwwwdd.", ".dddddddd."]], young: [[".lld.", ".lle.", "bddll", ".ww..", "dddd."], [".lld.", ".lle.", "bddll", ".ww..", "dddd."]] },
+  "canada:snowshoe-hare": { pal: { "b": "#8a7458", "d": "#5a4a36", "l": "#bca888", "e": "#120e08", "w": "#f0ece4" }, frames: [["....dd", ".bblll", "bwwdle", ".ww...", ".ddd..", ".ddd.."], ["....dd", ".bblll", "bwwdle", ".ww...", "..dd..", ".ddd.."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", ".ww...", ".dd..."]] },
+  "canada:canada-lynx": { pal: { "b": "#a89a7e", "d": "#746650", "l": "#cfc2a4", "e": "#120e08", "n": "#1a1814" }, frames: [["........dd.", "...........", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], ["........dd.", "...........", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd...."]], young: [["....dd", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....dd", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "canada:beaver": { pal: { "b": "#6a4e30", "d": "#3e2c1a", "l": "#8a6a44", "e": "#0c0806", "y": "#e8a030" }, frames: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "canada:moose": { pal: { "b": "#3a2e22", "d": "#201812", "l": "#5c4a38", "e": "#0a0806", "n": "#8a7a60" }, frames: [["......bd...", "......ld...", "....bblb...", "..bbbblbbb.", ".bbbbblbbbb", ".bbbbllbbbb", ".bbbllllbbb", "dddlllllldd", "..dllllled.", "....dlld...", "...d.ddd.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d."], ["......bd...", "......ld...", "....bblb...", "..bbbblbbb.", ".bbbbblbbbb", ".bbbbllbbbb", ".bbbllllbbb", "dddlllllldd", "..dllllled.", "....dlld...", ".....dd..d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d."]], young: [["..ld", "bblb", "bllb", "dlle", ".ddd", ".ddd", ".ddd"], ["..ld", "bblb", "bllb", "dlle", ".ddd", ".ddd", ".ddd"]] },
+  "canada:bighorn-sheep": { pal: { "b": "#a89880", "d": "#746650", "l": "#cfc2a4", "e": "#120e08", "n": "#e8e0d0" }, frames: [[".........l.", ".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], [".........l.", ".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "canada:hoary-marmot": { pal: { "b": "#8a8070", "d": "#5a5244", "l": "#b0a690", "e": "#120e08", "n": "#1e1a14" }, frames: [["....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", ".dd...", ".dd..."]] },
+  "canada:mountain-goat": { pal: { "b": "#f0ece0", "d": "#c8c0a8", "l": "#ffffff", "e": "#140f0a" }, frames: [[".....l.", "bbbbl..", "bbblll.", "dbbdlde", ".ddd...", ".ddd...", ".ddd..."], [".....l.", "bbbbl..", "bbblll.", "dbbdlde", "..dd...", ".ddd...", ".ddd..."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "canada:golden-eagle": { pal: { "d": "#2a2018", "b": "#44352a", "g": "#1a1410", "y": "#8a6a3a" }, frames: [["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."], ["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."]], young: [["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."], ["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."]], flies: true },
+  "canada:grizzly-bear": { pal: { "b": "#6a5438", "d": "#3e2f1e", "l": "#8a7250", "e": "#0c0906", "n": "#b0a078" }, frames: [[".bbbb...l.", "bbbbbblll.", "bbbbbbllle", "bbbbbbdll.", "dbbbbd....", ".ddddd....", ".dd.dd....", ".dd.dd...."], [".bbbb...l.", "bbbbbblll.", "bbbbbbllle", "bbbbbbdll.", "dbbbbd....", ".ddddd....", ".dd.dd....", ".dd.dd...."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "norway:elg": { pal: { "b": "#3a2e22", "d": "#201812", "l": "#5c4a38", "e": "#0a0806", "n": "#8a7a60" }, frames: [["......bd...", "......ld...", "....bblb...", "..bbbblbbb.", ".bbbbblbbbb", ".bbbbllbbbb", ".bbbllllbbb", "dddlllllldd", "..dllllled.", "....dlld...", "...d.ddd.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d."], ["......bd...", "......ld...", "....bblb...", "..bbbblbbb.", ".bbbbblbbbb", ".bbbbllbbbb", ".bbbllllbbb", "dddlllllldd", "..dllllled.", "....dlld...", ".....dd..d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d.", "...d.d.d.d."]], young: [["..ld", "bblb", "bllb", "dlle", ".ddd", ".ddd", ".ddd"], ["..ld", "bblb", "bllb", "dlle", ".ddd", ".ddd", ".ddd"]] },
+  "norway:ekorn": { pal: { "b": "#a8502a", "d": "#6a3018", "l": "#d08050", "e": "#120c06", "n": "#f0e8dc" }, frames: [[".....dd", "..bblll", "lbbbdle", "lddd...", "..ddd..", "..ddd.."], [".....dd", "..bblll", "lbbbdle", "lddd...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "norway:fjellrev-forest": { pal: { "b": "#b0a080", "d": "#7a6c50", "l": "#d4c6a4", "e": "#120e08", "n": "#1a1814" }, frames: [["........dd.", "...........", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], ["........dd.", "...........", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd...."]], young: [["....dd", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....dd", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "norway:jerv": { pal: { "b": "#3e3024", "d": "#201810", "l": "#5c4a38", "e": "#0a0806", "n": "#8a6a48" }, frames: [["....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "norway:storfugl": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#3a3a3e", "e": "#c0302a", "w": "#8a8470" }, frames: [[".......l..", "......lll.", ".ldbwwblde", "l.l.ww....", "....d.d...", "....d.d..."], [".......l..", "......lll.", ".ldbwwblde", "l.l.ww....", "......d...", "....d.d..."]], young: [["......l.", ".....lll", ".....dle", "..lww...", "lllww...", "...dd..."], ["......l.", ".....lll", ".....dle", "..lww...", "lllww...", "...dd..."]] },
+  "norway:fjellrev": { pal: { "b": "#f0ece4", "d": "#c8c0b0", "l": "#ffffff", "e": "#120e08", "n": "#8a8270" }, frames: [[".....dd", "..bblll", "lbbbdle", "lddd...", "..ddd..", "..ddd.."], [".....dd", "..bblll", "lbbbdle", "lddd...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "norway:reinsdyr": { pal: { "b": "#9a8468", "d": "#6a5844", "l": "#c0a888", "e": "#120e08", "n": "#f0e8d8" }, frames: [[".........l.", ".........l.", ".........l.", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], [".........l.", ".........l.", ".........l.", "..bbbb.lll.", ".bbbbbbllle", "bbbbbbbdll.", "ddbbbbd....", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "norway:havorn": { pal: { "d": "#4a4438", "b": "#5e5648", "g": "#2a2620", "y": "#d8c060", "w": "#f0ece0" }, frames: [["......dddd..ddd..", "....dddddddddddd.", "....dddddddddddyy", "..ddddddddddd....", "ddddddwwwwdd.....", "....ddwwwwdd.....", "......dddd......."], ["......dddd..ddd..", "....dddddddddddd.", "....dddddddddddyy", "..ddddddddddd....", "ddddddwwwwdd.....", "....ddwwwwdd.....", "......dddd......."]], young: [["......d..", ".....ddd.", "...dd.ddd", ".ddwwd...", "d.dww....", "..dddd..."], ["......d..", ".....ddd.", "...dd.ddd", ".ddwwd...", "d.dww....", "..dddd..."]], flies: true },
+  "norway:lunde": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#f0ece0", "e": "#120e08", "y": "#e8a030", "r": "#c0302a" }, frames: [["....l..", "...lll.", ".bbdlyy", "dbb....", ".d.d...", ".d.d..."], ["....l..", "...lll.", ".bbdlyy", "dbb....", "...d...", ".d.d..."]], young: [["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."], ["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."]] },
+  "norway:elg-fjell": { pal: { "d": "#2a2018", "b": "#44352a", "g": "#1a1410", "y": "#8a6a3a" }, frames: [["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."], ["........d.", ".......ddd", "...ddddddd", "..dddddd..", "ddddddd...", "...dddd..."]], young: [["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."], ["......d.", ".....ddd", "...ddddd", "..dddd..", "ddddd...", "...dd..."]], flies: true },
+  "nepal:spotted-deer": { pal: { "b": "#a86a3c", "d": "#6a3e22", "l": "#d09a60", "e": "#120e08", "n": "#f0ece0" }, frames: [[".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], [".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "nepal:asian-elephant": { pal: { "b": "#7a766e", "d": "#4e4a42", "l": "#9a968a", "e": "#120e08", "n": "#e8e2d4" }, frames: [["...bb..dd..", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "..ddddd....", "..dd.dd....", "..dd.dd...."], ["...bb..dd..", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "...dd.d....", "..dd.dd....", "..dd.dd...."]], young: [["....dd.", ".bblll.", "bbbdlll", "ddd....", ".ddd...", ".ddd..."], ["....dd.", ".bblll.", "bbbdlll", "ddd....", "..dd...", ".ddd..."]] },
+  "nepal:gharial": { pal: { "b": "#5a6048", "d": "#343a28", "l": "#7e8468", "e": "#0a0c06" }, frames: [["..........bd...", "........bbbb...", "......bbbbbbbb.", ".....bbbllllbbb", ".....bbblllebbb", "..dddbbbdlllllb", "dd....ddbbbbdd.", ".......ddddd.d."], ["..........bd...", "........bbbb...", "......bbbbbbbb.", ".....bbbllllbbb", ".....bbblllebbb", "..dddbbbdlllllb", "dd....ddbbbbdd.", ".......ddddd.d."]], young: [["......l...", ".....lll..", "...bb.ldll", "..bbbb....", "dd.dd.....", "..dddd...."], ["......l...", ".....lll..", "...bb.ldll", "..bbbb....", "dd.dd.....", "..dddd...."]] },
+  "nepal:bengal-tiger": { pal: { "b": "#d8832a", "d": "#8a4e16", "l": "#f0ac5a", "e": "#120e08", "k": "#1a1410", "w": "#f0ece0" }, frames: [["....bbbb.lll", "...bbbbbllle", "...bbbbbdlld", "ddddbwwbd...", "....dwwdd...", "....dd.dd..."], ["....bbbb.lll", "...bbbbbllle", "...bbbbbdlld", "ddddbwwbd...", "....dwwdd...", "....dd.dd..."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "nepal:greater-rhino": { pal: { "b": "#6a685c", "d": "#403e34", "l": "#8e8c7c", "e": "#0c0a06", "n": "#1a1814" }, frames: [["...bb......", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "..ddddd....", "..dd.dd....", "..dd.dd...."], ["...bb......", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "...dd.d....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "nepal:himalayan-monal": { pal: { "d": "#1a1420", "b": "#2a1a34", "g": "#1a5a40", "y": "#c0392b", "w": "#f0ece0" }, frames: [[".....y.", ".....d.", "....ddd", "....ddd", "..ww...", ".dww...", "d.dd..."], [".....y.", ".....d.", "....ddd", "....ddd", "..ww...", ".dww...", "d.dd..."]], young: [["....y.", "....d.", "...ddd", "...ddd", ".ww...", "dww...", ".dd..."], ["....y.", "....d.", "...ddd", "...ddd", ".ww...", "dww...", ".dd..."]] },
+  "nepal:himalayan-tahr": { pal: { "b": "#8a5e3a", "d": "#5a3a22", "l": "#b0845c", "e": "#120e08", "n": "#1a1410" }, frames: [[".........l.", ".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "..dd.dd....", "..dd.dd....", "..dd.dd....", "..dd.dd...."], [".........l.", ".........l.", "..bbbb...l.", ".bbbbbblll.", "bbbbbbbllle", "ddbbbbddll.", "..dddd.....", "...d..d....", "..dd.dd....", "..dd.dd....", "..dd.dd...."]], young: [["....l.", "....l.", ".bblll", "bbbdle", "ddd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", "ddd...", "..dd..", ".ddd.."]] },
+  "nepal:bharal": { pal: { "b": "#8a8e90", "d": "#5e6264", "l": "#b0b4b4", "e": "#120e08" }, frames: [[".....l.", "bbbbl..", "bbblll.", "dbbdlde", ".ddd...", ".ddd...", ".ddd..."], [".....l.", "bbbbl..", "bbblll.", "dbbdlde", "..dd...", ".ddd...", ".ddd..."]], young: [["....l.", "....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "nepal:red-panda": { pal: { "b": "#b0502a", "d": "#6a2e14", "l": "#d88a54", "e": "#120c06", "w": "#f0ece0", "n": "#2a2018" }, frames: [[".....dd", "..bblll", "lbwwdle", "ldww...", "..ddd..", "..ddd.."], [".....dd", "..bblll", "lbwwdle", "ldww...", "...dd..", "..ddd.."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "nepal:snow-leopard": { pal: { "b": "#c8c8c0", "d": "#9a9a90", "l": "#e8e8e0", "e": "#120e08", "n": "#6a6a5e" }, frames: [["........l..", "....bbblll.", "....bbbblde", ".ddddbbd...", "d....ddd...", ".....ddd..."], ["........l..", "....bbblll.", "....bbbblde", ".ddddbbd...", "d.....dd...", ".....ddd..."]], young: [[".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."], [".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."]] },
+  "patagonia:magellanic-woodpecker": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#3a3a3e", "e": "#120e08", "r": "#c0392b" }, frames: [["....l..", "....l..", "...lll.", ".bbdlll", "dbb....", ".d.d...", ".d.d..."], ["....l..", "....l..", "...lll.", ".bbdlll", "dbb....", "...d...", ".d.d..."]], young: [["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."], ["...l.", "..lll", "..dle", "bb...", "bb...", "dd..."]] },
+  "patagonia:guanaco": { pal: { "b": "#b08858", "d": "#7a5a38", "l": "#d8b47e", "e": "#120e08", "n": "#f0ece0" }, frames: [["......bd..", "....bbbb..", "..bbbddbbb", "ddbbbllbbb", "..bbllllbb", "..bblllebb", "..dbbddbbd", "..dddbbddd", "....dddd..", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d"], ["......bd..", "....bbbb..", "..bbbddbbb", "ddbbbllbbb", "..bbllllbb", "..bblllebb", "..dbbddbbd", "..dddbbddd", "....dddd..", ".....d...d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d"]], young: [["...bd", "...bd", ".bddb", "dblle", ".dddd", "..ddd", "..ddd", "..ddd"], ["...bd", "...bd", ".bddb", "dblle", ".dddd", "...dd", "..ddd", "..ddd"]] },
+  "patagonia:huemul": { pal: { "b": "#7a6a54", "d": "#4e4232", "l": "#a0906e", "e": "#120e08", "n": "#1a1410" }, frames: [[".....l.", "bbbbl..", "bbblll.", "dbbdlde", ".ddd...", ".ddd...", ".ddd..."], [".....l.", "bbbbl..", "bbblll.", "dbbdlde", "..dd...", ".ddd...", ".ddd..."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "patagonia:puma-patagonia": { pal: { "b": "#b08a54", "d": "#7a5a34", "l": "#d8b47e", "e": "#120e08", "w": "#f0ece0" }, frames: [[".........l.", "....bbbblll", "...bbwwbdle", ".ddddwwd...", "d....dddd..", ".....dddd.."], [".........l.", "....bbbblll", "...bbwwbdle", ".ddddwwd...", "d.....d.d..", ".....dddd.."]], young: [[".....l.", "....lll", "..bbdle", ".bwwb..", "ddww...", "..dd..."], [".....l.", "....lll", "..bbdle", ".bwwb..", "ddww...", "..dd..."]] },
+  "patagonia:condor": { pal: { "d": "#1a1a1c", "b": "#2c2a28", "g": "#f2efe8", "y": "#8a8278", "r": "#8a5a58" }, frames: [[".....dddd..ddd..", "...dddddddddddd.", "...dddddddddddyy", "..dddddddddd....", "ddddddddddd.....", "...dddddddd.....", ".....dddd......."], [".....dddd..ddd..", "...dddddddddddd.", "...dddddddddddyy", "..dddddddddd....", "ddddddddddd.....", "...dddddddd.....", ".....dddd......."]], young: [["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."], ["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."]], flies: true },
+  "patagonia:lesser-rhea": { pal: { "b": "#9a9078", "d": "#6a6248", "l": "#c4bc9e", "e": "#120e08", "y": "#8a8070" }, frames: [[".....bd...", ".....bd...", "...bbbb...", "..bbbbbb..", ".bbbbbbbb.", "bbbllllbbb", "bbblllebbb", "bbbdllyybb", ".dbbbbbbd.", ".dddbbddd.", "...dddd...", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."], [".....bd...", ".....bd...", "...bbbb...", "..bbbbbb..", ".bbbbbbbb.", "bbbllllbbb", "bbblllebbb", "bbbdllyybb", ".dbbbbbbd.", ".dddbbddd.", "...dddd...", "........d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d.", "..d.....d."]], young: [["..bd.", "..bd.", ".ll..", "blle.", "bddyy", ".dd..", ".d..d", ".d..d", ".d..d"], ["..bd.", "..bd.", ".ll..", "blle.", "bddyy", ".dd..", "....d", ".d..d", ".d..d"]] },
+  "patagonia:guanaco-steppe": { pal: { "b": "#b08858", "d": "#7a5a38", "l": "#d8b47e", "e": "#120e08", "n": "#f0ece0" }, frames: [["......bd..", "....bbbb..", "..bbbddbbb", "ddbbbllbbb", "..bbllllbb", "..bblllebb", "..dbbddbbd", "..dddbbddd", "....dddd..", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d"], ["......bd..", "....bbbb..", "..bbbddbbb", "ddbbbllbbb", "..bbllllbb", "..bblllebb", "..dbbddbbd", "..dddbbddd", "....dddd..", ".....d...d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d", "...d.d.d.d"]], young: [["...bd", "...bd", ".bddb", "dblle", ".dddd", "..ddd", "..ddd", "..ddd"], ["...bd", "...bd", ".bddb", "dblle", ".dddd", "...dd", "..ddd", "..ddd"]] },
+  "patagonia:burrowing-owl": { pal: { "b": "#8a7458", "d": "#5a4a36", "l": "#bca888", "e": "#e8c030", "w": "#1a1410" }, frames: [["....l..", ".wwlll.", "dwwdlll", ".d.d...", ".d.d...", ".d.d..."], ["....l..", ".wwlll.", "dwwdlll", "...d...", ".d.d...", ".d.d..."]], young: [["...l.", "..lll", "wwdle", "ww...", "d.d..", "d.d.."], ["...l.", "..lll", "wwdle", "ww...", "..d..", "d.d.."]] },
+  "patagonia:magellanic-penguin": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#f0ece0", "e": "#120e08", "y": "#d8c060" }, frames: [["....l..", "...lll.", ".bbdlyy", ".bb....", "ddd....", ".d.d...", ".d.d..."], ["....l..", "...lll.", ".bbdlyy", ".bb....", "ddd....", "...d...", ".d.d..."]], young: [["...l.", "..lll", "..dle", "bb...", "dd...", "dd..."], ["...l.", "..lll", "..dle", "bb...", "dd...", "dd..."]] },
+  "patagonia:andean-condor-steppe": { pal: { "d": "#1a1a1c", "b": "#2c2a28", "g": "#f2efe8", "y": "#8a8278", "r": "#8a5a58" }, frames: [[".....dddd..ddd..", "...dddddddddddd.", "...dddddddddddyy", "..dddddddddd....", "ddddddddddd.....", "...dddddddd.....", ".....dddd......."], [".....dddd..ddd..", "...dddddddddddd.", "...dddddddddddyy", "..dddddddddd....", "ddddddddddd.....", "...dddddddd.....", ".....dddd......."]], young: [["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."], ["......d..", ".....ddd.", "...dd.ddd", ".ddddd...", "d.ddd....", "..dddd..."]], flies: true },
+  "borneo:wallaces-flying-frog": { pal: { "b": "#3ea050", "d": "#1e6830", "l": "#7ad880", "e": "#141a0c", "y": "#e8d030" }, frames: [["....l..", "bbblll.", "bbbblde", "dbbd...", ".ddd...", ".ddd..."], ["....l..", "bbblll.", "bbbblde", "dbbd...", "..dd...", ".ddd..."]], young: [["....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "borneo:rhinoceros-hornbill": { pal: { "b": "#1a1a1c", "d": "#0a0a0c", "l": "#3a3a3e", "e": "#d8302a", "y": "#e8a030", "w": "#f0ece0" }, frames: [[".......y..", "......l...", ".....lll..", "......ldyy", "..bwwb....", ".d.ww.....", "d.dddd...."], [".......y..", "......l...", ".....lll..", "......ldyy", "..bwwb....", ".d.ww.....", "d.dddd...."]], young: [["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."], ["....l.", "...lll", "...dle", ".ww...", "dww...", ".dd..."]] },
+  "borneo:proboscis-monkey": { pal: { "b": "#8a5438", "d": "#5c3722", "l": "#b07a54", "e": "#100a06", "n": "#e8d8c0" }, frames: [["......l..", "...bblll.", "..bbbdlll", "ddddd....", "...ddd...", "...ddd..."], ["......l..", "...bblll.", "..bbbdlll", "ddddd....", "....dd...", "...ddd..."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "borneo:bornean-elephant": { pal: { "b": "#7a766e", "d": "#4e4a42", "l": "#9a968a", "e": "#120e08", "n": "#e8e2d4" }, frames: [["...bb..dd..", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "..ddddd....", "..dd.dd....", "..dd.dd...."], ["...bb..dd..", "..bbbb.l...", ".bbbbblll..", ".bbbbbbldll", "d.dbbd.....", "...dd.d....", "..dd.dd....", "..dd.dd...."]], young: [["....dd.", ".bblll.", "bbbdlll", "ddd....", ".ddd...", ".ddd..."], ["....dd.", ".bblll.", "bbbdlll", "ddd....", "..dd...", ".ddd..."]] },
+  "borneo:bornean-orangutan": { pal: { "b": "#9a5a2e", "d": "#6a3a18", "l": "#c0824a", "e": "#120e08", "n": "#1a1410" }, frames: [[".........l.", ".......lll.", ".bbbbbbllle", ".bbbbbbdll.", "bbbbbbbb...", ".bbbbbb....", ".ddbbdd....", "..dd.dd....", "..dd.dd...."], [".........l.", ".......lll.", ".bbbbbbllle", ".bbbbbbdll.", "bbbbbbbb...", ".bbbbbb....", ".ddbbdd....", "...d..d....", "..dd.dd...."]], young: [["....l.", "....l.", ".bblll", "bbbdle", ".dd...", ".ddd..", ".ddd.."], ["....l.", "....l.", ".bblll", "bbbdle", ".dd...", "..dd..", ".ddd.."]] },
+  "borneo:silvered-langur": { pal: { "b": "#8a8a82", "d": "#5e5e56", "l": "#b4b4ac", "e": "#120e08", "n": "#1a1a16" }, frames: [["......l.", "...bblll", "..bbbdle", "ddddd...", "...ddd..", "...ddd.."], ["......l.", "...bblll", "..bbbdle", "ddddd...", "....dd..", "...ddd.."]], young: [["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."], ["....l.", "...lll", ".bbdle", "bbbb..", "ddd...", ".dd..."]] },
+  "borneo:estuarine-crocodile": { pal: { "b": "#4a4e38", "d": "#2a2e20", "l": "#6e7250", "e": "#0a0c06", "y": "#9a9460" }, frames: [["...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", ".........dddd..."], ["...........bd...", ".........bbbb...", ".......bbllllbb.", "......bbblllebbb", "......bbbdlldbbb", "...dddbbbbbbbbbb", "ddd....ddbbbbdd.", ".........dddd..."]], young: [["........l.", ".......lll", "...bbbbdle", "..bbbbbb..", "ddddbbd...", "...dddd..."], ["........l.", ".......lll", "...bbbbdle", "..bbbbbb..", "ddddbbd...", "...dddd..."]] },
+  "borneo:storks-billed-kingfisher": { pal: { "b": "#2a7a8a", "d": "#154a54", "l": "#5ab0c0", "e": "#120e08", "r": "#c0392b", "w": "#e8d8a0" }, frames: [["....l..", "...lll.", "...dlll", ".ww....", "dww....", ".dd...."], ["....l..", "...lll.", "...dlll", ".ww....", "dww....", ".dd...."]], young: [["...l.", "..lll", "..dle", "ww...", "ww...", "dd..."], ["...l.", "..lll", "..dle", "ww...", "ww...", "dd..."]] },
+  "borneo:smooth-coated-otter": { pal: { "b": "#5a4a38", "d": "#342a1e", "l": "#8a7458", "e": "#0c0a06", "w": "#b4a488" }, frames: [[".....l.", "....lll", "..bbdle", ".bwwb..", "ddww...", "..dd..."], [".....l.", "....lll", "..bbdle", ".bwwb..", "ddww...", "..dd..."]], young: [["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."], ["....l.", "...lll", ".bbdle", "bwwb..", "dww...", ".dd..."]] },
+  "borneo:sunda-clouded-leopard": { pal: { "b": "#c0a070", "d": "#8a6e48", "l": "#e0c494", "e": "#120e08", "n": "#2a2018" }, frames: [["........l..", "....bbblll.", "....bbbblde", ".ddddbbd...", "d....ddd...", ".....ddd..."], ["........l..", "....bbblll.", "....bbbblde", ".ddddbbd...", "d.....dd...", ".....ddd..."]], young: [[".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."], [".....l.", "....lll", "..bbdle", ".bbbb..", "dddd...", "..dd..."]] }
+};
+
 // src/regions/season.ts
 function currentSeasonFor(region, date = new Date()) {
   const month = date.getMonth();
@@ -7147,20 +7398,44 @@ function currentSeasonFor(region, date = new Date()) {
 }
 
 // src/regions/index.ts
+function withSprites(region) {
+  return {
+    ...region,
+    biomes: region.biomes.map((biome) => ({
+      ...biome,
+      creatures: biome.creatures.map((creature) => {
+        const key = `${region.key}:${creature.key}`;
+        const sprite = HAND_SPRITES[key] ?? BAKED_SPRITES[key] ?? creature.sprite;
+        return sprite ? { ...creature, sprite } : creature;
+      })
+    }))
+  };
+}
+var australia2 = withSprites(australia);
+var aotearoa2 = withSprites(aotearoa);
+var japan2 = withSprites(japan);
+var madagascar2 = withSprites(madagascar);
+var costaRica2 = withSprites(costaRica);
+var eastAfrica2 = withSprites(eastAfrica);
+var canada2 = withSprites(canada);
+var norway2 = withSprites(norway);
+var nepal2 = withSprites(nepal);
+var patagonia2 = withSprites(patagonia);
+var borneo2 = withSprites(borneo);
 var REGIONS = [
-  australia,
-  aotearoa,
-  japan,
-  madagascar,
-  costaRica,
-  eastAfrica,
-  canada,
-  norway,
-  nepal,
-  patagonia,
-  borneo
+  australia2,
+  aotearoa2,
+  japan2,
+  madagascar2,
+  costaRica2,
+  eastAfrica2,
+  canada2,
+  norway2,
+  nepal2,
+  patagonia2,
+  borneo2
 ];
-var DEFAULT_REGION_KEY = australia.key;
+var DEFAULT_REGION_KEY = australia2.key;
 function regionByKey(key) {
   return REGIONS.find((r) => r.key === key);
 }

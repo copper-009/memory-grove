@@ -14,11 +14,14 @@ describe('buildCreatureFrames', () => {
             const [w, h] = frameSize(idle);
             expect(w).toBeGreaterThan(0);
             expect(h).toBeGreaterThan(0);
-            // every character used must either be '.' or a key in the palette
+            // every character used must either be '.' or a key in whichever palette this
+            // creature actually renders from (a hand/baked sprite's own `pal`, or the old
+            // `palette` for a creature still on the procedural fallback)
+            const pal = creature.sprite?.pal ?? creature.palette ?? {};
             const used = new Set(idle.join('').split(''));
             used.delete('.');
             for (const ch of used) {
-              expect(creature.palette[ch], `${creature.key} uses undeclared colour "${ch}"`).toBeDefined();
+              expect(pal[ch], `${creature.key} uses undeclared colour "${ch}"`).toBeDefined();
             }
           }
         }

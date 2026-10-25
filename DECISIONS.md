@@ -141,3 +141,27 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   but there were six strong candidates for five slots; it is recorded as a near-miss in
   `aotearoa/index.ts`'s module comment rather than silently dropped or wedged into the wrong
   biome.
+- **Creatures moved from procedural `BodyPlan` bodies to hand-authored `CreatureSprite`
+  character grids, Memory Forest's own `web/visitors.js` technique — reversing the "art is
+  entirely procedural" call above.** The procedural body-plan renderer was built because 140+
+  species couldn't be hand-drawn to a consistent standard; in practice it produced creatures
+  that read as generic shaded blobs rather than specific animals, which a hand-authored
+  sprite — a handful of deliberately placed pixels, one or two signature marks per species —
+  does not. `Creature.sprite?: CreatureSprite` is the new preferred field; `body`/`palette`
+  stay on the type as the fallback `creatureSprite.ts` renders from when `sprite` is absent,
+  so species not yet migrated keep working rather than silently losing their creature. Only
+  Australia's eucalypt woodland biome (5 species) is migrated so far — see
+  `src/regions/australia/sprites/` and `dev/gallery.html` (screenshot-reviewed against
+  Memory Forest's own fox/deer/owl, see that page's header for the comparison method). The
+  other 10 regions' ~125 remaining creatures still render through the `BodyPlan` fallback
+  until each gets the same hand-authoring and gallery review pass. The pack-validation point
+  above ("a hand-drawn sprite can't be checked for a missing trait, a `BodyPlan` can") is a
+  real loss for migrated species — `validate.ts` now checks a `CreatureSprite`'s palette hex
+  values and frame-row shape, not whether its traits are visually represented, so that check
+  is now what the gallery screenshot review is for.
+- **Eucalypt woodland's two broadleaf eucalypt species got a new `sparse-broadleaf`
+  `PlantForm`** rather than reusing the generic `broadleaf` crown every other rounded-canopy
+  tree in every region shares. Real eucalypt crowns are characteristically open and clumped —
+  visible gaps and branch structure, not a solid dome — which the existing `roundCrown`'s
+  default hole/density settings didn't capture; `broadleaf` stays the dense-canopy default
+  (figs, beeches, rainforest emergents) for every other species, migrated or not.

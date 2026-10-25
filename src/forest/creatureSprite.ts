@@ -1,26 +1,32 @@
 /**
- * Creature sprites: ASCII rows generated from a `BodyPlan`, in the same format Memory
- * Forest's hand-drawn animals use (`web/visitors.js`) — one character per pixel, `.` for
- * transparent, every other character indexing the creature's own `Palette`.
+ * Creature sprites.
  *
- * A `BodyPlan` (lengths and angles of named parts) generates the frame rather than an
- * artist drawing each of 143 species by hand — the only way that many creatures can be
- * both visually consistent and schema-checkable (`src/regions/validate.ts`). See
- * `DECISIONS.md` § "Art and assets".
+ * Primary path: a hand-authored character grid, Memory Forest's own technique
+ * (`reference/memory-forest/web/visitors.js`'s `VISITORS`) — one character per pixel, `.`
+ * for transparent, every other character indexing the sprite's own small fixed `pal`. Every
+ * migrated species (`Creature.sprite`) is drawn this way: two frames (idle/resting and a
+ * step or busy pose), plus an optional smaller `young` pair hand-drawn separately for the
+ * early life stages rather than the adult frames scaled down.
  *
- * Bodies are filled as ellipses, not rectangles — the same reason `plantSprite.ts` fills
- * crowns as overlapping ellipse blobs rather than boxes: at this pixel scale a hard
- * rectangle reads as furniture, not an animal, and a rounded silhouette reads as one
- * immediately.
- *
- * Two frames per creature: 0 = idle/standing, 1 = the "busy" frame (walking leg position,
- * a graze, a wing-flap). `scene.ts` picks between them using `creatureMotion.ts`.
+ * Fallback path, `buildProceduralFrames`: the previous approach this replaces — a body
+ * described by lengths and angles (`BodyPlan`), filled as overlapping ellipses. Kept only
+ * for the ~135 species across the other ten regions not yet given a hand-authored sprite
+ * (`DECISIONS.md` § "Region packs" has the full account of the switch and what's migrated so
+ * far) — every one of those still needs to render as *something*, not disappear, until it
+ * gets the same gallery-reviewed hand-authoring pass Australia's eucalypt woodland got.
+ * `scene.ts` prefers `creature.sprite` and only calls the fallback when it's absent.
  */
 
-import type { BodyPlan, Creature } from '../regions/types';
+import type { BodyPlan, Creature, SpriteFrame } from '../regions/types';
 import type { LifeStageIndex } from '../data/milestones';
 
 export type Frame = string[];
+
+/** Life stage 0–1 (joey/chick-equivalent) use a sprite's `young` grid when it has one. */
+export function framesFor(sprite: NonNullable<Creature['sprite']>, stage: LifeStageIndex): [Frame, Frame] {
+  const pair = stage <= 1 && sprite.young ? sprite.young : sprite.frames;
+  return [[...pair[0]], [...pair[1]]];
+}
 
 const STAGE_SCALE: Record<number, number> = { 0: 0.45, 1: 0.68, 2: 1, 3: 1 };
 
@@ -92,25 +98,34 @@ const KIND_PROPORTIONS: Record<BodyPlan['kind'], { bodyTilt: number; headScale: 
 };
 
 /**
- * Build both frames for a creature at a given life stage. The body plan drives size; the
- * `kind` picks proportions (how round the body is, how big the head reads) but every
- * creature is assembled by the same ellipse-based routine, so the whole roster stays
- * visually consistent.
+ * Build both frames for a not-yet-migrated creature from its `BodyPlan`, at a given life
+ * stage — the fallback path, see the module comment. `zoomScale` sizes the whole sprite
+ * directly: a creature standing nearer the camera (or a small grove's zoom-in) gets an
+ * ASCII grid built bigger in the first place, genuinely more character cells, each one
+ * still painted at a small, fixed pixel size, rather than the same small grid blown up by a
+ * large per-character paint multiplier (which produced "pixels far too large to make out
+ * anything" — a dozen characters blown up is still only a dozen giant flat squares).
+ *
+ * A hand-authored `CreatureSprite`'s frames are fixed-resolution data instead (there's no
+ * "build it bigger" for hand-drawn pixels) — those scale entirely through the paint
+ * multiplier at the call site, the same way Memory Forest's own `paintSprite`/`scaledAt`
+ * scales its fixed-size `VISITORS` frames up.
  */
-/**
- * `zoomScale` sizes the whole sprite directly, the same fix `plantSprite.ts`'s
- * `buildToneMap` got earlier: a creature standing nearer the camera (or a small grove's
- * zoom-in) gets an ASCII grid built bigger in the first place — genuinely more character
- * cells, each one still painted at a small, fixed pixel size — rather than the same small
- * grid blown up by a large per-character paint multiplier. The latter is what produced
- * "pixels far too large to make out anything": blowing up a 12-character-wide grid by a
- * factor of 6 gives a 72-pixel-wide creature made of only 12 giant flat squares, no matter
- * how big that number gets. Building a 40-character-wide grid at zoomScale instead gives a
- * 40-pixel-wide creature with 40 individual cells of actual shape detail — the resolution
- * itself grows with size, the way a real sprite should.
- */
-export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, zoomScale = 1): [Frame, Frame] {
+export function buildProceduralFrames(creature: Creature, stage: LifeStageIndex, zoomScale = 1): [Frame, Frame] {
   const plan = creature.body;
+  const pal = creature.palette;
+  if (!plan || !pal) {
+    // No BodyPlan and no sprite: nothing to draw. Shouldn't happen (every creature in a
+    // region pack has one or the other, checked by validate.ts), but fail quietly to a
+    // single-pixel placeholder rather than throwing mid-frame.
+    return [['.'], ['.']];
+  }
+  // TypeScript doesn't carry the `if (!plan || !pal) return` narrowing above into the
+  // `drawCommon` closure declared further down (a closure over a `const` can, in principle,
+  // run after reassignment elsewhere, so the checker doesn't trust it) — these two aliases
+  // are non-optional by construction instead of fighting that with assertions at every use.
+  const bodyPlan: BodyPlan = plan;
+  const bodyPal: Record<string, string> = pal;
   const scale = (STAGE_SCALE[stage] ?? 1) * zoomScale;
   const [bw, bh] = plan.size;
   const w = Math.max(3, Math.round(bw * scale));
@@ -123,7 +138,6 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
   const crest = Math.round((plan.crest ?? 0) * scale);
   const proportions = KIND_PROPORTIONS[plan.kind];
 
-  const pal = creature.palette;
   const main = mainKey(pal);
   const dark = pal.d ? 'd' : main;
   const light = pal.l ? 'l' : undefined;
@@ -149,7 +163,7 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
 
     // legs: thin, at the belly edge, offset in pairs for a walk cycle
     if (legs > 0) {
-      const legN = plan.kind === 'bird' || plan.kind === 'wader' ? 2 : 4;
+      const legN = bodyPlan.kind === 'bird' || bodyPlan.kind === 'wader' ? 2 : 4;
       for (let i = 0; i < legN; i++) {
         const lx = cx - w * 0.3 + (i * w * 0.6) / Math.max(1, legN - 1);
         const offset = legPhase && i % 2 === 0 ? 1 : 0;
@@ -163,7 +177,7 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
 
     // tail, drawn before the body so the body's rump overlaps its base
     if (tailLen > 0) {
-      const style = plan.tail?.style ?? 'down';
+      const style = bodyPlan.tail?.style ?? 'down';
       const tx = cx - w / 2 - 1;
       const ty = bodyCy + (style === 'up' || style === 'fan' ? -h * 0.2 : h * 0.15);
       for (let i = 0; i < tailLen; i++) {
@@ -187,15 +201,15 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
     // body: a compact, rounded ellipse — `bodyRound` pulls height up toward width instead
     // of the more realistic (and less cute) elongated oval the old proportions gave every
     // kind. Flat colour, shaded only at the lower-back rim (see ellipse()'s own comment).
-    const bodyW = w * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.85 : 1);
-    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (plan.kind === 'bird' || plan.kind === 'wader' ? 0.8 : 1));
+    const bodyW = w * (bodyPlan.kind === 'bird' || bodyPlan.kind === 'wader' ? 0.85 : 1);
+    const bodyH = Math.max(bodyW * proportions.bodyRound, h * (bodyPlan.kind === 'bird' || bodyPlan.kind === 'wader' ? 0.8 : 1));
     ellipse(g, cx, bodyCy, bodyW, bodyH, main, dark);
 
     // A bold, clearly visible accent patch — a belly, chest or tail-tip marking — on every
     // kind that has one defined, not just birds. This is the single detail that turns a
     // flat colour blob into a specific, recognisable little animal (the reference fox's
     // white chest, the rabbit's white tail) rather than a uniform silhouette.
-    if (pal.w) {
+    if (bodyPal.w) {
       // Same colour for both ellipse() params: a patch this small (often just a handful of
       // pixels) picking up its own internal shadow sub-tone was exactly what produced a
       // blocky diamond artefact instead of a soft accent marking — there's no room for two
@@ -233,7 +247,7 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
       }
     }
     // spines (echidna-style): along the back
-    if (plan.spines) {
+    if (bodyPlan.spines) {
       for (let x = -bodyW / 2; x <= bodyW / 2; x += 1.6) {
         put(g, Math.round(cx + x), Math.round(bodyCy - bodyH / 2 - 1), dark);
       }
@@ -245,9 +259,20 @@ export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, z
   return [drawCommon(0), drawCommon(1)];
 }
 
+/**
+ * Build both frames for a creature at a given life stage — `creature.sprite`'s hand-drawn
+ * grid when present, the procedural `BodyPlan` fallback otherwise. `zoomScale` only affects
+ * the fallback path (see `buildProceduralFrames`); a hand sprite's own fixed frames are
+ * returned as-is and the caller scales them with an integer paint multiplier instead.
+ */
+export function buildCreatureFrames(creature: Creature, stage: LifeStageIndex, zoomScale = 1): [Frame, Frame] {
+  if (creature.sprite) return framesFor(creature.sprite, stage);
+  return buildProceduralFrames(creature, stage, zoomScale);
+}
+
 /** Scale for how the given plan prefers to be laid out — exported for the painter's bounds. */
 export function frameSize(frame: Frame): [number, number] {
   return [frame[0]?.length ?? 0, frame.length];
 }
 
-export type { BodyPlan };
+export type { BodyPlan, SpriteFrame };

@@ -974,7 +974,16 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const zoomScale = layout.zoom * pixelScale * depthScale * 0.45;
     const [idle, busy] = buildCreatureFrames(creature, stageIdx, zoomScale);
     const home = 0.15 + (save.slot / 5) * 0.7;
-    const creatureScale = Math.max(1, Math.round(pixelScale * 0.5));
+    // A hand-authored sprite (`creature.sprite`) is a small *fixed* grid — Memory Forest's
+    // own creatures run 5-17 engine pixels wide — so unlike the procedural fallback (which
+    // already bakes zoom into the grid's own resolution, and only needs a small fixed paint
+    // multiplier on top) it needs the zoom carried entirely by the paint multiplier, the
+    // same way the original's `paintSprite`/`scaledAt` scales its own fixed-size frames up.
+    const creatureScale = creature.sprite
+      ? Math.max(1, Math.round(zoomScale * 2.6))
+      : Math.max(1, Math.round(pixelScale * 0.5));
+    const pal = creature.sprite?.pal ?? creature.palette ?? {};
+    const isHopper = creature.sprite ? !!creature.sprite.hop : creature.body?.kind === 'hopper';
     // Against the user's own reference: a fox or rabbit there is clean, simple, almost
     // flat colour — one body tone, one accent (a white tail tip, a dark eye), nothing more.
     // Stacking this scene's full tint + rim-light + haze treatment on a sprite that small
@@ -990,7 +999,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
       const pos = flightPosition(input.t, engineW * 0.6, horizonY * 0.5, engineW * 0.1, horizonY * 0.08, 0.3);
       const frame = input.animate && flapFrame(input.t, 2.5, 5) ? busy : idle;
       const fw = frame[0]?.length ?? 1;
-      paintCreature(eg, frame, creature.palette, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint);
+      paintCreature(eg, frame, pal, Math.round(pos.x - (fw * creatureScale) / 2), Math.round(pos.y - frame.length * creatureScale), creatureScale, false, creatureTint);
       pushBox('creature', save.slot, pos.x, pos.y - frame.length * creatureScale, fw * creatureScale, frame.length * creatureScale, 0);
       return;
     }
@@ -999,7 +1008,7 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     const frame = motion.moving ? busy : idle;
     const fw = frame[0]?.length ?? 1;
     let dy = -motion.idleBob * 0.6 * creatureScale;
-    if (creature.body.kind === 'hopper' && motion.moving) {
+    if (isHopper && motion.moving) {
       dy = -hopHeight(motion.groundCovered, RABBIT_LIKE_HOP, 3 * creatureScale);
     }
     const x = motion.x * engineW;
@@ -1012,7 +1021,12 @@ export function drawScene(g: CanvasRenderingContext2D, W: number, H: number, inp
     // for the ones placed far from the camera), not as a blanket effect on every creature
     // regardless of position.
     const creatureHazeOpt = creatureHaze > 0.25 ? { color: th.haze, amount: creatureHaze * 0.6 } : undefined;
-    paintCreature(eg, frame, creature.palette, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, motion.facing < 0, creatureTint, undefined, creatureHazeOpt);
+    // A sprite can declare itself drawn facing left by default (`facesLeft`, most face
+    // right) — flips the sense of `motion.facing` the same way Memory Forest's own
+    // `FACES_LEFT` map does, so a left-drawn sprite still turns to face the way it's moving.
+    const baseFlip = motion.facing < 0;
+    const flip = creature.sprite?.facesLeft ? !baseFlip : baseFlip;
+    paintCreature(eg, frame, pal, Math.round(x - (fw * creatureScale) / 2), Math.round(y0), creatureScale, flip, creatureTint, undefined, creatureHazeOpt);
     pushBox('creature', save.slot, x, y0, fw * creatureScale, frame.length * creatureScale, creatureDepth);
   });
 

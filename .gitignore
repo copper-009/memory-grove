@@ -8,5 +8,8 @@ coverage/
 reference/memory-forest/
 reference/plugin-template/
 reference/official-plugins/
+# Golden Lake reference art (from memory-grove-layers.zip) — viewing/sampling only, not a
+# tracked asset; review/gallery.html embeds the two images it actually uses as base64.
+art/
 screenshots/*.png
 screenshots/*.png
