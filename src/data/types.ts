@@ -87,7 +87,9 @@ export interface Plant {
   size: 0 | 1 | 2;
   /** 0 healthy .. 3 struggling badly. */
   health: 0 | 1 | 2 | 3;
-  /** Index into the region's plant species list for this biome. */
+  /** A seed-derived roll, deterministic and tested, not currently read for rendering —
+   * species names come from `kind` instead (`mfSpecies.ts`, `mfAdapter.ts`'s `forest.ts`
+   * comment on this field explains why). Kept for whatever wants per-slot variety later. */
   species: number;
   /** Stable per-day seed; everything random about this plant derives from it. */
   seed: number;

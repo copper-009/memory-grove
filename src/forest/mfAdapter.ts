@@ -10,13 +10,13 @@
  *
  * Golden Lake's own landscape/weather/time always (`presets.py`'s first preset —
  * `landscape: 'lake'`, `landmark: 'none'`, `weather: 'clear'`, `time: 'golden_hour'`); only
- * the trees change per biome, and only for biomes with an entry in `mfEnvs.ts`'s registry
- * (Phase 3, one region at a time — Australia's eucalypt woodland so far, `src/envs/
- * au-eucalypt.js`). Milestone animals are Memory Forest's own stock roster (rabbit/deer/
- * fox/owl/heron/stag/cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/
- * `visitors()` directly, not Memory Grove's own per-region creature roster, since the
- * vendored `visitors.js` only knows its own built-in `VISITORS` table) — creatures aren't
- * region-specific yet, even for eucalypt woodland.
+ * the trees change per biome. Every biome now has an entry in `mfEnvs.ts`'s registry
+ * (Phase 3), each one naming its own two species via `mfSpecies.ts` (`speciesNameFor`,
+ * below) rather than drawing generic trees. Milestone animals are Memory Forest's own stock
+ * roster (rabbit/deer/fox/owl/heron/stag/cabin/bear/squirrel/eagle — ported from
+ * `milestones.py`'s `VISITORS`/`visitors()` directly, not Memory Grove's own per-region
+ * creature roster, since the vendored `visitors.js` only knows its own built-in `VISITORS`
+ * table) — creatures aren't region-specific yet, for any biome.
  *
  * Not yet wired: `calendar` (the study heatmap — a separate panel below the forest, not
  * needed for the forest scene itself), `journal` (a stub empty string — `journal.py` isn't
@@ -29,6 +29,7 @@ import type { Grove, Plant } from '../data/types';
 import type { CreatureRoster } from '../data/milestones';
 import type { Biome } from '../regions/types';
 import { envForBiome } from './mfEnvs';
+import { BIOME_SPECIES } from './mfSpecies';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -65,13 +66,28 @@ export interface MfTree {
 
 const PINE_PERCENT = 34;
 
-/** `p.species` is a raw roll (`seed % 1024`, `forest.ts`), meant to be taken modulo
- * whichever biome's own species list is current — `biome` is optional only because the
- * synthetic-fixture test harness (`tools/harness/mf.ts`) doesn't have a real one to pass. */
+/** The species name for a tree, matching exactly what its `kind` (and, for a biome whose
+ * env rotates several species across one kind-slot, its `seed`) actually draws — see
+ * `mfSpecies.ts`'s header for the bug this replaced (an independent roll that routinely
+ * named a different species than the one on screen). Undefined when the matching env
+ * leaves that kind-slot on the vendored engine's own generic default (no real species to
+ * name) or when the biome has no entry at all. */
+function speciesNameFor(biome: Biome, kind: 0 | 1, seed: number): string | undefined {
+  const slots = BIOME_SPECIES[biome.key];
+  const entry = kind === 1 ? slots?.pine : slots?.round;
+  if (!entry) return undefined;
+  const key = Array.isArray(entry) ? entry[seed % entry.length] : entry;
+  return biome.plants.find((p) => p.key === key)?.common;
+}
+
+/** `biome` is optional only because the synthetic-fixture test harness
+ * (`tools/harness/mf.ts`) doesn't have a real one to pass — trees render the same either
+ * way, just without a species name in their tooltip. */
 export function toMfTree(p: Plant, biome?: Biome): MfTree {
+  const kind: 0 | 1 = p.seed % 100 < PINE_PERCENT ? 1 : 0;
   const out: MfTree = {
     day: p.day, ago: p.ago, date: p.date, n: p.n, stage: p.stage, size: p.size, health: p.health,
-    kind: p.seed % 100 < PINE_PERCENT ? 1 : 0, seed: p.seed,
+    kind, seed: p.seed,
     remembered: Math.round(p.remembered * 1000) / 1000, strength: Math.round(p.strength * 10) / 10,
     struggling: p.struggling, measured: p.measured,
   };
@@ -79,7 +95,10 @@ export function toMfTree(p: Plant, biome?: Biome): MfTree {
   if (p.burn !== undefined) out.burn = p.burn;
   if (p.smoke !== undefined) out.smoke = p.smoke;
   if (p.big !== undefined) out.big = p.big;
-  if (biome && biome.plants.length > 0) out.speciesName = biome.plants[p.species % biome.plants.length].common;
+  if (biome) {
+    const name = speciesNameFor(biome, kind, p.seed);
+    if (name) out.speciesName = name;
+  }
   return out;
 }
 

@@ -99,8 +99,11 @@ export function makePlant(cohort: Cohort, today: number): Plant {
     stage,
     size: sizeFor(cohort.n),
     health,
-    // A roll, not an index: the region pack mods it by its own species count, so switching
-    // regions re-skins every plant without moving any of them.
+    // A roll, not an index into anything read today — species names now come from `kind`
+    // instead (`mfSpecies.ts`), which matches the shape actually drawn; this field used to
+    // be taken modulo the biome's species count for the tooltip name, independently of
+    // `kind`, which routinely named a different species than the one on screen (fixed).
+    // Kept, deterministic and tested, for whatever wants per-slot variety later.
     species: seed % 1024,
     seed,
     remembered: Math.round(remembered * 1000) / 1000,
