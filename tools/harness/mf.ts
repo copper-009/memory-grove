@@ -10,11 +10,11 @@ import { scanCards } from '../../src/data/cards';
 import { buildGrove, mergeOld } from '../../src/data/forest';
 import { emptyRoster } from '../../src/data/milestones';
 import { buildMfPayload } from '../../src/forest/mfAdapter';
+import type { AnkiForestApi } from '../../src/forest/mfLoader';
 import type { FixtureName } from '../../src/data/fixtures';
 
 declare global {
   interface Window {
-    AnkiForest: { mount: (root: HTMLElement, data: unknown, opts: Record<string, unknown>) => void };
     __renderMf: (opts: { fixtureName: FixtureName; width: number }) => void;
   }
 }
@@ -25,6 +25,6 @@ window.__renderMf = (opts) => {
   const grove = mergeOld(buildGrove(scan));
   const payload = buildMfPayload(grove, emptyRoster(), { maxWidth: opts.width });
   const root = document.getElementById('stage')!;
-  window.AnkiForest.mount(root, payload, { now: true });
+  (window.AnkiForest as AnkiForestApi).mount(root, payload, { now: true });
   requestAnimationFrame(() => requestAnimationFrame(() => { document.title = 'ready'; }));
 };

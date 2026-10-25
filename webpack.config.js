@@ -77,6 +77,12 @@ const config = {
         { from: 'README.md', to: '' },
         { from: 'THIRD_PARTY_NOTICES.md', to: '' },
         { from: 'LICENSE', to: 'LICENSE' },
+        // The vendored Memory Forest engine (src/vendor/memory-forest/web/) is loaded via
+        // plain <script> tags at runtime (src/forest/mfLoader.ts), not imported as modules —
+        // it's a set of classic IIFE scripts that build up window.AnkiForest, unmodified
+        // from the original. Served as static files under /vendor/ in the built plugin, the
+        // same URL scheme the render harness (tools/harness/mf.html) already proved works.
+        { from: 'src/vendor/memory-forest/web', to: 'vendor' },
       ],
     }),
   ].filter(Boolean),
