@@ -272,3 +272,52 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     koala — sitting unused in `src/regions/sprites/`), the landscape (still always Golden
     Lake's lake, not eucalypt woodland's own ground/sky), and the other ten regions are all
     still ahead.
+- **Three live fixes against the real RemNote pane, in the Australia eucalypt woodland,
+  found by the user after the above shipped:**
+  - **A whole-scene blank-out, no error visible anywhere.** `loadMfScenery` let a Memory
+    Grove env script's load failure throw unhandled (only the vendored "no special script"
+    case was wrapped in try/catch), and `GroveCanvas.tsx`'s promise chain had no `.catch()`
+    at all — so a `src/envs/au-eucalypt.js` 404 (a stale dev-server build, in this instance)
+    silently aborted the whole mount. Fixed in both files: `mfLoader.ts` now catches a
+    Memory-Grove-owned env's load failure the same fail-soft way as the vendored "no
+    special script" case (logging to console instead of throwing — `AF.ENVS[key] || {}` in
+    `trees.js` already treats an unregistered key as harmless), and `GroveCanvas.tsx` now
+    catches the whole chain and renders a visible red message instead of an empty box.
+    Proved with a harness run that deliberately 404s every `/envs/*` request and confirms
+    the scene still renders (default trees, one console warning) instead of going blank.
+  - **The gum crown's trunk-to-crown gap, then a second regression from fixing it.**
+    `gumCrown`'s first version scattered blobs within ±dist of the crown region's centre
+    (above and below); at that function's own maximum spread, no blob's lower edge ever
+    reached more than ~45% of the way to the trunk, leaving the bottom half of every single
+    tree's crown empty — a systematic geometry bug, not a flaky one, reported live with a
+    zoomed screenshot. First fix anchored every blob's bottom edge to the trunk line
+    directly (verified numerically across three tree sizes before trusting a screenshot
+    again) — closed the gap, but, reported live again, made every tree read as several
+    separate upright columns instead of one silhouette, since independent blobs don't
+    blend into a shape the way a true union does. Final version (current) reverts to
+    `trees.js`'s own proven technique: one large central blob plus 3–4 smaller satellites,
+    combined by taking the *max* of every blob's own signed-distance field — a real union,
+    which is also exactly why the vendored default crown never had a connection problem
+    (the central blob alone nearly fills the region, satellites or not). The eucalypt
+    "open, gappy, you can see branch structure" character moved from blob placement into a
+    constant `GAP_PUNCH` (0.16) baseline hole-probability instead — the same per-pixel
+    random skip every crown already supports for a dying tree, just always on rather than
+    health-gated. Checked at both a sparse (clean silhouettes) and dense, 513-tree render.
+  - **Tree tooltips lost their species name.** Not a regression in the strict sense —
+    the vendored engine's `tooltips.js` never had a species-name field or any per-tree name
+    at all; what actually changed is that the *old* renderer's own tooltip code (deleted
+    with it, this file's "Old renderer removed" entry) used to show one, and switching
+    engines dropped it. Confirmed `tooltips.js` has no hook to plug into for this (no
+    `AF.ENVS`/`species` reference anywhere in its 61 lines, unlike `trees.js`'s `tree.*`
+    hooks) — a genuine gap in the vendored engine as wired, not a config miss. Fixed without
+    editing the vendored file: `mfAdapter.ts`'s `toMfTree` now takes the current `Biome` and
+    resolves `p.species % biome.plants.length` to that species' `common` name, same modulo
+    convention `forest.ts` already documents for `species` being a raw roll; a new
+    `src/envs/species-tooltip.js`, loaded always (not per-biome) right after the core
+    scripts (`mfLoader.ts`'s `loadMfCore`), wraps the plain `AF.tips.tree` function
+    `tooltips.js` itself assigns (`AF.tips = {...}`) to prepend the species name as a bold
+    first line when present, falling through to the original HTML untouched otherwise.
+    Verified end to end with a Playwright-driven harness run (bundled `tools/harness/mf.ts`
+    with esbuild, served the vendored/env scripts over a plain Node static server, called
+    `AF.tips.tree` directly) rather than trusting the type-checker alone — confirmed both
+    the with-name and without-name paths render the expected HTML.

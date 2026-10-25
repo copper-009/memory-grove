@@ -10,7 +10,10 @@
  * gets the vendored engine's own default pine/round trees, same as before that registry
  * existed. Per-tree/per-creature tooltips and hover are the vendored engine's own
  * (`tooltips.js`, `hover.js`) — nothing to wire up here for those, unlike the old renderer's
- * `hitTest.ts`.
+ * `hitTest.ts`; the one addition is each tree's species name, carried through by
+ * `mfAdapter.ts`'s `toMfTree` and spliced into the tooltip by `src/envs/species-tooltip.js`
+ * (loaded always, not per-biome — see that file's own header for why it wraps `AF.tips.tree`
+ * instead of editing the vendored `tooltips.js`).
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -41,6 +44,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       maxWidth: height * 2,
       animate: bundle.settings?.animate,
       biomeKey: bundle.biome?.key,
+      biome: bundle.biome,
     });
     loadMfScenery(payload.mood)
       .then(() => {

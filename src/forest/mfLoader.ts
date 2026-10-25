@@ -63,6 +63,10 @@ function vendorBase(): string {
   return new URL('.', window.location.href).toString();
 }
 
+/** Loaded once, right after the core scripts, regardless of biome — see the file's own
+ * header for why this wraps `AF.tips.tree` instead of editing the vendored `tooltips.js`. */
+const SPECIES_TOOLTIP_SCRIPT = 'species-tooltip.js';
+
 /** Load `util.js` through the pixel engine and events scripts once per page — every widget
  * instance sharing one `window.AnkiForest`, matching the original (one copy of the engine
  * per page, not per forest). Safe to call from multiple components; later callers just await
@@ -73,7 +77,7 @@ export function loadMfCore(): Promise<void> {
     loaded = CORE_SCRIPTS.reduce(
       (p, rel) => p.then(() => loadScript(`${base}vendor/${rel}`)),
       Promise.resolve(),
-    );
+    ).then(() => loadScript(`${base}envs/${SPECIES_TOOLTIP_SCRIPT}`));
   }
   return loaded;
 }

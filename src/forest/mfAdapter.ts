@@ -27,12 +27,19 @@
 
 import type { Grove, Plant } from '../data/types';
 import type { CreatureRoster } from '../data/milestones';
+import type { Biome } from '../regions/types';
 import { envForBiome } from './mfEnvs';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
  * flat per-seed roll, since the vendored engine has no concept of Memory Grove's own
- * per-region species yet (Phase 3). */
+ * per-region species yet (Phase 3).
+ *
+ * `speciesName` is Memory Grove's own addition, not part of the original shape — `tooltips.js`
+ * has no field or hook for it (checked directly: no `AF.ENVS`/`species` reference anywhere in
+ * that file), so nothing in the vendored engine reads it on its own. `src/envs/species-
+ * tooltip.js` is what actually uses it, wrapping `AF.tips.tree` rather than editing the
+ * vendored file — see that file's own header and DECISIONS.md. */
 export interface MfTree {
   day: number;
   ago: number;
@@ -53,11 +60,15 @@ export interface MfTree {
   burn?: number;
   smoke?: 1;
   big?: number;
+  speciesName?: string;
 }
 
 const PINE_PERCENT = 34;
 
-export function toMfTree(p: Plant): MfTree {
+/** `p.species` is a raw roll (`seed % 1024`, `forest.ts`), meant to be taken modulo
+ * whichever biome's own species list is current — `biome` is optional only because the
+ * synthetic-fixture test harness (`tools/harness/mf.ts`) doesn't have a real one to pass. */
+export function toMfTree(p: Plant, biome?: Biome): MfTree {
   const out: MfTree = {
     day: p.day, ago: p.ago, date: p.date, n: p.n, stage: p.stage, size: p.size, health: p.health,
     kind: p.seed % 100 < PINE_PERCENT ? 1 : 0, seed: p.seed,
@@ -68,6 +79,7 @@ export function toMfTree(p: Plant): MfTree {
   if (p.burn !== undefined) out.burn = p.burn;
   if (p.smoke !== undefined) out.smoke = p.smoke;
   if (p.big !== undefined) out.big = p.big;
+  if (biome && biome.plants.length > 0) out.speciesName = biome.plants[p.species % biome.plants.length].common;
   return out;
 }
 
@@ -173,6 +185,11 @@ export interface MfAdapterOptions {
    * region-specific environment; a biome with no entry there still renders (the vendored
    * engine's own default), same as before this option existed. */
   biomeKey?: string;
+  /** The current biome's full data, for resolving each tree's species name (`toMfTree`).
+   * Separate from `biomeKey` because the synthetic-fixture harness exercises `biomeKey`
+   * without a real `Biome` to hand over — species names just don't resolve there, which is
+   * fine, since nothing in the harness checks tooltips. */
+  biome?: Biome;
 }
 
 /** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — Golden Lake's own
@@ -182,7 +199,7 @@ export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAd
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';
   return {
-    trees: grove.plants.map(toMfTree),
+    trees: grove.plants.map((p) => toMfTree(p, opts.biome)),
     stats,
     visitors: toMfVisitors(stats),
     anniversaries: [],
