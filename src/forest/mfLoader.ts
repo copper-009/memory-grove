@@ -83,7 +83,16 @@ export function loadMfCore(): Promise<void> {
  * (several environments, "natural" among them, have no `.js` of their own — just a JSON
  * preset — and draw with no extra script at all). A `envs/*.js` 404 is that normal case, so
  * it's swallowed rather than failing the whole mount; `landscapes`/`landmarks` are always
- * drawn by a real file when referenced, so a 404 there is a genuine error. */
+ * drawn by a real file when referenced, so a 404 there is a genuine error.
+ *
+ * A Memory Grove env (`mfEnvs.ts`'s registry) failing to load is handled the same
+ * fail-soft way, even though `mfEnvs.ts` only ever maps to a file that's genuinely there —
+ * a real build can still be missing it for reasons outside this code's control (a stale
+ * dev-server bundle predating the file, a deploy that didn't finish copying `src/envs/`),
+ * and `AF.ENVS[key] || {}` in `trees.js` already treats an unregistered key as "no special
+ * environment" harmlessly. The whole grove silently failing to render at all — the actual
+ * failure mode this used to have, caught live — is a far worse outcome than one biome's
+ * trees quietly falling back to the vendored engine's own default for a session. */
 export async function loadMfScenery(mood: { special?: string; landscape?: string; landmark?: string }): Promise<void> {
   await loadMfCore();
   const base = vendorBase();
@@ -92,16 +101,11 @@ export async function loadMfScenery(mood: { special?: string; landscape?: string
     const rel = `envs/${mood.special}.js`;
     const key = (own ? 'mg:' : 'vendor:') + rel;
     if (!sceneryLoaded.has(key)) {
-      if (own) {
-        // A Memory Grove env is always expected to exist (mfEnvs.ts only maps to real
-        // files) — a 404 here is a genuine bug, not the normal "no special script" case.
-        await loadScript(`${base}${rel}`);
-      } else {
-        try {
-          await loadScript(`${base}vendor/${rel}`);
-        } catch {
-          /* no special script for this environment — e.g. "natural" — nothing to draw */
-        }
+      try {
+        await loadScript(own ? `${base}${rel}` : `${base}vendor/${rel}`);
+      } catch (e) {
+        if (own) console.error(`Memory Grove env "${mood.special}" failed to load; falling back to the default trees.`, e);
+        /* vendored: no special script for this environment — e.g. "natural" — nothing to draw */
       }
       sceneryLoaded.add(key);
     }
