@@ -1,0 +1,7 @@
+{
+ "order": 0,
+ "label": "Scenery",
+ "tip": "Uses the current scenery's own tile style and updates when you change scenery",
+ "follow": true,
+ "phrase": "The scenery's own tiles"
+}

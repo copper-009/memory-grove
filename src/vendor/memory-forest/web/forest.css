@@ -1,0 +1,343 @@
+/* Memory Forest — panel below the deck list. Uses Anki's own theme variables when present.
+   Focus rings are written as :focus, then taken back with :focus:not(:focus-visible): Chromium 77
+   (Anki 2.1.45's) drops a whole rule that names :focus-visible, so there a click leaves a ring too. */
+.af-panel {
+  position: relative;
+  margin: 28px auto 8px;
+  width: 100%;
+  padding: 0 12px;
+  box-sizing: border-box;
+  direction: ltr;  /* (its words are English: in an Anki set to a right-to-left language the heatmap's footer mirrored) */
+}
+/* on a finished deck's congratulations page (panel.on_page_loaded): under its message */
+.af-finished { margin: 28px auto 0; padding: 0 16px 24px; }
+.af-scene {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.af-canvas { display: block; max-width: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* a phone flashes what it takes a tap on, and zooms on a double tap (holding a tap back, or
+ * never passing it on, to see if it is one): the forest, its caption and the calendar answer
+ * taps themselves (a second tap on a strike replays it) */
+.af-canvas, .af-info, .af-cal-grid { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* the tooltips' look, shared by everything dressed as one (a tooltip, a marked day's editor, the
+   what's-new note): dark on Anki's light page, and on its dark page the other way round, a warm
+   beige, as tooltips are best (light on dark, dark on light, so one always stands off what it
+   covers); either way a little see-through, alike, the forest showing through it softened
+   (blurred, so its words stay easy to read), the beige with a faint edge the shadow can't give on
+   a dark page */
+:root {
+  --af-tip-bg: rgba(18, 22, 20, 0.72); --af-tip-panel: rgb(18, 22, 20); --af-tip-fg: #eef2ec; --af-tip-soft: #c9d8c4; --af-tip-accent: #9fe3b4;
+  --af-tip-line: rgba(238, 242, 236, 0.3); --af-tip-faint: rgba(238, 242, 236, 0.45);
+  --af-tip-hover: rgba(238, 242, 236, 0.08); --af-tip-chosen: rgba(238, 242, 236, 0.18);
+  --af-tip-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.nightMode, .night_mode, .night-mode {
+  --af-tip-bg: rgba(239, 228, 207, 0.86); --af-tip-panel: rgb(239, 228, 207); --af-tip-fg: #3b3226; --af-tip-soft: #5c4f3e; --af-tip-accent: #2f7a45;
+  --af-tip-line: rgba(59, 50, 38, 0.35); --af-tip-faint: rgba(59, 50, 38, 0.5);
+  --af-tip-hover: rgba(59, 50, 38, 0.1); --af-tip-chosen: rgba(59, 50, 38, 0.18);
+  --af-tip-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.af-tip {
+  position: absolute;
+  z-index: 2;
+  max-width: 280px;
+  max-width: min(280px, calc(100% - 12px));  /* (and never wider than its scene, which clips it) */
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--af-tip-bg);
+  color: var(--af-tip-fg);
+  font: 12.5px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif;
+  pointer-events: none;
+  box-shadow: var(--af-tip-shadow);
+  -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px);
+}
+.af-tip i { color: var(--af-tip-soft); font-style: normal; }
+.af-tip[hidden] { display: none; }
+
+.af-caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 8px;
+  font: 12.5px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif;
+  color: var(--fg-subtle, #8a8f8c);
+}
+/* the room between them as margins, not gap: Chromium 77 (Anki 2.1.45-2.1.49) has no flex gap */
+.af-journal { font-style: italic; margin-right: 16px; }
+.af-caption[hidden] { display: none; }
+
+/* zooming in among the trees (web/visit.js): its button on the forest's corner, and while it is
+   on, the bar of how and the steps, in the caption's place */
+.af-canvas { transition: opacity 0.18s ease; }
+.af-visit {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  margin-top: 8px; font: 12.5px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif;
+  color: var(--fg-subtle, #8a8f8c);
+}
+.af-visit[hidden] { display: none; }
+.af-visit-about { margin: 3px 16px 3px 0; }
+.af-visit-about b { color: var(--fg, inherit); font-weight: 600; }
+.af-visit-acts { display: flex; flex-wrap: wrap; }
+/* Anki's own button styles are more specific than these (see .af-cog) */
+.af-visit-btn {
+  box-sizing: border-box; height: 26px; min-width: 30px; margin: 3px 0 3px 6px !important; padding: 0 9px !important;
+  border: 1px solid rgba(128, 128, 128, 0.45) !important; border-radius: 6px !important;
+  background: transparent !important; color: inherit !important; box-shadow: none !important;
+  font: inherit; cursor: pointer;
+}
+.af-visit-btn:hover:not([disabled]) { background: rgba(128, 128, 128, 0.18) !important; color: var(--fg, inherit) !important; }
+.af-visit-btn[disabled] { opacity: 0.35; cursor: default; }
+.af-visit-btn:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.af-visit-btn:focus:not(:focus-visible) { outline: none; }
+/* the buttons on the forest, the zoom and the settings cog in its top right corner: round,
+   translucent, darker on hover (Anki's own button styles are more specific: see .af-cog) */
+.af-zoom {
+  position: absolute; z-index: 2; top: 8px; right: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; width: 28px; height: 28px; padding: 0 !important; border: 0 !important; border-radius: 50% !important;
+  cursor: pointer; box-shadow: none !important;
+}
+.af-zoom, .af-scene .af-cog { border-radius: 50% !important; background: rgba(70, 72, 71, 0.45) !important; color: rgba(255, 255, 255, 0.82) !important; }
+.af-zoom:hover, .af-zoom:active, .af-scene .af-cog:hover, .af-scene .af-cog:active {
+  background: rgba(40, 42, 41, 0.8) !important; color: #fff !important; border: 0 !important; box-shadow: none !important;
+}
+.af-zoom svg { flex: none; }
+/* on: the same, the other way round (a light ring with dark corners) */
+.af-zoom.af-zoom-on, .af-zoom.af-zoom-on:hover { background: rgba(255, 255, 255, 0.92) !important; color: #141615 !important; box-shadow: inset 0 0 0 2px #141615 !important; }
+.af-zoom:focus { outline: 2px solid #fff; outline-offset: 1px; }
+.af-zoom:focus:not(:focus-visible) { outline: none; }
+/* zoomed in: a drag walks about (a phone's finger too, rather than scrolling the page) */
+.af-visiting .af-canvas { cursor: grab; touch-action: none; }
+.af-dragging .af-canvas { cursor: grabbing !important; }
+.af-dragging .af-tip { display: none !important; }
+.af-top { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+/* (no forest above: the heatmap comes up so its controls share the cog's line, left of it) */
+.af-top + .af-cal { margin-top: -4px; }
+.af-top + .af-cal .af-cal-grid > .af-cal-acts { right: 36px; }
+/* on the forest: its top right corner (the zoom button moves beside it) */
+.af-scene .af-top { position: absolute; z-index: 3; top: 8px; right: 8px; margin: 0; line-height: normal; }
+.af-has-cog .af-zoom { right: 42px; }
+/* Anki's own button styles are more specific than these, and older ones (2.1.50's on a dark
+   Mac: padding 2px 15px) leave the icon no room in 28px, so the box itself is !important */
+.af-cog {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; width: 28px; height: 28px; padding: 0 !important; border: 0 !important; border-radius: 5px !important;
+  background: rgba(70, 70, 70, 0.75) !important; color: #d8d8d8 !important; cursor: pointer; box-shadow: none !important;
+}
+.af-cog svg { flex: none; }
+/* and they would add a border and a shadow on hover and press */
+.af-cog:hover, .af-cog:active { background: rgba(95, 95, 95, 0.9) !important; color: #fff !important; border: 0 !important; box-shadow: none !important; }
+.af-cog:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.af-cog:focus:not(:focus-visible) { outline: none; }
+.af-hint { opacity: 0.65; font-size: 11.5px; }
+.af-info { border-bottom: 1px dotted currentColor; }
+.af-click { cursor: pointer; }
+.af-cap-tip { max-width: 300px; }
+.af-cal-tip { width: max-content; }  /* (its own width, not squeezed where the heatmap's edge is near: a date never wraps) */
+.af-meta { font-variant-numeric: tabular-nums; }
+.af-credit { opacity: 0.75; }
+
+/* what's new (web/news.js): the cog's dot, and a note on the forest's top-left corner, dressed
+   as the tooltips are */
+.af-cog.af-cog-new { position: relative; }
+.af-cog.af-cog-new::after {
+  content: ""; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
+  border-radius: 50%; background: #3fbf6a; box-shadow: 0 0 0 2px var(--canvas, var(--window-bg, #f5f5f5));
+}
+.af-news {
+  position: absolute; z-index: 2; left: 10px; top: 10px;
+  max-width: calc(100% - 20px); max-width: min(290px, calc(100% - 20px));  /* (min() needs Chromium 79) */
+  padding: 10px 12px; border-radius: 8px; background: var(--af-tip-bg); color: var(--af-tip-fg);
+  font: 12.5px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; text-align: left;
+  box-shadow: var(--af-tip-shadow);
+}
+.af-news b { display: block; font-size: 13px; margin-bottom: 3px; }
+.af-news-acts { display: flex; margin-top: 8px; }
+.af-news-acts button + button { margin-left: 14px; }  /* (not gap: Chromium 77 has no flex gap) */
+/* Anki's own button styles are more specific: these are plain links, as in the caption */
+.af-news-acts button {
+  font: inherit !important; background: none !important; border: 0 !important; padding: 0 !important;
+  box-shadow: none !important; cursor: pointer; color: var(--af-tip-soft) !important;
+}
+.af-news-acts button:first-child:not(:only-child) { color: var(--af-tip-accent) !important; text-decoration: underline; text-underline-offset: 2px; }
+/* (Chromium 77-86, Anki 2.1.45-2.1.49, has no text-underline-offset: the underline goes under the letters' descent instead) */
+@supports not (text-underline-offset: 2px) { .af-news-acts button:first-child:not(:only-child) { text-underline-position: under; } }
+.af-news-acts button:hover { color: var(--af-tip-fg) !important; }
+.af-news-acts button:focus { outline: 2px solid currentColor; outline-offset: 2px; }
+.af-news-acts button:focus:not(:focus-visible) { outline: none; }
+
+/* the study calendar under the forest (web/calendar.js). Margins rather than gap throughout:
+   Chromium 77 (Anki 2.1.45-2.1.49) has no flex gap */
+/* Centered under the forest; calendar.js sets the width (85% by default). */
+.af-cal { position: relative; text-align: left; margin: 24px auto 0; font: 12.5px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; color: var(--fg-subtle, #8a8f8c); font-variant-numeric: tabular-nums; }
+/* the foot of the panel: the forest's journal, and a small key at the right (as GitHub's graph has it) */
+.af-cal-foot { display: flex; justify-content: space-between; align-items: baseline; min-height: 18px; margin-top: 7px; }  /* (7px under the trophies' lane: calendar.js FOOT_GAP) */
+.af-cal-journal { font-style: italic; margin-right: 16px; flex: 1 1 auto; min-width: 0; }  /* (it wraps; the key never does) */
+.af-cal-journal .af-journal { margin: 0; }
+.af-cal-key { display: inline-flex; flex-wrap: nowrap; flex: none; white-space: nowrap; align-items: center; font-size: 11px; margin-left: auto; }
+.af-cal-key span { margin-right: 4px; }
+.af-cal-key span:last-child { margin-right: 0; }  /* (the key ends on the forest's edge) */
+.af-cal-key .af-cal-swatch:last-of-type { margin-right: 4px; }
+.af-cal-swatch { width: 9px; height: 9px; margin-right: 2px; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* a choice of two, drawn as one control: a track round both words, the chosen one lifted on it
+   (a pill, white on a light page), the other its words alone, as macOS, Apple Calendar and GitHub
+   draw theirs. Timeline | By year on the months' row left of the arrows; Reviews | Time in the
+   footer, left of the key it changes (calendar.js; neither on the phone, the second not with no
+   study time kept). Plain filled words read as labels, "Shade by" as a third choice (2026-10-15) */
+.af-cal-by {
+  display: inline-flex; flex: none; align-items: center; box-sizing: border-box; height: 18px; margin: 0 16px 0 0;
+  padding: 1px; border-radius: 6px; background: rgba(128, 128, 128, 0.16); font-size: 11px; white-space: nowrap;
+}
+.af-cal-by[hidden] { display: none; }
+.af-cal-by button {
+  box-sizing: border-box; height: 16px; margin: 0 !important; padding: 0 7px !important;
+  border: 0 !important; border-radius: 5px !important; background: transparent !important; color: var(--fg-subtle, #8a8f8c) !important; box-shadow: none !important;
+  font: inherit; font-size: 11px; line-height: 16px; cursor: pointer;
+}
+.af-cal-by button:hover { color: var(--fg, inherit) !important; }  /* (its words brighten, no fill: a fill is the chosen one's alone, two read as both chosen) */
+.af-cal-by button.af-on, .af-cal-by button.af-on:hover { background: rgba(255, 255, 255, 0.17) !important; color: var(--fg, inherit) !important; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25) !important; cursor: default; }
+.af-cal-on-light .af-cal-by button.af-on, .af-cal-on-light .af-cal-by button.af-on:hover { background: #fff !important; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18) !important; }
+.af-cal-by button:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.af-cal-by button:focus:not(:focus-visible) { outline: none; }
+/* (in the footer: Reviews | Time, then the key, both shown on hover) */
+.af-cal-foot > .af-cal-shade { margin: 0 12px 0 auto; }  /* (on the row's baseline, as the key: centred, it sank below the key once the journal wrapped) */
+/* By year's earlier years: their switch in a row over the heatmap, the years shown under it, oldest
+ * first, the year in view last (calendar.js past); the page keeps the year in view still itself */
+.af-cal { overflow-anchor: none; }
+.af-cal-pastbar { display: flex; align-items: center; height: 22px; }  /* (BAR_H) */
+.af-cal-pastbar .af-cal-more { margin: 0 0 0 -5px !important; }
+.af-cal-pastbar .af-cal-more-all { margin-left: 4px !important; }
+.af-cal-grid > .af-cal-more-near { position: absolute; left: 0; margin: 0 0 0 -5px !important; z-index: 1; }  /* (Hide over the year in view's months, where Show was: calendar.js past) */
+/* The years shown: Hide on the controls' row too (calendar.js past). */
+.af-cal-foot > .af-cal-shade + .af-cal-key { margin-left: 0; }
+/* ‹ Today ›: on the months' row, at its right end, beside the period they change (calendar.js; on
+   the phone Today alone, in the footer): plain, small, and with the key only there while the
+   pointer is on the calendar (on the phone, where nothing hovers, always) */
+.af-cal-acts { display: inline-flex; align-items: center; align-self: center; margin-left: auto; margin-right: 12px; }
+.af-cal-acts + .af-cal-key { margin-left: 0; }
+.af-cal-grid > .af-cal-acts { position: absolute; top: -20px;  /* (ACTS_ROOM: calendar.js sets it again once the months' row is laid out) */ right: 0; height: 16px; padding-bottom: 4px; margin: 0; z-index: 1; }  /* (lifted over the months' row, in the gap above it: no label is ever under them; the padding keeps the pointer on the heatmap between them and the row) */
+.af-cal-grid > .af-cal-acts.af-acts-low { top: 0; padding-bottom: 0; }  /* (where the forest's caption reaches them: back on the row) */
+.af-cal-grid > .af-cal-acts .af-cal-chev { height: 16px; line-height: 13px; padding-bottom: 3px !important; }  /* (the glyphs on the words' line: centred in the box, they sat 2px low) */
+/* a month's label under them (only when they are back on the row) makes way while they show */
+.af-cal-months .af-under { transition: opacity 0.2s; }
+.af-cal:hover .af-cal-months .af-under, .af-cal:focus-within .af-cal-months .af-under { opacity: 0; }
+.af-cal-acts, .af-cal-key, .af-cal-foot > .af-cal-shade, .af-cal-pastbar, .af-cal-more-near { opacity: 0; transition: opacity 0.2s; }
+.af-cal:hover .af-cal-acts, .af-cal:hover .af-cal-key, .af-cal:focus-within .af-cal-acts, .af-cal:focus-within .af-cal-key,
+.af-cal:hover .af-cal-foot > .af-cal-shade, .af-cal:focus-within .af-cal-foot > .af-cal-shade,
+.af-cal:hover .af-cal-pastbar, .af-cal:focus-within .af-cal-pastbar, .af-cal:hover .af-cal-more-near, .af-cal:focus-within .af-cal-more-near,
+.af-cal-swiped .af-cal-acts, .af-cal-swiped .af-cal-key { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .af-cal-acts, .af-cal-key, .af-cal-foot > .af-cal-shade, .af-cal-pastbar, .af-cal-more-near { transition: none; } }
+.af-cal-chev {
+  position: relative; box-sizing: border-box; height: 18px; min-width: 24px; margin: 0 0 0 2px !important; padding: 0 4px !important;
+  border: 0 !important; border-radius: 4px !important; background: transparent !important; color: inherit !important; box-shadow: none !important;
+  font: inherit; font-size: 15px; line-height: 18px; cursor: pointer;
+}
+.af-cal-chev:hover:not([disabled]) { background: rgba(128, 128, 128, 0.18) !important; color: var(--fg, inherit) !important; }
+.af-cal-chev[disabled] { opacity: 0.5; cursor: default; }
+.af-cal-chev:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.af-cal-chev:focus:not(:focus-visible) { outline: none; }
+/* each a 24px target at least, however small it looks (WCAG 2.5.8) */
+.af-cal-chev::after { content: ''; position: absolute; top: -4px; bottom: -4px; left: 0; right: 0; }
+/* the phone's Today as a small outlined pill, as calendars do it */
+.af-cal-today {
+  height: 18px; margin-right: 6px !important; padding: 0 10px !important; font-size: 11px; line-height: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.5) !important; border-radius: 10px !important;
+}
+/* on the desktop, a jump back to today after the arrows in place of the pill: » from the past, «
+   from the days ahead; always there, the same width, so nothing comes or goes beside the arrows
+   (dimmed on today's page); the phone keeps its Today pill (which scrolls to today) */
+.af-cal-now { font-size: 14px; }
+.af-cal-grid { position: relative; padding-top: 16px; padding-bottom: 0; }
+/* By year's earlier years (calendar.js past): one switch over the heatmap shows or hides them all
+   ("Show 2 earlier years"), above the year in view, each a whole year with a line of words over it.
+   Plain, small, as the arrows are, and shown on hover as they are */
+/* (.af-cal-past is not positioned: its years are placed, and point, by the heatmap's own offsets, as the year in view is) */
+.af-cal-more {
+  display: inline-flex; align-items: center; box-sizing: border-box; height: 18px; margin: 4px 0 0 -5px !important; padding: 0 6px 0 4px !important;
+  border: 0 !important; border-radius: 4px !important; background: transparent !important; color: inherit !important; box-shadow: none !important;
+  font: inherit; font-size: 11px; line-height: 18px; cursor: pointer;
+}
+.af-cal-more:hover { background: rgba(128, 128, 128, 0.18) !important; color: var(--fg, inherit) !important; }
+.af-cal-more:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.af-cal-more:focus:not(:focus-visible) { outline: none; }
+.af-cal-more-chev { display: inline-block; width: 12px; margin-right: 3px; font-size: 10px; text-align: center; }
+.af-cal-past-year { margin-top: 8px; }
+.af-cal-past-head { height: 18px; font-size: 11px; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.af-cal-past-head b { margin-right: 8px; font-weight: 600; color: var(--fg, inherit); }  /* (a margin, not flex gap: Chromium 77 has none) */
+/* (shown: they come down into place, briefly; never with the forest kept still, nor reduced motion) */
+@keyframes af-cal-past-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.af-cal-past-in .af-cal-past-year { animation: af-cal-past-in 0.2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .af-cal-past-in .af-cal-past-year { animation: none; } }  /* (its top, calendar.js monthsRoom: the first row 8px under the months' baseline at any zoom) */
+/* on the phone: one long timeline, swiped along (calendar.js SWIPED_K) */
+.af-cal-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.af-cal-scroll::-webkit-scrollbar { display: none; }  /* (swiped, never dragged by a bar) */
+/* both ends fade out, the usual sign that a strip goes on */
+.af-cal-scroll { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+                 mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
+.af-cal-acts [hidden] { display: none; }
+/* paging: the new stretch slides in from the side you went towards, briefly (calendar.js go) */
+@keyframes af-cal-from-left { from { opacity: 0.25; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+@keyframes af-cal-from-right { from { opacity: 0.25; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+.af-cal-from-left .af-cal-canvas, .af-cal-from-left .af-cal-months, .af-cal-from-left .af-cal-notes { animation: af-cal-from-left 0.18s ease-out; }
+.af-cal-from-right .af-cal-canvas, .af-cal-from-right .af-cal-months, .af-cal-from-right .af-cal-notes { animation: af-cal-from-right 0.18s ease-out; }
+@media (prefers-reduced-motion: reduce) { .af-cal-from-left *, .af-cal-from-right * { animation: none !important; } }
+.af-cal-canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.af-cal-canvas:focus { outline: none; }
+.af-cal-gone { position: absolute; width: 0; height: 0; visibility: hidden; pointer-events: none; }  /* (the last weeks, kept for a swipe still on them: calendar.js draw) */  /* (the day the keyboard is on has the hover's ring and its tooltip) */
+.af-cal-months { position: absolute; top: 0; left: 0; right: 0; height: 16px; }
+.af-cal-months span { position: absolute; top: 0; font-size: 11px; line-height: 16px; white-space: nowrap; }  /* (baseline about 12px down) */
+.af-cal-months .af-cal-year { color: inherit; }
+.af-cal-hover {
+  position: absolute; box-sizing: border-box; pointer-events: none;
+  border: 2px solid;  /* its colour: today's frame's, which shows on every shade (calendar.js) */
+  transition: left 0.06s ease-out, top 0.06s ease-out;  /* (square, flat and on the grid, as the pixels round it: a soft shadow and a lift blurred it off the tiles) */
+}
+.af-cal-hover[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .af-cal-hover { transition: none; } }
+.af-cal-notes { position: absolute; left: 0; right: 0; height: 11px; pointer-events: none; }  /* (in the trophies' lane: calendar.js lay; the pointer goes through to the trophies and the pennant under it) */
+.af-cal-note { position: absolute; transform: translateX(-50%); font-size: 11px; line-height: 11px; white-space: nowrap; }
+/* a marked day's editor (calendar.js, on a right-click): the icons side by side, all in full colour,
+ * the chosen one in a soft square (dimmed would read as disabled: UI_GUIDELINES.md), its name and ×, dressed as the tooltip is; margins rather than gap (Chromium 77) */
+.af-cal-pin { position: absolute; z-index: 3; display: flex; align-items: center; padding: 5px 6px; border-radius: 8px;
+  background: var(--af-tip-panel); box-shadow: var(--af-tip-shadow); }  /* (solid: what you type must not sit on the month names) */
+.af-cal-pin[hidden] { display: none; }
+.af-cal-pin-icons { display: inline-flex; margin-right: 6px; }
+/* (Anki's own button styles are more specific, and add a border, padding and a shadow on hover and
+   press, which would change the editor's size under the pointer: so the box itself is !important,
+   as the cog's is) */
+.af-cal-pin-icon { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 24px !important; height: 24px !important;
+  min-width: 0 !important; min-height: 0 !important; margin: 0 2px 0 0 !important; padding: 0 !important; border: 0 !important;
+  border-radius: 6px !important; background: transparent !important; box-shadow: none !important; cursor: pointer; }
+.af-cal-pin-icon:hover, .af-cal-pin-icon:active, .af-cal-pin-icon:focus { background: var(--af-tip-hover) !important; border: 0 !important; box-shadow: none !important; }
+.af-cal-pin-icon.af-on, .af-cal-pin-icon.af-on:hover, .af-cal-pin-icon.af-on:active, .af-cal-pin-icon.af-on:focus { background: var(--af-tip-chosen) !important; }
+.af-cal-pin-icon canvas { display: block; image-rendering: pixelated; }
+.af-cal-pin-icon:focus { outline: 2px solid var(--af-tip-fg) !important; outline-offset: -2px; }
+.af-cal-pin-icon:focus:not(:focus-visible) { outline: none !important; }
+.af-cal-pin-name { width: 150px; padding: 3px 2px; border: none; border-bottom: 1px solid var(--af-tip-line); outline: none;
+  background: transparent; color: var(--af-tip-fg); font: 12.5px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.af-cal-pin-name::placeholder { color: var(--af-tip-faint); }
+.af-cal-pin-del { box-sizing: border-box; height: 24px !important; min-width: 0 !important; min-height: 0 !important; margin: 0 0 0 4px !important;
+  padding: 0 4px !important; border: 0 !important; border-radius: 6px !important; background: transparent !important; box-shadow: none !important;
+  color: var(--af-tip-soft) !important; font-size: 16px; line-height: 1; cursor: pointer; }
+.af-cal-pin-del:hover, .af-cal-pin-del:active, .af-cal-pin-del:focus { color: var(--af-tip-fg) !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+/* a month's label tells its month on hover (calendar.js monthSummary) */
+.af-cal-months span { cursor: default; }
+/* the weekdays beside the weeks, just outside the forest's edge, shown with the key on hover */
+.af-cal-days { position: absolute; top: 0; left: 0; width: 0; height: 100%; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+.af-cal-days span { position: absolute; right: 6px; transform: translateY(-50%); font-size: 11px; line-height: 1; white-space: nowrap; color: var(--fg-subtle, #8a8f8c); }
+.af-cal:hover .af-cal-days, .af-cal:focus-within .af-cal-days { opacity: 1; }
+.af-cal-days[hidden] { display: none; }
+.af-cal-swiped .af-cal-days { display: none; }
+@media (prefers-reduced-motion: reduce) { .af-cal-days { transition: none; } }
+/* the animals over the weeks (and the forest's first seedling), on a layer of their own: shown
+ * while the pointer is on the heatmap, as the key is, and always on the phone (calendar.js paint) */
+.af-cal-above { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; image-rendering: crisp-edges;
+  opacity: 0; transition: opacity 0.2s; }
+.af-cal:hover .af-cal-above, .af-cal:focus-within .af-cal-above, .af-cal-swiped .af-cal-above { opacity: 1; }
+.af-cal-above.af-cal-spot { opacity: 1; transition: none; }  /* (the dimmed days round a hover's own: calendar.js spot) */
+@media (prefers-reduced-motion: reduce) { .af-cal-above { transition: none; } }

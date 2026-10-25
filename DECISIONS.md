@@ -149,12 +149,16 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   sprite — a handful of deliberately placed pixels, one or two signature marks per species —
   does not. `Creature.sprite?: CreatureSprite` is the new preferred field; `body`/`palette`
   stay on the type as the fallback `creatureSprite.ts` renders from when `sprite` is absent,
-  so species not yet migrated keep working rather than silently losing their creature. Only
-  Australia's eucalypt woodland biome (5 species) is migrated so far — see
-  `src/regions/australia/sprites/` and `dev/gallery.html` (screenshot-reviewed against
-  Memory Forest's own fox/deer/owl, see that page's header for the comparison method). The
-  other 10 regions' ~125 remaining creatures still render through the `BodyPlan` fallback
-  until each gets the same hand-authoring and gallery review pass. The pack-validation point
+  so species not yet migrated keep working rather than silently losing their creature. Every
+  creature across every region got a first-pass baked sprite (`src/regions/sprites/baked.
+  generated.ts`, generated from the procedural generator itself — see `scripts/
+  bakeCreatureSprites.ts`); 7 of Australia's got real hand-authored ones instead
+  (`src/regions/sprites/handAuthored.ts`) — the 5 eucalypt-woodland species plus cassowary
+  and platypus. `src/regions/index.ts`'s `withSprites` attaches whichever applies to each
+  creature without any of the 11 region files needing an edit. Reviewed via `review/
+  gallery.html` against Memory Forest's own fox/deer/owl; the user's `decisions.json` export
+  (55 keep / 75 redo, mostly in the baked set) is what the still-open redo pass works from.
+  The pack-validation point
   above ("a hand-drawn sprite can't be checked for a missing trait, a `BodyPlan` can") is a
   real loss for migrated species — `validate.ts` now checks a `CreatureSprite`'s palette hex
   values and frame-row shape, not whether its traits are visually represented, so that check
@@ -165,3 +169,23 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   visible gaps and branch structure, not a solid dome — which the existing `roundCrown`'s
   default hole/density settings didn't capture; `broadleaf` stays the dense-canopy default
   (figs, beeches, rainforest emergents) for every other species, migrated or not.
+- **Phase 2: vendoring Memory Forest's rendering engine verbatim, on the `vendor` branch —
+  a second reversal, this time of "no source file is copied verbatim" (see this file's
+  Licensing section and `THIRD_PARTY_NOTICES.md`).** Explicit user decision, not a judgment
+  call made here: after a long iterative polish phase on the procedural reimplementation
+  kept missing the reference images on specific details, the user asked to adapt the
+  original engine directly instead of re-deriving it. `reference/memory-forest/web/` copied
+  unmodified into `src/vendor/memory-forest/web/`, `LICENSE` alongside it.
+  - **Licence/edition check, done before copying anything:** this checkout has no
+    `editions.json` — per `dev/editions.py`'s own comment ("the public repo has no
+    editions.json: there, everything present is the edition"), that means this is the
+    public/base-only snapshot. `settings/plus.json` and the `cherry_blossom`/`starry_night`
+    PNGs present are locked-preview thumbnails for the settings picker UI, not the scenery
+    code itself — that code was never included here. `manifest.json`'s `package` is
+    `memory_forest` (the base `DEV_PACKAGE`, not `memory_forest_plus`). Confirmed nothing
+    Plus-exclusive or differently licensed is in the tree; the whole thing is the one MIT
+    licence already on file.
+  - New work goes in new files that plug into the vendored engine's own registries (envs,
+    landscapes, landmarks, tree hooks) rather than editing vendored files; an edit that's
+    genuinely unavoidable gets marked `// Memory Grove change:` inline and listed here when
+    it happens.
