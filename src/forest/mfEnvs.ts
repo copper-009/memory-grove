@@ -7,6 +7,11 @@
  */
 export const BIOME_ENVS: Record<string, string> = {
   eucalypt: 'au-eucalypt',
+  rainforest: 'au-rainforest',
+  tropical: 'au-tropical',
+  coastal: 'au-coastal',
+  outback: 'au-outback',
+  alpine: 'au-alpine',
   'kauri-forest': 'nz-kauri',
   satoyama: 'jp-satoyama',
   'eastern-rainforest': 'mg-rainforest',

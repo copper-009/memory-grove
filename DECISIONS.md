@@ -390,3 +390,21 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     this env's `trunk` hook returns `false` for pine-kind) expects `{l, m, d}`, an object.
     Crashed immediately on the very first render attempt (`mix()`, undefined colour) —
     fixed by giving it the object shape instead.
+- **Phase 3, Australia's remaining five biomes.** Same `_forms.js`-driven pattern as the
+  other ten regions, finishing off the one region that had more than two biomes to begin
+  with: `au-rainforest` (antarctic beech + tree fern — bangalow palm is this biome's most
+  recognisable plant but needs the still-deferred `tree.body()` hook, same as every other
+  palm this session), `au-tropical` (curtain fig + red mangrove, `shrub`-formed via
+  `roundCrownForm` at a smaller blob count — fan palm deferred for the same reason),
+  `au-coastal` (paperbark, whose pale papery bark is its own colour, + pandanus,
+  `columnar`-formed via a half-height `roundCrownForm` + `crownShadeForm`), `au-outback`
+  (ghost gum, pale bark again its own, + desert oak, the same columnar pairing as
+  `au-coastal`'s pandanus), `au-alpine` (snow gum + alpine everlasting, `shrub`-formed, its
+  golden-flower highlight tone its own). Every Australian biome now has real trees; every
+  other region's primary biome does too (its second biome doesn't yet — a stated gap, not
+  an oversight).
+  - Verified the same way as the other ten regions tonight: an isolated two-tree harness
+    render per biome, cropped and inspected directly. All five came out clean on the first
+    render — no new bug class, since this just applies forms `_forms.js` already fixed
+    (the frond-origin and short-crown-alignment bugs) to five more species pairings, not
+    anything novel.
