@@ -35,14 +35,6 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
     widgetTabIcon: ICON_DATA_URI,
     widgetTabTitle: 'Memory Grove',
   });
-  // Phase 2 proof-of-concept: the vendored Memory Forest engine drawing the real grove,
-  // in its own pane so it can't disturb the production `pane_widget`. See DECISIONS.md.
-  await plugin.app.registerWidget('mf_preview_widget', WidgetLocation.Pane, {
-    dimensions: { height: 'auto', width: '100%' },
-    widgetTabIcon: ICON_DATA_URI,
-    widgetTabTitle: 'Memory Grove (engine preview)',
-  });
-
   // -- Commands -----------------------------------------------------------
   await plugin.app.registerCommand({
     id: 'memory-grove.open',
@@ -50,15 +42,6 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
     description: "Open your grove in its own pane.",
     action: async () => {
       await plugin.window.openWidgetInPane('pane_widget', {});
-    },
-  });
-
-  await plugin.app.registerCommand({
-    id: 'memory-grove.vendor-preview',
-    name: 'Open Memory Grove (engine preview)',
-    description: 'Golden Lake, drawn by the vendored Memory Forest engine itself from your real grove — experimental, Phase 2 proof.',
-    action: async () => {
-      await plugin.window.openWidgetInPane('mf_preview_widget', {});
     },
   });
 
