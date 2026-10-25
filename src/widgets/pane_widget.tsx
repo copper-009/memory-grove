@@ -21,9 +21,11 @@ function PaneWidget() {
         {bundle.biome.label}
         {bundle.biomeOverride == null && ' · following the season'}
       </p>
-      {/* Doesn't change the scene yet — the vendored engine always draws its own Golden
-          Lake default until region-specific envs land (Phase 3). The choice is still saved
-          (`useGrove.ts`'s biome override) for when it does. */}
+      {/* Only Eucalypt woodland's trees change with this yet (`mfEnvs.ts`'s registry,
+          Phase 3, one biome at a time) — every other biome still draws the vendored
+          engine's own default trees regardless of which is picked here. The choice is
+          saved either way (`useGrove.ts`'s biome override), ready as each biome gets its
+          own environment. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;

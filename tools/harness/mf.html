@@ -44,8 +44,9 @@
 <script src="/vendor/events/flowers.js"></script>
 <script src="/vendor/events/asteroid.js"></script>
 <script src="/vendor/events/fire.js"></script>
-<!-- Golden Lake's own scenery: landscape "lake", no special environment, no landmark -->
-<script src="/vendor/landscapes/lake.js"></script>
+<!-- Scenery (landscape, and a biome's own tree environment) loads dynamically via
+     mfLoader.ts's loadMfScenery, called from mf.ts — not a static tag here, so this
+     exercises the same path GroveCanvas.tsx actually uses. -->
 <script src="mf.js"></script>
 </body>
 </html>

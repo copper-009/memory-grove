@@ -83,6 +83,10 @@ const config = {
         // from the original. Served as static files under /vendor/ in the built plugin, the
         // same URL scheme the render harness (tools/harness/mf.html) already proved works.
         { from: 'src/vendor/memory-forest/web', to: 'vendor' },
+        // Memory Grove's own envs (src/envs/) that plug into the vendored engine's AF.env
+        // registry (DECISIONS.md's Phase 3 entries) — same loading mechanism, a distinct
+        // URL namespace so they're never mistaken for vendored files.
+        { from: 'src/envs', to: 'envs' },
       ],
     }),
   ].filter(Boolean),

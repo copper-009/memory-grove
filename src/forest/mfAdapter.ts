@@ -8,13 +8,15 @@
  * *shape* `AF.mount(root, data, opts)` actually reads, built from Memory Grove's existing
  * `Grove`/`CreatureRoster` (`src/data/*.ts`) instead of an Anki collection.
  *
- * First milestone only: the Golden Lake default scene (`presets.py`'s first preset —
- * `environment: 'natural'`, `landscape: 'lake'`, `landmark: 'none'`, `weather: 'clear'`,
- * `time: 'golden_hour'`), Memory Forest's own stock milestone animals (rabbit/deer/fox/owl/
- * heron/stag/cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/`visitors()`
- * directly, not Memory Grove's own per-region creature roster, since the vendored
- * `visitors.js` only knows its own built-in `VISITORS` table). Region-specific trees and
- * creatures are Phase 3 (new "envs" using `trees.js`'s own hook functions), not this.
+ * Golden Lake's own landscape/weather/time always (`presets.py`'s first preset —
+ * `landscape: 'lake'`, `landmark: 'none'`, `weather: 'clear'`, `time: 'golden_hour'`); only
+ * the trees change per biome, and only for biomes with an entry in `mfEnvs.ts`'s registry
+ * (Phase 3, one region at a time — Australia's eucalypt woodland so far, `src/envs/
+ * au-eucalypt.js`). Milestone animals are Memory Forest's own stock roster (rabbit/deer/
+ * fox/owl/heron/stag/cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/
+ * `visitors()` directly, not Memory Grove's own per-region creature roster, since the
+ * vendored `visitors.js` only knows its own built-in `VISITORS` table) — creatures aren't
+ * region-specific yet, even for eucalypt woodland.
  *
  * Not yet wired: `calendar` (the study heatmap — a separate panel below the forest, not
  * needed for the forest scene itself), `journal` (a stub empty string — `journal.py` isn't
@@ -25,6 +27,7 @@
 
 import type { Grove, Plant } from '../data/types';
 import type { CreatureRoster } from '../data/milestones';
+import { envForBiome } from './mfEnvs';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -120,11 +123,14 @@ export interface MfMood {
 
 /** `presets.py`'s first preset, "Golden hour by the lake" (`envs/natural.json`'s own
  * `preset` block) — Memory Forest's default scene, hardcoded for this first milestone
- * rather than porting the full preset-picker/live-weather system. */
-export function goldenLakeMood(moonPhase = 0): MfMood {
+ * rather than porting the full preset-picker/live-weather system. `special` swaps in a
+ * region-specific environment (`mfEnvs.ts`) when the current biome has one; everything else
+ * about the scene (landscape, weather, time) stays Golden Lake's regardless — swapping
+ * those too, per biome, is further Phase 3 work, not this. */
+export function goldenLakeMood(moonPhase = 0, special = 'natural'): MfMood {
   return {
-    time: 'golden_hour', clock: false, weather: 'clear', special: 'natural', wind: false,
-    environment: 'natural', landscape: 'lake', landmark: 'none',
+    time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
+    environment: special, landscape: 'lake', landmark: 'none',
     moon: Math.round(moonPhase * 1000) / 1000, source: 'preset',
   };
 }
@@ -163,10 +169,15 @@ export interface MfAdapterOptions {
   moonPhase?: number;
   /** `'on' | 'off' | 'system'` — pass `GroveSettings.animate` straight through. */
   animate?: 'on' | 'off' | 'system';
+  /** The current biome's key (`Biome.key`) — looked up in `mfEnvs.ts`'s registry for a
+   * region-specific environment; a biome with no entry there still renders (the vendored
+   * engine's own default), same as before this option existed. */
+  biomeKey?: string;
 }
 
-/** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — the Golden Lake
- * default scene only (see module comment for what's deliberately not wired up yet). */
+/** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — Golden Lake's own
+ * landscape/weather/time always, a region-specific tree environment when `opts.biomeKey`
+ * has one (see module comment for what else is deliberately not wired up yet). */
 export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';
@@ -175,7 +186,7 @@ export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAd
     stats,
     visitors: toMfVisitors(stats),
     anniversaries: [],
-    mood: goldenLakeMood(opts.moonPhase),
+    mood: goldenLakeMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural'),
     journal: '',
     events: [],
     merged: null,

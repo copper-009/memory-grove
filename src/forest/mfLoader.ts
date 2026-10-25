@@ -6,7 +6,14 @@
  * piece by piece — not ES modules — so this is script-tag injection, not an `import`,
  * deliberately mirroring how the original's own deck-list page loads them and how
  * `tools/harness/mf.html` already proved the exact same list works.
+ *
+ * Also loads Memory Grove's own environments (`src/envs/*.js`, `mfEnvs.ts`'s registry) the
+ * same way, from a separate `envs/` URL namespace — `AF.env()` doesn't care which file
+ * registered a key, so this is the one place that needs to.
  */
+import { BIOME_ENVS } from './mfEnvs';
+
+const MG_ENV_KEYS = new Set(Object.values(BIOME_ENVS));
 
 /** `catalog.py`'s `SCRIPTS` constant, verbatim order. */
 const CORE_SCRIPTS = [
@@ -81,14 +88,22 @@ export async function loadMfScenery(mood: { special?: string; landscape?: string
   await loadMfCore();
   const base = vendorBase();
   if (mood.special) {
+    const own = MG_ENV_KEYS.has(mood.special);
     const rel = `envs/${mood.special}.js`;
-    if (!sceneryLoaded.has(rel)) {
-      try {
-        await loadScript(`${base}vendor/${rel}`);
-      } catch {
-        /* no special script for this environment — e.g. "natural" — nothing to draw */
+    const key = (own ? 'mg:' : 'vendor:') + rel;
+    if (!sceneryLoaded.has(key)) {
+      if (own) {
+        // A Memory Grove env is always expected to exist (mfEnvs.ts only maps to real
+        // files) — a 404 here is a genuine bug, not the normal "no special script" case.
+        await loadScript(`${base}${rel}`);
+      } else {
+        try {
+          await loadScript(`${base}vendor/${rel}`);
+        } catch {
+          /* no special script for this environment — e.g. "natural" — nothing to draw */
+        }
       }
-      sceneryLoaded.add(rel);
+      sceneryLoaded.add(key);
     }
   }
   const required: string[] = [];

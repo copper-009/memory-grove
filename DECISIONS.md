@@ -236,3 +236,39 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     hand-authored-sprite move, now by the vendored engine not reading per-region art at all
     yet. Left as historical record per this file's own rule (append, don't rewrite); this
     entry is the up-to-date account.
+- **Phase 3, first region: Australia's eucalypt woodland, trees only.** `src/envs/
+  au-eucalypt.js` plugs into the vendored engine's own `AF.env` registry (`scenery.js`) —
+  a new file, not an edit to anything under `src/vendor/`, loaded at runtime from a
+  separate `envs/` URL namespace (`webpack.config.js`'s `CopyPlugin`, `mfLoader.ts`)
+  entirely distinct from the vendored engine's own `vendor/envs/`. `mfEnvs.ts`'s
+  `BIOME_ENVS` registry maps `Biome.key` → env file; `mfAdapter.ts`'s `buildMfPayload`
+  takes an optional `biomeKey` and looks it up, defaulting to `'natural'` (no special
+  environment — the vendored engine's own default pine/round trees) for every biome
+  without an entry, same as every biome got before this registry existed.
+  - The tree-kind bit every tree already carries (`seed % 100 < 34`, `trees.js`'s own
+    pine/round split) is repurposed rather than replaced: `pine` draws as a grass tree
+    (black trunk, spiky skirt, flower spear — Xanthorrhoea, one of eucalypt woodland's five
+    species) and `round` draws as a gum (open, clumped crown on a pale trunk — river red
+    gum/spotted gum). Colours are the exact ones already in `src/regions/australia/
+    eucalypt.ts`'s own species data, not re-invented. Two species standing in for the
+    biome's actual five, chosen because they're the ones that read as genuinely different
+    silhouettes (not just a palette swap) through `trees.js`'s own hook functions
+    (`tree.trunk`, `tree.crown`) — wattle/kangaroo-grass are smaller visual differences,
+    left for a follow-up pass.
+  - A real debugging note, since the first visual check was actively misleading: at normal
+    grove density the new trees look nearly identical to the vendored default in a
+    screenshot (hard to see individual crown shape in hundreds of overlapping trees), and
+    an early isolated check seemed to show the grass tree's crown rendering in the wrong
+    (tan/peach) colour entirely. Verified the crown-shape and palette logic directly in
+    Node (no browser needed — `gumCrown`/`grassTreeCrown` only touch a plain `Int8Array`)
+    before trusting any screenshot again, which confirmed the palette was correct; the
+    tan colouring turned out to be `trees.js`'s own golden-hour "rim light" effect (a
+    backlit silhouette-edge glow, present for every tree in every golden-hour scene already
+    — not something this env added), just far more visible on a many-bladed grass-tree
+    silhouette (many edges) than a solid round crown (one edge). Genuine engine behaviour,
+    not a bug — left as-is.
+  - Known gap: only trees change per biome so far. Creatures (Memory Grove's own hand-
+    authored eucalypt roster from Phase 1 — kookaburra, cockatoo, kangaroo, lace monitor,
+    koala — sitting unused in `src/regions/sprites/`), the landscape (still always Golden
+    Lake's lake, not eucalypt woodland's own ground/sky), and the other ten regions are all
+    still ahead.

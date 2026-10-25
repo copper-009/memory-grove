@@ -4,13 +4,13 @@
  * `mfAdapter`/`mfLoader` — not our own renderer, which this replaced (see `DECISIONS.md`
  * § "Region packs" / "Phase 2" for the full account of the switch).
  *
- * Known gap, honestly: the vendored engine always draws its own Golden Lake default scene
- * right now (`mfAdapter.ts`'s `goldenLakeMood`) — the region/biome picker in `pane_widget`
- * doesn't change what's drawn yet. That's Phase 3's main piece of remaining work (new
- * "envs" using `trees.js`'s own hook functions, per region), not done in this pass, which
- * was specifically about removing the old renderer so there's one grove view, not two.
- * Per-tree/per-creature tooltips and hover are the vendored engine's own (`tooltips.js`,
- * `hover.js`) — nothing to wire up here for those, unlike the old renderer's `hitTest.ts`.
+ * Known gap, honestly: the vendored engine still always draws Golden Lake's own landscape/
+ * weather/time — only the *trees* change per biome so far (`mfEnvs.ts`'s registry, Phase 3,
+ * one region at a time), and only for biomes with an entry there; everything else still
+ * gets the vendored engine's own default pine/round trees, same as before that registry
+ * existed. Per-tree/per-creature tooltips and hover are the vendored engine's own
+ * (`tooltips.js`, `hover.js`) — nothing to wire up here for those, unlike the old renderer's
+ * `hitTest.ts`.
  */
 
 import { useEffect, useRef } from 'react';
@@ -38,6 +38,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
     const payload = buildMfPayload(bundle.grove, bundle.roster, {
       maxWidth: height * 2,
       animate: bundle.settings?.animate,
+      biomeKey: bundle.biome?.key,
     });
     loadMfScenery(payload.mood).then(() => {
       if (cancelled || !rootRef.current) return;
@@ -48,7 +49,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bundle.grove, bundle.roster, bundle.settings?.animate, height]);
+  }, [bundle.grove, bundle.roster, bundle.settings?.animate, bundle.biome?.key, height]);
 
   return <div ref={rootRef} className="rn-clr-background-light-gray" style={{ width: '100%', minHeight: height }} />;
 }
