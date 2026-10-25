@@ -189,3 +189,21 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     landscapes, landmarks, tree hooks) rather than editing vendored files; an edit that's
     genuinely unavoidable gets marked `// Memory Grove change:` inline and listed here when
     it happens.
+- **Phase 2 milestone confirmed: Golden Lake renders inside live RemNote from the user's
+  real grove.** Verified by the user directly (2026-10-25), not just the standalone harness
+  (`tools/harness/mf.html`, synthetic fixtures) — the "Show Memory Forest engine preview"
+  toggle in `pane_widget.tsx` drew the vendored engine's own sky/hills/ground/water/trees/
+  cabin from their actual RemNote cards, including real pond shapes from their actual study
+  gaps. Two install/dev-loop issues surfaced and got fixed along the way, both worth keeping
+  in mind for anyone testing locally, not vendored-engine bugs:
+  - The zip-upload path (Settings → Plugins → Build → Upload) is RemNote's submission/
+    review pipeline, not a quick-test path — even unlisted plugins need review before they
+    run. "Develop from localhost" is the only path that doesn't require approval.
+  - `lsof -ti:8080 | xargs kill -9` before `npm run dev` is the reliable way to restart the
+    dev server — Ctrl+C doesn't always actually kill the process, and a stale server left
+    listening on 8080 serves an old build (missing `vendor/`, or missing a brand-new widget
+    entry) while looking, from RemNote's side, like it reconnected fine.
+  - The engine-preview toggle lives inside the existing `pane_widget` pane rather than its
+    own `openWidgetInPane`-opened pane — a second pane was what reliably triggered RemNote's
+    "Cannot parse window string" pane-layout bug in practice, beyond the first-pane case
+    already noted above.
