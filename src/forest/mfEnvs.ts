@@ -7,6 +7,16 @@
  */
 export const BIOME_ENVS: Record<string, string> = {
   eucalypt: 'au-eucalypt',
+  'kauri-forest': 'nz-kauri',
+  satoyama: 'jp-satoyama',
+  'eastern-rainforest': 'mg-rainforest',
+  'cloud-forest': 'cr-cloudforest',
+  'acacia-savanna': 'ea-savanna',
+  boreal: 'ca-boreal',
+  taiga: 'no-taiga',
+  terai: 'np-terai',
+  'southern-beech': 'pt-beech',
+  dipterocarp: 'bo-dipterocarp',
 };
 
 export function envForBiome(biomeKey: string | undefined): string | undefined {

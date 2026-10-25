@@ -321,3 +321,72 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     with esbuild, served the vendored/env scripts over a plain Node static server, called
     `AF.tips.tree` directly) rather than trusting the type-checker alone — confirmed both
     the with-name and without-name paths render the expected HTML.
+- **Phase 3, the other ten regions' primary biome, trees only.** Same move as
+  `au-eucalypt.js`, generalised: picked each region's own primary biome (`biomes[0]` —
+  Australia keeps its six-biome lead since `eucalypt` was already done; everywhere else has
+  two, so the other one is still a documented gap, same as Australia's remaining five) and
+  gave it two real species through `trees.js`'s hooks. `src/envs/_forms.js` is new: a
+  shared library, loaded once before any region env (`mfLoader.ts`'s `loadMfCore`), of
+  crown/trunk functions reused across all ten new env files instead of each reinventing
+  them. These are ports of the shape logic the now-deleted `src/forest/plantSprite.ts` drew
+  for each `PlantForm` — retrieved from git history (the commit before its deletion) purely
+  as a design reference for what each form was supposed to look like, not reused as code
+  (different API entirely — this targets `trees.js`'s own `c.tone`/`c.pick`/`c.R`
+  contract, not that file's `ToneMap`). Two forms from that set — `palm` and `bulbous` — are
+  deliberately not in `_forms.js`: both need a trunk far taller than the engine's fixed
+  `PINE_TRUNK`/`BROAD_TRUNK` share of height allows for (a palm's trunk is most of its
+  height; a baobab's bulge needs to eat into where the crown would otherwise start), which
+  only `tree.body()` — a full custom-painter override, not exercised yet — can do. Rather
+  than guess at that hook without a way to check it live, the traveller's palm (Madagascar)
+  and the baobab (East Africa) were swapped for a tree fern and a shrub respectively, both
+  documented inline as deferred, not dropped.
+  - New envs: `nz-kauri` (Aotearoa — kauri, a conifer, needs no custom crown hook at all;
+    ponga/silver fern via `frondCrownForm`), `jp-satoyama` (Japan — sugi and yamazakura,
+    both default-shaped, the cherry-blossom pink is just that species' own highlight tone),
+    `mg-rainforest` (Madagascar — tree fern + rosewood), `cr-cloudforest` (Costa Rica — tree
+    fern + oak), `ea-savanna` (East Africa — whistling thorn, `shrub`-formed via
+    `roundCrownForm` at a smaller blob count, + umbrella thorn), `ca-boreal` (Canada —
+    black spruce + paper birch, both default-shaped), `no-taiga` (Norway — spruce + rowan,
+    both default-shaped), `np-terai` (Nepal — sal + elephant grass, `columnar`-formed via a
+    half-height `roundCrownForm` plus `crownShadeForm`), `pt-beech` (Patagonia — all three
+    of the biome's species are `broadleaf`, so instead of a second form for the pine-kind
+    slot this one uses `trees.js`'s own per-seed palette rotation, `pals.rounds`, to cycle
+    lenga/ñire/coihue across round-kind trees, each with its own trunk colour via a custom
+    seed-matched `trunk` hook; pine-kind trees are left on the engine's own generic default,
+    a real, stated gap for this one biome rather than a fourth species to force into a slot
+    that doesn't exist here), `bo-dipterocarp` (Borneo — rafflesia, `shrub`-formed, chosen
+    over the biome's other shrub, the pitcher plant, for the same "which silhouette actually
+    reads at this resolution" reason `au-eucalypt.js` picked its own two species — + giant
+    dipterocarp).
+  - **Two real bugs, both caught by the harness render before anything shipped, neither
+    visible from reading the code:**
+    1. `frondCrownForm`'s origin was anchored near the crown's own *top* (`top + 1`),
+       fanning fronds further upward and mostly off-canvas — a direct, deliberate port of
+       `plantSprite.ts`'s own `frondCrown`, which did the exact same thing; whatever that
+       file's own `paint.ts` did to compensate is lost with it (both deleted). Caught as a
+       fern rendering as a bare stick with no visible crown at all. Fixed by anchoring at
+       `top + ch` (the trunk connection) and fanning *up* toward `top` instead — the same
+       direction every other crown function in this file already works in.
+    2. `roundCrownForm`'s `chFrac` (a shorter-than-full crown, for `columnar`/`shrub`)
+       top-aligned the shrunken region to `top`, leaving the gap between the crown's own
+       bottom and the actual trunk connection (`top + fullCh`) completely empty — the same
+       class of bug as `au-eucalypt.js`'s first gum-crown gap, just in a shared function
+       this time instead of one env's local one. Caught as elephant grass (Nepal)
+       rendering as a crown floating visibly above its trunk. Fixed by bottom-aligning the
+       shrunken region to the trunk connection instead.
+  - Verified with the same two-tier method as the eucalypt work: an isolated one-pine/
+    one-round-tree harness render per biome (a throwaway `tools/harness/region.ts`, not
+    committed) for checking crown/trunk connection and colour up close, cropped and
+    inspected directly rather than guessed at from a thumbnail; then a full 513-tree dense
+    render for four of the ten (one per distinct crown technique used: default-only,
+    frond, shrub/columnar, palette-rotation) to confirm nothing breaks or reads as mush at
+    scale. `pt-beech`'s palette rotation was checked a third way — three round-kind trees
+    forced to seeds landing on each of the three palettes — since it was the most novel
+    piece (nothing else in this session reads `pals.rounds` or needs a seed-matched trunk).
+    A third bug, unrelated to the shape work, surfaced the same way: `pt-beech`'s `pals.bark`
+    fallback (for the pine-kind trees this env leaves untouched) was set as a `[light, mid,
+    dark]` array, matching every other env's own custom `trunk` hook convention — but the
+    *engine's own default* trunk-draw (which is what actually reads that fallback, since
+    this env's `trunk` hook returns `false` for pine-kind) expects `{l, m, d}`, an object.
+    Crashed immediately on the very first render attempt (`mix()`, undefined colour) —
+    fixed by giving it the object shape instead.

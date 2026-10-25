@@ -63,9 +63,12 @@ function vendorBase(): string {
   return new URL('.', window.location.href).toString();
 }
 
-/** Loaded once, right after the core scripts, regardless of biome — see the file's own
- * header for why this wraps `AF.tips.tree` instead of editing the vendored `tooltips.js`. */
-const SPECIES_TOOLTIP_SCRIPT = 'species-tooltip.js';
+/** Loaded once, right after the core scripts, regardless of biome. `_forms.js` must come
+ * first — every region env's own script (`BIOME_ENVS`) calls into `window.MGForms` at
+ * registration time, which only `loadMfScenery`'s one-env-per-biome load happens after this
+ * resolves. `species-tooltip.js` wraps `AF.tips.tree` — see that file's own header for why,
+ * instead of editing the vendored `tooltips.js`. */
+const ALWAYS_SCRIPTS = ['_forms.js', 'species-tooltip.js'];
 
 /** Load `util.js` through the pixel engine and events scripts once per page — every widget
  * instance sharing one `window.AnkiForest`, matching the original (one copy of the engine
@@ -77,7 +80,7 @@ export function loadMfCore(): Promise<void> {
     loaded = CORE_SCRIPTS.reduce(
       (p, rel) => p.then(() => loadScript(`${base}vendor/${rel}`)),
       Promise.resolve(),
-    ).then(() => loadScript(`${base}envs/${SPECIES_TOOLTIP_SCRIPT}`));
+    ).then(() => ALWAYS_SCRIPTS.reduce((p, rel) => p.then(() => loadScript(`${base}envs/${rel}`)), Promise.resolve()));
   }
   return loaded;
 }
