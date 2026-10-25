@@ -38,18 +38,25 @@ const CHAR_BARK = H6(['#4a4038', '#312a24', '#1c1814']);
  * rather than trees.js's own roundCrown, which blends every blob into one smooth union. */
 function gumCrown(c) {
   const { tone, W, H, w, top, ch, cx, R, hole, pick } = c;
-  const rx = w / 2, ry = ch / 2, ccx = cx + 0.5, ccy = top + ry - 0.5;
+  const rx = w / 2, ccx = cx + 0.5;
+  // Every blob anchors to the same line — where the crown actually meets the trunk — rather
+  // than floating at an independent height scattered around the region's geometric centre.
+  // That symmetric scatter (each blob's own y picked within +/-dist of centre, in both
+  // directions) was the real bug: at dist's own max (0.6) and the extra 0.75 vertical
+  // compression, no blob's lower edge ever reached past about 45% of the way down to the
+  // trunk, leaving a visible gap between crown and bark on every single tree. Blobs still
+  // vary in size and how high they sit (`yLift`) for the sparse, clumped look; they just
+  // never leave their own base unconnected to the trunk under them.
+  const baseY = top + ch;
   const n = 3 + Math.floor(R() * 2);
   const blobs = [];
   for (let k = 0; k < n; k++) {
-    const a = -Math.PI / 2 + (k / n) * Math.PI * 2 + (R() - 0.5) * 0.9;
-    const dist = 0.3 + R() * 0.3;
-    blobs.push({
-      x: ccx + Math.cos(a) * rx * dist,
-      y: ccy + Math.sin(a) * ry * dist * 0.75,
-      sx: rx * (0.4 + R() * 0.16),
-      sy: ry * (0.4 + R() * 0.16),
-    });
+    const t = n === 1 ? 0.5 : k / (n - 1);
+    const sx = rx * (0.32 + R() * 0.16);
+    const sy = ch * (0.55 + R() * 0.25);
+    const xOff = (t - 0.5) * rx * 1.5 + (R() - 0.5) * rx * 0.3;
+    const yLift = R() * ch * 0.25;
+    blobs.push({ x: ccx + xOff, y: baseY - sy * 0.55 - yLift, sx, sy });
   }
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
