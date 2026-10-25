@@ -33,31 +33,29 @@ const GUM_BARK = H6(['#d8cfc0', '#b3a797', '#8a7c6c']);
 // them lets it catch rim light and haze the same way every other trunk does
 const CHAR_BARK = H6(['#4a4038', '#312a24', '#1c1814']);
 
-/* A real eucalypt crown is open and clumped — branch structure shows through — not one
- * dense dome. 3-4 separate blob clusters, deliberately spaced so gaps show between them,
- * rather than trees.js's own roundCrown, which blends every blob into one smooth union. */
+/* Second attempt — the first (several independent blobs, each anchored to its own patch of
+ * the trunk line) fixed the crown-trunk gap but read as separate upright columns instead of
+ * one tree, reported live. Rebuilt on trees.js's own roundCrown approach instead: one big
+ * central blob plus smaller satellite blobs around it, blended into a single silhouette by
+ * taking the *max* of every blob's distance field (a true union, not independent shapes) —
+ * which is also exactly why the default never had a connection problem: the central blob
+ * alone is nearly as large as the whole region, so it reaches the trunk regardless of the
+ * satellites. A eucalypt crown's actual character — open, you can see branch structure
+ * through it, not a dense ball — comes from `GAP_PUNCH` instead: the same per-pixel random
+ * skip (`hole` in the original) every crown already supports for a dying tree, just applied
+ * as a constant baseline regardless of health, which is what trees.js itself never has a
+ * reason to do. */
+const GAP_PUNCH = 0.16;
 function gumCrown(c) {
   const { tone, W, H, w, top, ch, cx, R, hole, pick } = c;
-  const rx = w / 2, ccx = cx + 0.5;
-  // Every blob anchors to the same line — where the crown actually meets the trunk — rather
-  // than floating at an independent height scattered around the region's geometric centre.
-  // That symmetric scatter (each blob's own y picked within +/-dist of centre, in both
-  // directions) was the real bug: at dist's own max (0.6) and the extra 0.75 vertical
-  // compression, no blob's lower edge ever reached past about 45% of the way down to the
-  // trunk, leaving a visible gap between crown and bark on every single tree. Blobs still
-  // vary in size and how high they sit (`yLift`) for the sparse, clumped look; they just
-  // never leave their own base unconnected to the trunk under them.
-  const baseY = top + ch;
+  const rx = w / 2, ry = ch / 2, ccx = cx + 0.5, ccy = top + ry - 0.5;
   const n = 3 + Math.floor(R() * 2);
-  const blobs = [];
+  const blobs = [{ x: ccx, y: ccy, sx: rx * 0.8, sy: ry * 0.8 }];
   for (let k = 0; k < n; k++) {
-    const t = n === 1 ? 0.5 : k / (n - 1);
-    const sx = rx * (0.32 + R() * 0.16);
-    const sy = ch * (0.55 + R() * 0.25);
-    const xOff = (t - 0.5) * rx * 1.5 + (R() - 0.5) * rx * 0.3;
-    const yLift = R() * ch * 0.25;
-    blobs.push({ x: ccx + xOff, y: baseY - sy * 0.55 - yLift, sx, sy });
+    const a = -Math.PI / 2 + (k / n) * Math.PI * 2 + (R() - 0.5) * 0.7;
+    blobs.push({ x: ccx + Math.cos(a) * rx * 0.46, y: ccy + Math.sin(a) * ry * 0.46, sx: rx * 0.48, sy: ry * 0.48 });
   }
+  const punch = Math.max(GAP_PUNCH, hole);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const px = x + 0.5, py = y + 0.5;
@@ -67,8 +65,8 @@ function gumCrown(c) {
         if (nx * nx + ny * ny <= 1) best = Math.max(best, -(nx * 0.6 + ny * 0.8));
       }
       if (best === -9) continue;
-      if (hole && R() < hole) continue;
-      tone[y * W + x] = pick(best + (R() - 0.5) * 0.12);
+      if (R() < punch) continue;
+      tone[y * W + x] = pick(0.55 * best + 0.45 * -((px - ccx) / rx * 0.5 + (py - ccy) / ry * 0.7) + (R() - 0.5) * 0.1);
     }
   }
   return true;
