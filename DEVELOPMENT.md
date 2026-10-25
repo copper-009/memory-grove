@@ -33,7 +33,6 @@ npm run typecheck   # tsc --noEmit
 npm test             # vitest run — 163 tests as of this writing
 npm run bench        # vitest bench, if any benchmark files are added later
 npm run build        # typecheck -> production webpack build -> MemoryGrove.zip
-npm run shots        # screenshot harness (needs `npx playwright install chromium` once)
 npm run species-doc  # regenerate reference/SPECIES.md from the region packs
 ```
 
@@ -48,17 +47,16 @@ and asserts it completes well inside a 250ms budget (observed: under 100ms on a 
 laptop). The brief's 300ms first-render budget is for data *and* the first paint together;
 the data half is the part that scales with history length, which is what's pinned here.
 
-### Screenshot review
+### Render harness
 
-`npm run shots` bundles `tools/harness/render.ts` with esbuild and drives headless Chromium
-(via Playwright) to call `drawScene()` directly — no RemNote SDK involved, so it's fast and
-needs no running plugin. It renders:
-
-- every scenery (`natural`, `misty`, `aurora`, `rain`, `snow`, `dusk`) against every fixture
-  (`newbie`, `veteran`, `gappy`, `forgetful`)
-- three sampled regions (`australia`, `japan`, `borneo`) at low/medium/high ecosystem health
-
-to `screenshots/*.png`. Look at them after any change to `src/forest/`.
+`tools/harness/mf.html` + `mf.ts` load the vendored Memory Forest engine
+(`src/vendor/memory-forest/web/`, via plain `<script>` tags, in `catalog.py`'s own `SCRIPTS`
+order) and call `AF.mount` directly against a synthetic fixture — no RemNote SDK involved,
+so it's fast and needs no running plugin. There's no `npm` script for it (a one-off
+verification tool from the Phase 2 vendoring work, not a routine check); bundle `mf.ts` with
+esbuild and drive it with Playwright the way `DECISIONS.md`'s Phase 2 entries describe, or
+serve `tools/harness/` and `src/vendor/memory-forest/web/` (as `/vendor/`) statically and
+open `mf.html`.
 
 ## Project layout
 
@@ -70,20 +68,28 @@ src/
                  schedulePresets.ts, heatmap.ts, milestones.ts (creature unlocks),
                  cache.ts, fixtures.ts (synthetic test knowledge bases).
   regions/       region packs. See "Adding a region" below.
-  forest/        the renderer — pure except paint.ts and scene.ts, which touch canvas.
-                 layout.ts, theme.ts, plantSprite.ts, creatureSprite.ts,
-                 creatureMotion.ts, hitTest.ts, tooltip.ts, ecosystemVisual.ts.
+  forest/        theme.ts, color.ts, heatmapRender.ts (the study-calendar heatmap, its own
+                 small renderer, unrelated to the grove scene) plus the vendored-engine
+                 bridge: mfAdapter.ts (builds the payload AF.mount reads from a Grove) and
+                 mfLoader.ts (loads the vendored engine's own scripts at runtime). The grove
+                 scene itself has no code here any more — see "Rendering" below.
+  vendor/        memory-forest/web/ — Memory Forest's own rendering engine, copied in
+                 unmodified (DECISIONS.md § "Phase 2"). Loaded via <script> tags at runtime
+                 (mfLoader.ts), not imported; see webpack.config.js's CopyPlugin for how it
+                 reaches the built plugin.
   widgets/       the RemNote plugin itself: index.tsx (activation), settings.ts,
-                 groveBuilder.ts, useGrove.ts, GroveCanvas.tsx, and one thin entry
-                 file per WidgetLocation.
+                 groveBuilder.ts, useGrove.ts, GroveCanvas.tsx (mounts the vendored engine),
+                 and one thin entry file per WidgetLocation.
 tools/
   species-doc.mjs    regenerates reference/SPECIES.md from src/regions/
-  screenshots.mjs    the screenshot harness
-  harness/           its standalone render entry (no SDK)
+  harness/           mf.html + mf.ts — the vendored-engine render harness, see "Render
+                     harness" above
 reference/
   NOTES.md           how the original Memory Forest works, read before writing this
   REMNOTE_API.md     the Anki -> RemNote SDK mapping, with a workaround for every gap
   SPECIES.md         generated — do not hand-edit
+  memory-forest/     a full checkout of the original add-on (gitignored) — src/vendor/'s
+                     source, and what DECISIONS.md's Phase 2 entries studied directly
 ```
 
 ## Adding a region
@@ -111,19 +117,23 @@ A region needs:
   logged there.
 - Run `npm run species-doc` afterwards to regenerate `reference/SPECIES.md`.
 
-Creatures and plants are drawn procedurally from a `BodyPlan`/`PlantForm` plus a `Palette` —
-see `src/forest/creatureSprite.ts` and `src/forest/plantSprite.ts` — not hand-drawn, so a new
-region's art is "free" once its data is right. See `DECISIONS.md` § "Art and assets" for why.
+A region's own creature/plant art isn't drawn yet — the grove scene is the vendored Memory
+Forest engine's own generic pine/round trees and stock animal roster (Phase 2; see
+`DECISIONS.md`), the same for every region until Phase 3 wires region-specific rendering
+through `trees.js`'s hook functions. A `Creature` still needs a `sprite` (or the older
+`body`/`palette` pair — see `src/regions/types.ts`'s `CreatureSprite`) and a `PlantSpecies`
+still needs `crown`/`bark`, both schema-checked by `validate.ts`; that data is just not
+reaching the screen yet for any region but whatever Phase 3 has wired up so far.
 
 ## Known limitations / stubbed for v1
 
 Kept honest here rather than glossed over:
 
-- **Scenery is a smaller set than the original's eight environments / four landscapes / four
-  landmarks.** The rendering *engine* supports arbitrary scenery data (`theme.ts`'s `Theme`
-  is deliberately data-only), but only a representative set of time-of-day/weather
-  combinations is wired into `settings.ts`'s dropdowns for v1. Adding the rest is data work,
-  not engine work.
+- **The scene is always Golden Lake, every region, regardless of settings.** The vendored
+  engine (Phase 2) supports its own full set of environments/landscapes/landmarks/weather —
+  nothing about the engine limits this — but `mfAdapter.ts`'s `goldenLakeMood` hardcodes the
+  one scene for now. Wiring real scenery choice (and region-specific rendering through
+  `trees.js`'s hook functions) is Phase 3's main remaining work; see `DECISIONS.md`.
 - **Settings read as one flat list**, not literal tabs (Scenery/Forest/Nature/Weather) —
   the SDK has no tabbed-settings API. Approximated with an id-prefix convention
   (`scenery.*`, `forest.*`, ...); see `DECISIONS.md`.
@@ -131,8 +141,6 @@ Kept honest here rather than glossed over:
   picker) is not yet a dedicated popup widget — the underlying logic (`src/data/calendar.ts`,
   `schedulePresets.ts`) is complete and tested, but today the only way to set a pause is the
   "Holiday mode" command. A calendar popup widget is the natural next addition.
-- **The cabin** is a simple two-colour shape in `scene.ts`, not yet a full creature-style
-  sprite with smoke and lit windows at night, as the original has.
 - **A "Cannot parse window string" toast can appear while developing from localhost.**
   Seen once, immediately after using the "Open Memory Grove" command, which calls
   `plugin.window.openWidgetInPane`. RemNote persists its pane layout, and a dev-server
@@ -149,10 +157,9 @@ Kept honest here rather than glossed over:
   full view" button calling `openWidgetInPane` from inside themselves — an earlier version
   of this did, and calling that API from inside an already-mounted widget corrupted
   RemNote's own pane-layout state (the same "Cannot parse window string" failure mode as
-  the point above, but reliably, not just as a dev-server artifact). The omnibar commands
-  (`memory-grove.open`, `memory-grove.vendor-preview`) remain the one supported way into a
-  full pane, since they call it from a top-level command, never from inside a mounted
-  widget.
+  the point above, but reliably, not just as a dev-server artifact). The `memory-grove.open`
+  omnibar command remains the one supported way into a full pane, since it calls it from a
+  top-level command, never from inside a mounted widget.
 
 None of these affect data correctness, the plugin's build, or its tests — they're rendering
 and settings-surface polish, left for a follow-up pass.

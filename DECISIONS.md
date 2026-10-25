@@ -207,3 +207,32 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     own `openWidgetInPane`-opened pane — a second pane was what reliably triggered RemNote's
     "Cannot parse window string" pane-layout bug in practice, beyond the first-pane case
     already noted above.
+- **The old procedural renderer removed outright, not kept alongside the vendored engine —
+  user's explicit call, once the engine preview was confirmed working against their real
+  data.** `GroveCanvas.tsx` now mounts the vendored engine directly; it's the only grove
+  view across every widget (sidebar, queue, pane, learning progress), not a toggle. Deleted:
+  `scene.ts`, `plantSprite.ts`, `creatureSprite.ts`, `paint.ts`, `layout.ts`,
+  `ecosystemVisual.ts`, `hitTest.ts`, `tooltip.ts`, `creatureMotion.ts`, `rng.ts` (all
+  `src/forest/`), `MfEnginePreview.tsx`, and the old screenshot harness (`tools/harness/
+  render.ts`, `tools/screenshots.mjs`, `screenshots/`) — all of it specific to the removed
+  renderer, none of it reachable from anything that stays. `src/forest/color.ts`, `theme.ts`
+  and `heatmapRender.ts` stay: the study-calendar heatmap (`HeatmapView.tsx`) is a separate
+  feature that still needs them, not part of the grove scene.
+  - **Known gap this leaves, stated plainly:** the vendored engine always draws its own
+    Golden Lake default scene right now (`mfAdapter.ts`'s `goldenLakeMood` is hardcoded) —
+    the region/biome picker in `pane_widget` no longer changes what's drawn at all (it did,
+    through the now-deleted renderer, before this change). That's a real, visible regression
+    for anyone using a non-default region, accepted deliberately rather than kept as a
+    silent toggle, because Phase 3's very next piece of work is exactly this: real
+    region-specific rendering through `trees.js`'s own hook functions, starting with
+    Australia. The hand-authored/baked `CreatureSprite` data from the "Region packs" entry
+    above is exactly what that work will finally connect to something on screen.
+  - `src/forest/mfAdapter.ts`'s `animations` field changed shape (`number` → `boolean |
+    'system'`) to match what `util.js`'s `animates()` actually reads and what
+    `GroveSettings.animate` already provides — `GroveCanvas.tsx` now passes the user's real
+    setting through instead of a hardcoded value.
+  - `reference/SPECIES.md`'s claim that creature/plant art is procedural (`DECISIONS.md`'s
+    own earlier "Region packs" entries) is now doubly out of date: first by the Phase 1
+    hand-authored-sprite move, now by the vendored engine not reading per-region art at all
+    yet. Left as historical record per this file's own rule (append, don't rewrite); this
+    entry is the up-to-date account.

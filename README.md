@@ -43,11 +43,11 @@ forest. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for the full cred
 - Hover (or tap, on touch) any plant or creature for its details — species, age, health, and
   for creatures, a gentle conservation note.
 
-## Screenshots
+## Rendering
 
-See [`screenshots/`](screenshots/) (regenerate with `npm run shots`) — every scenery against
-four fixtures (a brand-new user, a two-year veteran, someone with long gaps, someone who
-lapses a lot), and three sampled regions at low/medium/high ecosystem health.
+The grove is drawn by Memory Forest's own vendored engine (`src/vendor/memory-forest/web/`),
+not a from-scratch renderer — see `DECISIONS.md` § "Phase 2" for why, and
+`tools/harness/mf.html` for the render harness used to verify it against fixtures.
 
 ## Privacy
 

@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import { renderWidget } from '@remnote/plugin-sdk';
 import { GroveCanvas } from './GroveCanvas';
 import { HeatmapView } from './HeatmapView';
-import { MfEnginePreview } from './MfEnginePreview';
 import { useGrove } from './useGrove';
 import { resolveMood } from './mood';
 import '../style.css';
@@ -10,12 +8,6 @@ import '../style.css';
 /** The dedicated "Grove" page, opened via command / omnibar. */
 function PaneWidget() {
   const bundle = useGrove();
-  // The Phase 2 vendored-engine preview renders *inside this already-open pane*, behind a
-  // toggle, rather than as its own pane opened via `openWidgetInPane` — that second call
-  // was what triggered RemNote's "Cannot parse window string" pane-layout bug in practice
-  // (see `MfEnginePreview.tsx`'s own comment and `DEVELOPMENT.md`). This pane is already
-  // open and known to work, so nothing new needs opening.
-  const [showEnginePreview, setShowEnginePreview] = useState(false);
   if (bundle.loading) return <div style={{ padding: 24 }}>Growing your grove…</div>;
   if (bundle.error) return <div style={{ padding: 24, color: '#c0392b' }}>Memory Grove: {bundle.error}</div>;
 
@@ -29,25 +21,9 @@ function PaneWidget() {
         {bundle.biome.label}
         {bundle.biomeOverride == null && ' · following the season'}
       </p>
-      {/* Right at the top, before anything that might need scrolling past — no point
-          putting a toggle below a tall scene + heatmap if the pane doesn't scroll to it. */}
-      <div style={{ marginBottom: 14 }}>
-        <button
-          onClick={() => setShowEnginePreview((v) => !v)}
-          style={{
-            fontSize: 12, padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-            border: '1px solid var(--rn-clr-border-light, rgba(128,128,128,0.3))',
-            background: 'transparent', opacity: 0.8,
-          }}
-        >
-          {showEnginePreview ? 'Hide' : 'Show'} Memory Forest engine preview (experimental)
-        </button>
-        {showEnginePreview && (
-          <div style={{ marginTop: 12 }}>
-            <MfEnginePreview grove={bundle.grove} roster={bundle.roster} />
-          </div>
-        )}
-      </div>
+      {/* Doesn't change the scene yet — the vendored engine always draws its own Golden
+          Lake default until region-specific envs land (Phase 3). The choice is still saved
+          (`useGrove.ts`'s biome override) for when it does. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;

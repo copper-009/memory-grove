@@ -141,7 +141,6 @@ export interface MfPayload {
   forestSeed: number;
   dayNumber: number;
   testForest: boolean;
-  animations: number;
   tooltips: boolean;
   zoom: boolean;
   maxWidth: number;
@@ -152,17 +151,25 @@ export interface MfPayload {
   inAnki: boolean;
   showForest: boolean;
   calendar: null;
+  /** `util.js`'s `animates()` reads this directly: `'system'` defers to
+   * `prefers-reduced-motion` itself, `true`/`false` are explicit. Matches
+   * `GroveSettings.animate`'s own `'on' | 'off' | 'system'` shape (`state.py`'s
+   * `ANIMATION_VALUES` maps those same three strings to `true`/`false`/`'system'`). */
+  animations: boolean | 'system';
 }
 
 export interface MfAdapterOptions {
   maxWidth?: number;
   moonPhase?: number;
+  /** `'on' | 'off' | 'system'` — pass `GroveSettings.animate` straight through. */
+  animate?: 'on' | 'off' | 'system';
 }
 
 /** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — the Golden Lake
  * default scene only (see module comment for what's deliberately not wired up yet). */
 export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
+  const animate = opts.animate ?? 'system';
   return {
     trees: grove.plants.map(toMfTree),
     stats,
@@ -175,7 +182,7 @@ export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAd
     forestSeed: grove.seed,
     dayNumber: grove.today,
     testForest: false,
-    animations: 1,
+    animations: animate === 'system' ? 'system' : animate === 'on',
     tooltips: true,
     zoom: false,
     maxWidth: opts.maxWidth ?? 900,

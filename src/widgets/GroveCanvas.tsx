@@ -1,239 +1,54 @@
 /**
- * The canvas widget: one component, used at every placement (sidebar, queue, pane). Sizes
- * itself to its container, scales for device pixel ratio, draws via `drawScene`, and
- * handles hover/tap for the inspector tooltip.
+ * The grove view: one component, used at every placement (sidebar, queue, pane, learning
+ * progress). Mounts the vendored Memory Forest engine (`src/vendor/memory-forest/web/`) via
+ * `mfAdapter`/`mfLoader` — not our own renderer, which this replaced (see `DECISIONS.md`
+ * § "Region packs" / "Phase 2" for the full account of the switch).
  *
- * Animation discipline, per the brief:
- * - honours `prefers-reduced-motion` when the setting is "system"
- * - pauses the rAF loop entirely when the tab/pane is hidden (IntersectionObserver +
- *   document.visibilityState), so a background widget costs nothing
- * - frozen (animate=false) still shows every sprite, just on its idle frame
+ * Known gap, honestly: the vendored engine always draws its own Golden Lake default scene
+ * right now (`mfAdapter.ts`'s `goldenLakeMood`) — the region/biome picker in `pane_widget`
+ * doesn't change what's drawn yet. That's Phase 3's main piece of remaining work (new
+ * "envs" using `trees.js`'s own hook functions, per region), not done in this pass, which
+ * was specifically about removing the old renderer so there's one grove view, not two.
+ * Per-tree/per-creature tooltips and hover are the vendored engine's own (`tooltips.js`,
+ * `hover.js`) — nothing to wire up here for those, unlike the old renderer's `hitTest.ts`.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { drawScene } from '../forest/scene';
-import type { MoodInput } from '../forest/theme';
-import { hitTest } from '../forest/hitTest';
-import type { HitBox } from '../forest/hitTest';
-import { plantTooltip, creatureTooltip, ecosystemTooltip } from '../forest/tooltip';
-import type { Tooltip } from '../forest/tooltip';
-import { pauseLabel } from '../data/calendar';
+import { useEffect, useRef } from 'react';
+import { buildMfPayload } from '../forest/mfAdapter';
+import { loadMfScenery } from '../forest/mfLoader';
+import type { AnkiForestApi } from '../forest/mfLoader';
+import '../vendor/memory-forest/web/forest.css';
 import type { GroveBundle } from './useGrove';
-import { resolveMood } from './mood';
-import { currentSeasonFor } from '../regions';
-
-function prefersReducedMotion(): boolean {
-  try {
-    return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * The canvas's CSS height, given the "Grove shape" setting.
- *
- * `layout.ts`/`scene.ts` work in normalised 0..1 coordinates throughout, so the renderer
- * already draws correctly at any aspect ratio — "landscape" and "vertical" just pick a
- * height from the container's actual width rather than always using the placement's own
- * fixed `height` prop (`defaultHeight`, used for "auto"). Clamped so a very wide pane
- * doesn't produce an absurdly tall vertical strip, or a very narrow sidebar an
- * unreadably short landscape banner.
- */
-function heightFor(layout: 'auto' | 'landscape' | 'vertical', cssW: number, defaultHeight: number): number {
-  if (layout === 'landscape') return Math.max(140, Math.min(480, Math.round(cssW / 2.6)));
-  if (layout === 'vertical') return Math.max(320, Math.min(700, Math.round(cssW * 1.4)));
-  return defaultHeight;
-}
 
 export interface GroveCanvasProps {
   bundle: GroveBundle;
   height?: number;
-  onTreeClick?: (day: number) => void;
 }
 
 export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const boxesRef = useRef<HitBox[]>([]);
-  const t0Ref = useRef<number>(performance.now());
-  const rafRef = useRef<number | null>(null);
-  const visibleRef = useRef(true);
-  const [tooltip, setTooltip] = useState<{ content: Tooltip; x: number; y: number } | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // Was hardcoded to biomes[0]: a region's other ecosystems were never reachable by any
-  // means at all. bundle.biome resolves the user's own choice, or the month-based default.
-  const biome = bundle.biome ?? bundle.region?.biomes?.[0];
-
-  const animate = (() => {
-    const mode = bundle.settings?.animate ?? 'system';
-    if (mode === 'off') return false;
-    if (mode === 'on') return true;
-    return !prefersReducedMotion();
-  })();
-
-  const draw = useCallback(
-    (tSeconds: number) => {
-      const canvas = canvasRef.current;
-      const container = containerRef.current;
-      if (!canvas || !container || !bundle.grove || !biome) return;
-      const dpr = window.devicePixelRatio || 1;
-      const cssW = container.clientWidth || 400;
-      const cssH = heightFor(bundle.settings.layout, cssW, height);
-      const W = Math.round(cssW * dpr);
-      const H = Math.round(cssH * dpr);
-      if (canvas.width !== W) canvas.width = W;
-      if (canvas.height !== H) canvas.height = H;
-      canvas.style.width = `${cssW}px`;
-      canvas.style.height = `${cssH}px`;
-      const g = canvas.getContext('2d');
-      if (!g) return;
-
-      // "Follow the real sky" (weather set to "auto") uses the fetched city weather when
-      // it has landed; otherwise, and for every other weather setting, the preset wins.
-      const mood: MoodInput = resolveMood(bundle);
-      const paused = pauseLabel(bundle.calendar, bundle.grove.today) != null;
-
-      const result = drawScene(g, W, H, {
-        grove: bundle.grove,
-        biome,
-        roster: bundle.roster,
-        activeStudyDays: bundle.activeStudyDays,
-        mood,
-        visualHealth: bundle.health.visual,
-        t: tSeconds,
-        animate,
-        paused,
-        dpr,
-        regionKey: bundle.region.key,
-        backdrops: bundle.region.backdrops,
-        season: currentSeasonFor(bundle.region),
-      });
-      boxesRef.current = result.boxes;
-    },
-    [bundle, biome, height, animate],
-  );
-
-  // Animation loop: paused when hidden, frozen at frame 0 when `animate` is false.
   useEffect(() => {
-    const loop = () => {
-      if (visibleRef.current) {
-        const t = animate ? (performance.now() - t0Ref.current) / 1000 : 0;
-        draw(t);
-      }
-      rafRef.current = animate ? requestAnimationFrame(loop) : null;
-    };
-    if (animate) {
-      rafRef.current = requestAnimationFrame(loop);
-    } else {
-      draw(0);
-    }
-    return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [draw, animate]);
-
-  // Pause the loop entirely off-screen or when the tab is hidden, per the brief.
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => {
-      visibleRef.current = entry.isIntersecting && document.visibilityState === 'visible';
+    if (!rootRef.current || !bundle.grove) return;
+    let cancelled = false;
+    // The vendored engine draws at a fixed 2:1 width:height (core.js's own ASPECT) and
+    // shrinks to whatever's narrower between this and the container's own width
+    // (core.js's `build()`) — so this is a ceiling, not a fixed size; the result is still
+    // responsive in a narrow sidebar or a squeezed pane.
+    const payload = buildMfPayload(bundle.grove, bundle.roster, {
+      maxWidth: height * 2,
+      animate: bundle.settings?.animate,
     });
-    io.observe(el);
-    const onVis = () => {
-      visibleRef.current = document.visibilityState === 'visible';
-    };
-    document.addEventListener('visibilitychange', onVis);
+    loadMfScenery(payload.mood).then(() => {
+      if (cancelled || !rootRef.current) return;
+      const AF = window.AnkiForest as AnkiForestApi;
+      AF.mount(rootRef.current, payload, { now: true });
+    });
     return () => {
-      io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
+      cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bundle.grove, bundle.roster, bundle.settings?.animate, height]);
 
-  const pointAt = (e: React.PointerEvent<HTMLCanvasElement>): [number, number] => {
-    const canvas = canvasRef.current!;
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    return [(e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr];
-  };
-
-  const showTooltipFor = (box: HitBox, clientX: number, clientY: number) => {
-    if (!bundle.grove || !biome) return;
-    let content: Tooltip | null = null;
-    if (box.kind === 'plant' && box.ref >= 0) {
-      const plant = bundle.grove.plants[box.ref];
-      const species = biome.plants[plant.species % biome.plants.length];
-      content = plantTooltip(plant, species);
-    } else if (box.kind === 'creature') {
-      const save = bundle.roster.creatures.find((c) => c.slot === box.ref);
-      const creature = biome.creatures.find((c) => c.slot === box.ref);
-      if (save && creature) {
-        content = creatureTooltip(creature, save, bundle.region.key, bundle.activeStudyDays, 'active');
-      }
-    }
-    if (content) setTooltip({ content, x: clientX, y: clientY });
-  };
-
-  const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (e.pointerType === 'touch') return; // touch uses tap, not hover
-    const [x, y] = pointAt(e);
-    const box = hitTest(boxesRef.current, x, y);
-    if (box) showTooltipFor(box, e.clientX, e.clientY);
-    else setTooltip(null);
-  };
-
-  const onTap = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (e.pointerType !== 'touch') return;
-    const [x, y] = pointAt(e);
-    const box = hitTest(boxesRef.current, x, y);
-    if (box) showTooltipFor(box, e.clientX, e.clientY);
-    else setTooltip(null);
-  };
-
-  const onEcosystemHover = () => {
-    if (!bundle.grove || !bundle.health) return;
-    const label = pauseLabel(bundle.calendar, bundle.grove.today);
-    const content = ecosystemTooltip(bundle.health.visual, bundle.health.trend, bundle.health.advice, label);
-    setTooltip({ content, x: 0, y: 0 });
-  };
-
-  return (
-    <div ref={containerRef} className="rn-clr-background-light-gray" style={{ position: 'relative', width: '100%', height }}>
-      <canvas
-        ref={canvasRef}
-        style={{ display: 'block', width: '100%', height, imageRendering: 'pixelated' }}
-        onPointerMove={onMove}
-        onPointerDown={onTap}
-        onPointerLeave={() => setTooltip(null)}
-        onDoubleClick={onEcosystemHover}
-      />
-      {tooltip && (
-        <div
-          className="rn-clr-background-primary rn-clr-content-primary"
-          style={{
-            position: 'fixed',
-            left: tooltip.x + 12,
-            top: tooltip.y + 12,
-            maxWidth: 260,
-            padding: '8px 10px',
-            borderRadius: 6,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
-            fontSize: 12,
-            lineHeight: 1.4,
-            zIndex: 1000,
-            pointerEvents: 'none',
-          }}
-        >
-          <div style={{ fontWeight: 600, marginBottom: 2 }}>{tooltip.content.title}</div>
-          {tooltip.content.lines.map((l, i) => (
-            <div key={i}>{l}</div>
-          ))}
-          {'conservationNote' in tooltip.content && tooltip.content.conservationNote && (
-            <div style={{ marginTop: 4, opacity: 0.8, fontStyle: 'italic' }}>{tooltip.content.conservationNote}</div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={rootRef} className="rn-clr-background-light-gray" style={{ width: '100%', minHeight: height }} />;
 }
