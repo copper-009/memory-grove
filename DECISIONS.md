@@ -443,3 +443,33 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     always Golden Lake's regardless of which biome is picked), and region-specific
     creatures (the hand-authored Phase 1 roster still sits unused in `src/regions/sprites/`
     — `visitors.js`'s fixed stock roster is what actually renders).
+- **Checked, deliberately not touched tonight: wiring `src/data/events.ts` (Memory Forest's
+  ported Nature system) in.** It has zero importers anywhere — fully ported, differentially
+  tested against the real Python, and never called. Looked into finishing that wiring as the
+  next automated task, and stopped once two things became clear, both worth the next
+  session's attention rather than a unilateral call made solo:
+  1. **It isn't the only ecosystem-severity system in the codebase.** `src/data/health.ts`
+     — already wired, `useGrove.ts` calls it every render — is a separate, original Memory
+     Grove mechanism: a continuous 0–100 score (`HealthResult.score`/`.visual`) from the
+     *same* `GroveSettings.severity` setting (`nature.severity`, five levels: peaceful /
+     gentle / wild / merciless / custom), gating plant growth and yellowing smoothly.
+     `events.ts`'s `Nature` type has three levels (peaceful / wild / merciless, matching
+     Memory Forest's own `state.py` exactly) and drives blunter, discrete, narrative events
+     instead — an asteroid strike that deletes every plant from a missed run of days, a
+     fire that spreads and has to be healed out, flowers on a big learning day. Whether
+     these are meant to run *together* (Memory Forest's dramatic events layered on top of
+     Memory Grove's own smooth health score) or whether `events.ts` was only ever meant to
+     supply pieces of it (`markBigDays`'s flowers, say, without `merciless`'s literal
+     grove-deleting asteroid) isn't something the code states anywhere, and the five-level/
+     three-level mismatch between the two severity types has no stated mapping either.
+  2. **The highest-value piece, Merciless's asteroid, reshapes the plant list itself**
+     (`wipe()` in `events.ts` removes every plant older than the strike) — core data-
+     pipeline surface (`forest.ts`'s `buildGrove`), not an isolated, opt-in-until-picked
+     addition the way tonight's new biome envs are. Getting the health.ts/events.ts
+     relationship wrong here risks a visible, confusing change to a real grove's actual
+     plant count, not a cosmetic miss on an unused biome.
+  Given that, this was left alone rather than guessed at — a clear next question for
+  whoever picks this up, not a silent gap. `markBigDays` (flowers on a big learning day) is
+  the one piece that's purely additive regardless of how the rest resolves, since the
+  docstring states Peaceful gets it too ("Peaceful only ever brings good things") — a
+  reasonable place to start once the relationship above is actually decided.
