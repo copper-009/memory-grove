@@ -300,14 +300,22 @@ function drawSky(g: CanvasRenderingContext2D, W: number, horizonY: number, th: T
  * rolling hills, Japan's volcanic cone, Norway's fjord wall and Nepal's jagged peaks don't
  * all collapse into the same generic bump.
  */
-function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, groundColor: string, form: string): void {
+function drawHills(g: CanvasRenderingContext2D, W: number, horizonY: number, farColor: string, form: string): void {
   // Nearly flat, matching the exact reference the user sent: that hill band is nowhere
   // near as textured as the ground below it, essentially one solid silhouette colour. A
   // narrow two-tone spread (not a single flat fill) still gives the escarpment's cliff
   // face *some* shading — a plain fill there read as "a weird box" with no light/shadow
   // distinction at all — but it's subtle enough now not to compete with the ground.
-  const light = mix(hex(farColor), hex(groundColor), 0.24);
-  const dark = mix(hex(farColor), hex(groundColor), 0.32);
+  //
+  // This used to shade by blending `farColor` toward the ground's own light tone — harmless
+  // back when the hill colour was itself ground-derived, but `farColor` is now deliberately
+  // a *different*, cooler atmospheric hue from the ground (real distant hills read that way,
+  // which is exactly what the reference shows: dusty mauve hills over green grass). Blending
+  // toward a green ground tone pulled that purple straight back toward green, quietly
+  // erasing the whole point of giving hills their own colour. Shading from `farColor` itself
+  // instead — same hue, only lighter/darker — keeps the two-tone cliff texture without
+  // contaminating the hue a ground blend would.
+  const [light, dark] = shadePair(hex(farColor), 0.16);
   const base = horizonY + horizonY * 0.1;
   // Raised substantially from 0.14: a landform's whole point is to show through above the
   // deep forest's own canopy line (drawn on top of this, right after) so a region's
@@ -456,20 +464,23 @@ function drawGround(
   // olive-green `#7d8a52` near tone, for instance). Wherever the treeline had a gap, that put
   // a visibly different-coloured, noticeably paler band sitting inside what should read as
   // one ground — exactly "the ground being different colours." These two actually need
-  // different treatment, not one shared value: hills are a genuinely distant, atmospheric
-  // silhouette standing in front of the sky, so pulling them strongly toward the sky's own
-  // horizon colour is correct; the gap-filler strip is conceptually *the same ground*, just
-  // glimpsed through a canopy gap a little higher up the frame — it has to match the ground
-  // fill's own `g0` almost exactly or it reads as a third tone, not blend into the sky.
-  const hillBase = th.snow ? hex(th.far) : shadePair(groundBase, 0.6)[0];
-  const hillCol = applyGroundHealth(toHex(mix(hillBase, hex(th.sky[5]), 0.55)), visual);
+  // different treatment, not one shared value, and hills specifically need to come from
+  // `th.far` (the *theme's* own atmospheric distance colour — already a close match to the
+  // reference's dusty mauve hills at golden hour, `#a898a6`), not from the ground at all:
+  // real distant hills read cooler/greyer than the ground beneath them precisely *because*
+  // they're seen through more atmosphere, the opposite of matching the ground's own hue.
+  // Deriving them from `groundBase` (an earlier version of this fix) overcorrected into
+  // hills that were just a paler copy of the grass, losing that atmospheric-perspective look
+  // entirely. A light blend toward the sky's own horizon stop keeps them tied to the same
+  // light without erasing `th.far`'s own distinct, intentional colour.
+  const hillCol = applyGroundHealth(toHex(mix(hex(th.far), hex(th.sky[5]), 0.22)), visual);
   // The biome's own landform drives the hill silhouette, not the region backdrop's form — a
   // backdrop is picked for sky/season variety and is shared across every biome in the
   // region, so using it for terrain shape meant switching ecosystems never changed the land
   // itself, only its colour. The biome's landform is geographically fixed; it doesn't change
   // with the weather or time of day, so it stays constant while everything else (sky,
   // lighting) keeps varying around it.
-  drawHills(g, W, horizonY, hillCol, g0, biomeLandform);
+  drawHills(g, W, horizonY, hillCol, biomeLandform);
 
   // There used to be a *separate* "gap-filler" rectangle here, sized to a generous 22% of
   // the ground's height on the theory that it was needed wherever the deep forest's canopy

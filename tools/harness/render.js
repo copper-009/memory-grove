@@ -2014,9 +2014,8 @@ function drawSky(g, W, horizonY, th, t) {
     }
   }
 }
-function drawHills(g, W, horizonY, farColor, groundColor, form) {
-  const light = mix(hex(farColor), hex(groundColor), 0.24);
-  const dark = mix(hex(farColor), hex(groundColor), 0.32);
+function drawHills(g, W, horizonY, farColor, form) {
+  const [light, dark] = shadePair(hex(farColor), 0.16);
   const base = horizonY + horizonY * 0.1;
   const amp = horizonY * 0.34;
   const heightAt = (p) => {
@@ -2085,9 +2084,8 @@ function drawGround(g, W, horizonY, landBottomY, biomeGround, th, visual, biomeL
   const ground1 = toHex(groundDark);
   const g0 = applyGroundHealth(ground0, visual);
   const g1 = applyGroundHealth(ground1, visual);
-  const hillBase = th.snow ? hex(th.far) : shadePair(groundBase, 0.6)[0];
-  const hillCol = applyGroundHealth(toHex(mix(hillBase, hex(th.sky[5]), 0.55)), visual);
-  drawHills(g, W, horizonY, hillCol, g0, biomeLandform);
+  const hillCol = applyGroundHealth(toHex(mix(hex(th.far), hex(th.sky[5]), 0.22)), visual);
+  drawHills(g, W, horizonY, hillCol, biomeLandform);
   const top = Math.round(horizonY);
   const bottom = Math.round(landBottomY);
   const rows = Math.max(1, bottom - top);
