@@ -584,3 +584,29 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     rainforest, checked and accepted rather than hidden). Not fixed by writing more
     backdrops tonight — that's new content, a different kind of work from reconnecting what
     already exists, which is what this whole landscape pass has been.
+- **`tree.body()`, finally exercised — every deferred `palm` species now draws for real.**
+  Reconsidered the earlier "deferred, needs a way to check it live" call now that tonight's
+  harness methodology (isolated two-tree renders, dense spot-checks, no errors required)
+  has proven itself repeatedly. Worked out that `body()` isn't actually a different kind of
+  problem from every other custom crown/trunk this session — the shared palette-resolution
+  pass after every hook still reads `c.tone`, so the crown portion only ever needs
+  `pick()`/`tone[]` same as a normal `crown()` hook; the only genuinely new part is
+  computing this tree's own `trunkH`/`tw`/`tx0`/`top`/`ch` by hand (a palm's trunk is most
+  of its height, where every other form's trunk is a fixed, small share) instead of reading
+  what the engine already computed. `_forms.js`'s `paintTrunk` was pulled out of
+  `trunkForm` into its own function so `palmBody` could reuse the exact same trunk-painting
+  code with self-computed geometry instead of the engine's.
+  - Proven first against the cleanest case — `bo-mangroveriver.js`'s empty pine-slot, nipa
+    palm, nothing to replace — then extended to the three biomes that had been carrying a
+    fern or mangrove as a stand-in specifically because palm wasn't available yet:
+    `au-tropical` (fan palm, replacing red mangrove), `au-rainforest` (bangalow palm,
+    replacing tree fern), `mg-rainforest` (traveller's palm, replacing tree fern — its wide,
+    almost-flat frond fan given its own `arcSpan` for exactly that reason). All four checked
+    isolated and at 513-tree density: a genuinely tall, thin trunk with a frond cluster at
+    the very top, reading clearly as a palm next to everything else's short-trunk-tall-crown
+    shape, no gaps, no crashes.
+  - `mfSpecies.ts` updated for all four swaps (the species-name regression test catches a
+    wrong key immediately, same as it would for any other biome) and `mfEnvs.ts`'s own
+    header comment corrected — `mg-spiny` (a baobab, `bulbous`-formed, a genuinely different
+    problem: a trunk whose *width* varies by row, not just one that's taller) is now the
+    only biome left with an empty kind-slot.

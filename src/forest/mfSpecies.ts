@@ -27,8 +27,8 @@ export interface BiomeSpeciesSlots {
 /** One entry per `mfEnvs.ts` biome, naming exactly what that biome's env file draws. */
 export const BIOME_SPECIES: Record<string, BiomeSpeciesSlots> = {
   eucalypt: { pine: 'grass-tree', round: 'river-red-gum' },
-  rainforest: { pine: 'tree-fern', round: 'antarctic-beech' },
-  tropical: { pine: 'red-mangrove', round: 'curtain-fig' },
+  rainforest: { pine: 'bangalow-palm', round: 'antarctic-beech' },
+  tropical: { pine: 'fan-palm', round: 'curtain-fig' },
   coastal: { pine: 'pandanus', round: 'paperbark' },
   outback: { pine: 'desert-oak', round: 'ghost-gum' },
   alpine: { pine: 'alpine-everlasting', round: 'snow-gum' },
@@ -36,7 +36,7 @@ export const BIOME_SPECIES: Record<string, BiomeSpeciesSlots> = {
   'southern-alps': { pine: 'snow-tussock', round: 'mountain-beech' },
   satoyama: { pine: 'sugi', round: 'yamazakura' },
   hokkaido: { pine: 'ezo-spruce', round: 'shirakaba' },
-  'eastern-rainforest': { pine: 'tree-fern-madagascar', round: 'madagascar-rosewood' },
+  'eastern-rainforest': { pine: 'traveller-palm', round: 'madagascar-rosewood' },
   'spiny-forest': { round: 'octopus-tree' },
   'cloud-forest': { pine: 'tree-fern-cr', round: 'oak-costa-rica' },
   'lowland-rainforest': { pine: 'heliconia', round: 'ceiba' },
@@ -51,5 +51,5 @@ export const BIOME_SPECIES: Record<string, BiomeSpeciesSlots> = {
   'southern-beech': { round: ['lenga', 'nire', 'coihue'] },
   steppe: { pine: 'coiron', round: 'mata-negra' },
   dipterocarp: { pine: 'rafflesia', round: 'giant-dipterocarp' },
-  'mangrove-river': { round: 'bakau-mangrove' },
+  'mangrove-river': { pine: 'nipa-palm', round: 'bakau-mangrove' },
 };

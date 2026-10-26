@@ -12,22 +12,26 @@
  * wants that same look with different parameters (fewer blobs for a shrub, a half-height
  * crown for a columnar plant) rather than the environment's own invention.
  *
- * Not every `PlantForm` is here: `palm` and `bulbous` both need a trunk taller than the
- * engine's own fixed PINE_TRUNK/BROAD_TRUNK share of height allows for (a palm's trunk is
- * most of its height, a baobab's bulge needs to eat into where the crown would start) — the
- * only hook that can do that is `tree.body()`, a full custom-painter override of both trunk
- * and crown together, not exercised yet. Left for a follow-up once there's a way to check
- * it against a real render; every region below picks its two species from forms this file
- * already covers, same "two species standing in for the biome's actual five, chosen for
- * distinct silhouettes" judgment call `au-eucalypt.js` documents.
+ * `palm` (`palmBody`, below) needed a trunk taller than the engine's own fixed
+ * PINE_TRUNK/BROAD_TRUNK share of height allows for — a palm's trunk is most of its height
+ * — which only `tree.body()` (a full custom-painter override of both trunk and crown
+ * together, since `trunkH` is fixed by `pine` alone everywhere else in `trees.js` and isn't
+ * overridable from inside a normal `trunk()`/`crown()` hook) can give it. `bulbous` (a
+ * baobab's swollen trunk, which needs to eat into where the crown would otherwise start)
+ * still isn't here — a `body()` hook of its own, not yet attempted, since a varying
+ * trunk *width* per row is a different problem from `palmBody`'s fixed-width, just-taller
+ * trunk.
  */
 (function () {
 'use strict';
 const AF = window.AnkiForest;
-const { MATURE } = AF.STAGE;
+const { MATURE, OLD } = AF.STAGE;
 
 const PINE_W = [0.46, 0.54, 0.62], BROAD_W = [0.66, 0.8, 0.94], ANCIENT_W = [0.9, 0.98, 1.04];
 const ANCIENT_PINE_W = 1.1;
+// trees.js's own private constant (not reachable from here, so duplicated — `sprite()`
+// gives any tree this tall a two-pixel trunk even before it's old).
+const THICK_TRUNK_H = 16;
 
 /** `tree.width()` hook: the engine's own default width formula (verbatim, from trees.js's
  * `sprite()`), scaled by a species' own `spread` (`PlantSpecies.spread` — the old renderer's
@@ -44,23 +48,31 @@ function widthForm(pineSpread, roundSpread) {
   };
 }
 
-/** `tree.trunk()` hook: the engine's own default trunk paint (verbatim), just reading one
- * of two bark triples by kind instead of the one shared `pals.bark` the default renderer is
- * limited to — the reason every region env needs this instead of leaving `trunk` unset. */
+/** The engine's own default trunk paint (verbatim, from `trees.js`'s `sprite()`), as a
+ * standalone function rather than only reachable through a `trunk()` hook — `palmBody`
+ * needs the exact same painting with a self-computed `trunkH`/`tw`/`tx0` instead of the
+ * engine's own, since a fixed-share trunk height is precisely what a palm can't use. */
+function paintTrunk(c, bark, trunkH, tw, tx0) {
+  const { base, put, ancient } = c;
+  for (let y = base - trunkH; y <= base; y++) {
+    for (let x = tx0; x < tx0 + tw; x++) {
+      let col = tw > 1 && x === tx0 ? bark[0] : tw > 1 && x === tx0 + tw - 1 ? bark[2] : bark[1];
+      if (y <= base - trunkH + 3) col = bark[2];
+      else if (tw === 1 && y & 1) col = bark[0];
+      put(x, y, col);
+    }
+  }
+  if (c.t.stage >= MATURE && !ancient) { put(tx0 - 1, base, bark[2]); put(tx0 + tw, base, bark[2]); }
+  if (ancient) { put(tx0 - 1, base, bark[2]); put(tx0 + tw, base, bark[2]); put(tx0 - 2, base, bark[2]); put(tx0 + tw + 1, base, bark[2]); }
+}
+
+/** `tree.trunk()` hook: `paintTrunk` with the engine's own precomputed geometry, just
+ * reading one of two bark triples by kind instead of the one shared `pals.bark` the
+ * default renderer is limited to — the reason every region env needs this instead of
+ * leaving `trunk` unset. */
 function trunkForm(pineBark, roundBark) {
   return (c) => {
-    const { base, tx0, tw, trunkH, put, ancient, pine } = c;
-    const bark = pine ? pineBark : roundBark;
-    for (let y = base - trunkH; y <= base; y++) {
-      for (let x = tx0; x < tx0 + tw; x++) {
-        let col = tw > 1 && x === tx0 ? bark[0] : tw > 1 && x === tx0 + tw - 1 ? bark[2] : bark[1];
-        if (y <= base - trunkH + 3) col = bark[2];
-        else if (tw === 1 && y & 1) col = bark[0];
-        put(x, y, col);
-      }
-    }
-    if (c.t.stage >= MATURE && !ancient) { put(tx0 - 1, base, bark[2]); put(tx0 + tw, base, bark[2]); }
-    if (ancient) { put(tx0 - 1, base, bark[2]); put(tx0 + tw, base, bark[2]); put(tx0 - 2, base, bark[2]); put(tx0 + tw + 1, base, bark[2]); }
+    paintTrunk(c, c.pine ? pineBark : roundBark, c.trunkH, c.tw, c.tx0);
     return true;
   };
 }
@@ -145,6 +157,34 @@ function frondCrownForm(c, fronds, arcSpan) {
   }
 }
 
+/** `tree.body()` hook: a palm — a trunk that's most of the tree's height (the deleted old
+ * renderer's own `SHARE_OF_HEIGHT.palm = 0.75`, `plantSprite.ts`, used here purely as a
+ * design reference the same way every other form in this file is, not reused as code) with
+ * a small fan of fronds at the very top, not the trunk-then-crown split the normal
+ * pine/broadleaf geometry would give it. `body()` is the only hook that can give a tree a
+ * non-default trunk-to-crown height ratio: `trunkH` is a fixed share of `h` by `pine` alone
+ * everywhere else in `trees.js`, computed before `trunk()`/`crown()` run and not
+ * overridable from within them — `trees.js`'s own `sprite()` reads `if (shape) {...} else
+ * {...default trunk+crown, where trunk()/crown() hooks get consulted...}`, so `body()`
+ * fully replaces that path rather than adding to it, and has to paint both itself. The
+ * crown portion still only sets `c.tone` (via `frondCrownForm`, not `c.put`) so the shared
+ * palette-resolution pass after every hook runs still applies to it correctly — exactly
+ * like a normal `crown()` hook, the only genuinely new part here is computing this tree's
+ * own `trunkH`/`tw`/`tx0`/`top`/`ch` by hand instead of reading the engine's. */
+function palmBody(bark, fronds, arcSpan) {
+  return (c) => {
+    const { t, h, ancient, cx } = c;
+    const trunkH = Math.max(3, Math.round(h * 0.75));
+    const tw = ancient ? 3 : t.stage >= OLD || h >= THICK_TRUNK_H ? 2 : 1;
+    const tx0 = cx - Math.floor(tw / 2);
+    paintTrunk(c, bark, trunkH, tw, tx0);
+    const top = 1, ch = Math.max(2, h - trunkH + 2);
+    Object.assign(c, { trunkH, tw, tx0, top, ch });
+    frondCrownForm(c, fronds, arcSpan);
+    return { top, ch };
+  };
+}
+
 /** A low spiky dome: a grass tree's skirt, a tussock, elephant grass. */
 function hummockCrownForm(c, bladesScale) {
   const { tone, W, H, w, top, ch, cx, R } = c;
@@ -185,5 +225,5 @@ function groundTheme(ground, hills) {
   };
 }
 
-window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme };
+window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme, palmBody };
 })();

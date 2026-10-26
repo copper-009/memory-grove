@@ -1,29 +1,36 @@
 /* Memory Grove — Borneo, mangrove river (this region's second biome).
  *
- * Only bakau mangrove is drawn here, round-kind — `shrub`-formed via a small
- * `MGForms.roundCrownForm`. The biome's other species (`src/regions/borneo/index.ts`), nipa
- * palm, needs the still-deferred `tree.body()` hook (see `_forms.js`'s header); pine-kind
- * trees are left on the engine's own generic default rather than forced into a palm's shape
- * without a way to check it live — a real, stated gap for this biome, same as
- * `mg-spiny.js`'s missing baobabs.
+ * Bakau mangrove (round-kind, `shrub`-formed via a small `MGForms.roundCrownForm`) and nipa
+ * palm (pine-kind, via `MGForms.palmBody` — a trunk that's most of its height with a frond
+ * fan at the top, the geometry only `tree.body()` can give a tree; see `_forms.js`'s own
+ * header for why). `body()` runs for every tree regardless of kind, so it returns `false`
+ * for round-kind here, letting the engine fall through to the normal path, where `trunk`/
+ * `crown` below handle the mangrove exactly as before.
  */
 (function () {
 'use strict';
 const AF = window.AnkiForest;
 const { hex } = AF.u;
-const { roundCrownForm } = window.MGForms;
+const { roundCrownForm, palmBody, widthForm } = window.MGForms;
 const H6 = a => a.map(hex);
 
 // bakau-mangrove (src/regions/borneo/index.ts)
 const BAKAU_CROWN = H6(['#1c3220', '#28492c', '#386138', '#4c7a48', '#6a9660']);
 const BAKAU_BARK = H6(['#7a6450', '#55463a', '#332b24']);
+// nipa-palm
+const NIPA_CROWN = H6(['#1c3220', '#28492c', '#386138', '#4c7a48', '#6a9660']);
+const NIPA_BARK = H6(['#6a6048', '#473e30', '#2c261c']);
+
+const nipaBody = palmBody(NIPA_BARK, 7, Math.PI * 1.3);
 
 AF.env('bo-mangroveriver', {
   theme: window.MGForms.groundTheme(["#3a4a30","#2a3822","#4c603e"], ["#b4c0c8","#7a8a84"]),
-  pals: { round: BAKAU_CROWN },
+  pals: { round: BAKAU_CROWN, pine: NIPA_CROWN },
   tree: {
+    width: widthForm(0.9, 1),
+    body: (c) => (c.pine ? nipaBody(c) : false),
     trunk: (c) => {
-      if (c.pine) return false; // no nipa palm here yet; the engine's own default pine trunk stands in
+      if (c.pine) return false; // handled by body() above
       const { base, tx0, tw, trunkH, put, ancient } = c;
       const bark = BAKAU_BARK;
       for (let y = base - trunkH; y <= base; y++) {
@@ -38,7 +45,7 @@ AF.env('bo-mangroveriver', {
       return true;
     },
     crown: (c) => {
-      if (c.pine) return false; // no nipa palm here yet; the engine's own default pine crown stands in
+      if (c.pine) return false; // handled by body() above
       roundCrownForm(c, 2, 0.08, 0.6);
       return true;
     },
