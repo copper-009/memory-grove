@@ -3,7 +3,13 @@
  * 4x, idle/busy frames animated, next to Memory Forest's own fox/deer/owl (transcribed
  * directly from `reference/memory-forest/web/visitors.js`, MIT licensed, credited on the
  * page) for scale, on the golden-lake ground as a backdrop. Each sprite gets a Keep/Redo/
- * Drop toggle; "Export decisions" downloads `review/decisions.json`.
+ * Drop toggle, saved live to this artifact's own `db` capability (one document per
+ * creature under `decisions/`) — not `localStorage` plus a download button, which this
+ * page used at first: published as a Claude Artifact, the artifact viewer never grants a
+ * page download permission, so that button did nothing there, and `localStorage` isn't
+ * readable from outside the page at all. `db` fixes both: Claude reads the decisions back
+ * directly (`ArtifactData`, collection `decisions`), and they survive reloads and
+ * revisits the same way `localStorage` did, just actually reachable.
  *
  * Run: npx esbuild scripts/buildGallery.ts --bundle --platform=node --format=esm
  *        --outfile=/tmp/gallery.mjs && node /tmp/gallery.mjs
@@ -97,6 +103,8 @@ const html = `<!doctype html>
   button { background: #3a4a2e; color: #eee; border: 1px solid #5a6a4a; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
   button:hover { background: #4a5c3a; }
   .count { font-size: 13px; color: #aaa; }
+  .dbStatus { font-size: 12px; color: #9a9; }
+  .dbStatus.err { color: #e99; }
   .section-title { font-size: 15px; margin: 28px 0 10px; color: #dde; border-bottom: 1px solid #333; padding-bottom: 4px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
   .card { background: #20251a; border: 1px solid #343a28; border-radius: 6px; padding: 10px; }
@@ -125,9 +133,9 @@ const html = `<!doctype html>
 <div class="credit">Fox, deer and owl reference sprites are Memory Forest's own (© Barak Levy, MIT licence) — shown for scale only, not part of Memory Grove's roster. Background: the golden-lake reference scenery. <a href="../DECISIONS.md">DECISIONS.md</a> has the full account of this rewrite.</div>
 <img class="preview" src="data:image/png;base64,${previewB64}" alt="Golden Lake reference scene">
 <div class="toolbar">
-  <button id="exportBtn">Export decisions (review/decisions.json)</button>
   <button id="animBtn">Pause animation</button>
   <span class="count" id="count"></span>
+  <span class="dbStatus" id="dbStatus">Connecting…</span>
 </div>
 
 <div class="section-title">Memory Forest reference (for scale — not reviewed)</div>
@@ -139,15 +147,54 @@ const html = `<!doctype html>
 <script>
 const ENTRIES = ${JSON.stringify(entries)};
 const REFERENCE = ${JSON.stringify(REFERENCE)};
-const DECISIONS_KEY = 'mg-gallery-decisions';
 
-function loadDecisions() {
-  try { return JSON.parse(localStorage.getItem(DECISIONS_KEY) || '{}'); } catch { return {}; }
+// entry.id -> current value ('keep'/'redo'/'drop'), filled in once the db loads.
+const decisions = {};
+// entry.id -> { keep: <input>, redo: <input>, drop: <input> }, so a db load after cards
+// are already on the page can still check the right radio.
+const radioInputs = {};
+
+let db = null;
+const dbStatus = document.getElementById('dbStatus');
+(async () => {
+  try {
+    db = await claude.use('db');
+  } catch {
+    db = null;
+  }
+  if (!db) {
+    dbStatus.textContent = "Decisions aren't saving — open this page on claude.ai, signed in.";
+    dbStatus.classList.add('err');
+    return;
+  }
+  try {
+    const snap = await db.collection('decisions').get();
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      if (!data || !data.value) continue;
+      decisions[doc.id] = data.value;
+      const inputs = radioInputs[doc.id];
+      if (inputs && inputs[data.value]) inputs[data.value].checked = true;
+    }
+    dbStatus.textContent = 'Decisions saved live';
+    updateCount();
+  } catch {
+    dbStatus.textContent = 'Could not load saved decisions.';
+    dbStatus.classList.add('err');
+  }
+})();
+
+function setDecision(entry, val) {
+  decisions[entry.id] = val;
+  updateCount();
+  if (!db) return;
+  db.collection('decisions').doc(entry.id).set({
+    value: val, common: entry.common, region: entry.region, biome: entry.biome, source: entry.source,
+  }).catch(() => {
+    dbStatus.textContent = 'A decision failed to save — reload and check your connection.';
+    dbStatus.classList.add('err');
+  });
 }
-function saveDecisions(d) {
-  try { localStorage.setItem(DECISIONS_KEY, JSON.stringify(d)); } catch {}
-}
-const decisions = loadDecisions();
 
 function paintFrame(ctx, rows, pal, scale, flip) {
   const w = Math.max(...rows.map(r => r.length));
@@ -211,12 +258,14 @@ function card(entry, isRef) {
     const toggle = document.createElement('div');
     toggle.className = 'toggle';
     const current = decisions[entry.id] || '';
+    const inputs = radioInputs[entry.id] = {};
     for (const [val, label, cls] of [['keep', 'Keep', 'keep'], ['redo', 'Redo', 'redo'], ['drop', 'Drop', 'drop']]) {
       const id = 'd_' + entry.id.replace(/[^a-z0-9]/gi, '_') + '_' + val;
       const input = document.createElement('input');
       input.type = 'radio'; input.name = 'd_' + entry.id; input.id = id; input.value = val;
       if (current === val) input.checked = true;
-      input.addEventListener('change', () => { decisions[entry.id] = val; saveDecisions(decisions); updateCount(); });
+      input.addEventListener('change', () => setDecision(entry, val));
+      inputs[val] = input;
       const lab = document.createElement('label');
       lab.className = cls; lab.htmlFor = id; lab.textContent = label;
       toggle.appendChild(input); toggle.appendChild(lab);
@@ -242,14 +291,6 @@ updateCount();
 document.getElementById('animBtn').addEventListener('click', (e) => {
   animating = !animating;
   e.target.textContent = animating ? 'Pause animation' : 'Resume animation';
-});
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(decisions, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'decisions.json';
-  a.click();
 });
 </script>
 </body>
