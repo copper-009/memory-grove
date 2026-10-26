@@ -23,7 +23,7 @@ const BEECH_BARK = H6(['#6a6a52', '#484a38', '#2c2e22']);
 const palmShape = palmBody(PALM_BARK, 7, Math.PI * 1.3);
 
 AF.env('au-rainforest', {
-  theme: window.MGForms.groundTheme(["#3c4a33","#2d3b28","#49603a"], ["#8fa2c0","#6e8a92"]),
+  theme: window.MGForms.groundTheme(["#3c4a33","#2d3b28","#49603a"], ["#8fa2c0","#6e8a92"], ["#6b9fd4","#86b4de","#a2c8e6","#bdd7ea","#d4e3ea","#e6efe8"]),
   pals: { pine: PALM_CROWN, round: BEECH_CROWN },
   tree: {
     width: widthForm(0.95, 1.05),

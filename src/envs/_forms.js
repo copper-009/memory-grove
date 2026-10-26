@@ -26,6 +26,7 @@
 'use strict';
 const AF = window.AnkiForest;
 const { MATURE, OLD } = AF.STAGE;
+const { mixHex } = AF.u;
 
 const PINE_W = [0.46, 0.54, 0.62], BROAD_W = [0.66, 0.8, 0.94], ANCIENT_W = [0.9, 0.98, 1.04];
 const ANCIENT_PINE_W = 1.1;
@@ -240,6 +241,14 @@ function hummockCrownForm(c, bladesScale) {
   }
 }
 
+/** How much of a region's own backdrop sky shows through the golden-hour gradient —
+ * tested at a few ratios against real renders before settling here: high enough that
+ * `peaks-sunrise`/`baobab-avenue`'s own warm tones genuinely read, low enough that
+ * `ranges`/`glacial-lake`'s cool daytime blue doesn't fight the "golden hour" mood the
+ * whole scene is built around (`goldenHourMood`, `mfAdapter.ts`) — see `groundTheme`'s own
+ * comment for why this is a blend, not a swap. */
+const SKY_BLEND = 0.22;
+
 /** `tree.theme(th, mood, night)` hook (`theme.js`'s `AF.theme`, called before weather):
  * the ground plane's own colours, from `Biome.ground` (`[far, near, grass]` —
  * `src/regions/types.ts`'s own doc comment, written for the old renderer and never read
@@ -248,18 +257,26 @@ function hummockCrownForm(c, bladesScale) {
  * `hills`, optional, is `[far, near]` for the hill silhouette (`th.far`/`th.near`) — *not*
  * from `Biome` (it has no hill-colour data of its own) but from the region's own matching
  * `Backdrop.far`/`.near` (`mfLandscape.ts`'s pairing logic documents which backdrop was
- * picked for which biome, and why). Kept as a second, optional array rather than folded
+ * picked for which biome, and why). Kept as a separate, optional array rather than folded
  * into `ground` because the two come from genuinely different source data, picked by
- * different logic, even though they land on the same hook. The sky gradient itself
- * (`th.sky`) is deliberately left alone — a `Backdrop`'s six stops weren't authored
- * against this engine's specific "always golden hour" lighting, and swapping the whole sky
- * risks clashing with it in a way a quick render can't rule out as easily as a hill colour
- * can; a smaller, more deliberate piece than this round attempts. */
-function groundTheme(ground, hills) {
+ * different logic, even though they land on the same hook.
+ *
+ * `sky`, also optional, is that same backdrop's own six-stop `sky` array, blended into
+ * `th.sky` at `SKY_BLEND` rather than swapped wholesale — most matched backdrops are cool
+ * daytime blue (`ranges`, `glacial-lake`, `granite-towers`...), which would read as midday
+ * instead of golden hour if dropped in whole; a couple (`peaks-sunrise`, `baobab-avenue`)
+ * are themselves warm sunset gradients that would have been a perfectly reasonable full
+ * swap on their own, but one rule applied everywhere beats a different exception for every
+ * biome whose backdrop happens to already suit it. Checked at this ratio against both
+ * kinds before rolling out to all 26 — alpine biomes read a little cooler/clearer (real
+ * high-altitude air does), savanna and baobab country read a little warmer — without
+ * losing the gold the whole scene is otherwise built around. */
+function groundTheme(ground, hills, sky) {
   const [g0, g1, grass] = ground;
   return (th) => {
     th.g0 = g0; th.g1 = g1; th.grass = grass;
     if (hills) { th.far = hills[0]; th.near = hills[1]; }
+    if (sky) th.sky = th.sky.map((c, i) => mixHex(c, sky[i], SKY_BLEND));
   };
 }
 

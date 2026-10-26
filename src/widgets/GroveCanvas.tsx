@@ -6,10 +6,11 @@
  *
  * Known gap, honestly: the vendored engine still always draws golden hour, in clear
  * weather — time of day and weather don't follow the biome yet, only its trees (`mfEnvs.ts`'s
- * registry, Phase 3), ground colour and landscape (`mfLandscape.ts` — lake, river or
- * meadow, from `Biome.hasWater`). Every biome in every region now has a tree entry, though
- * a few only cover one kind-slot's worth of real species (`mfEnvs.ts`'s own comment
- * explains which, and why).
+ * registry, Phase 3), ground/hill colour, a touch of its own sky tint, and landscape
+ * (`mfLandscape.ts` — lake, river, meadow or mountains, from `Biome.hasWater` and, for a
+ * few genuinely high-alpine biomes, a direct judgment call). Every biome in every region
+ * now has a tree entry, and almost all of them cover both kind-slots with a real species —
+ * `mfEnvs.ts`'s own comment names the one real exception and why.
  * Per-tree/per-creature tooltips and hover are the vendored engine's own
  * (`tooltips.js`, `hover.js`) — nothing to wire up here for those, unlike the old renderer's
  * `hitTest.ts`; the one addition is each tree's species name, carried through by

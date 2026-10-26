@@ -20,7 +20,7 @@ const MATA_NEGRA_CROWN = H6(['#2a2a20', '#3a3a2c', '#4c4c3a', '#60604a', '#78785
 const MATA_NEGRA_BARK = H6(['#4a4636', '#343026', '#201e18']);
 
 AF.env('pt-steppe', {
-  theme: window.MGForms.groundTheme(["#8a8260","#6e6848","#9c9470"], ["#8a8a92","#5a5a62"]),
+  theme: window.MGForms.groundTheme(["#8a8260","#6e6848","#9c9470"], ["#8a8a92","#5a5a62"], ["#5f87b8","#82a0c6","#a6bcd6","#c7d6e2","#dde6e4","#eef2ec"]),
   pals: { pine: COIRON_CROWN, round: MATA_NEGRA_CROWN },
   tree: {
     width: widthForm(0.7, 0.5),

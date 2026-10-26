@@ -27,10 +27,10 @@ function PaneWidget() {
           `bulbousBody`). The all-one-form `pt-beech.js`/`ea-riverine.js` are the only
           biomes still only covering one kind-slot's worth of real species — no conifer
           exists among either biome's own species, so their pine-kind slot stays on the
-          engine's own generic default. Ground colour, hill colour and the landscape
-          (lake/river/meadow/mountains, `mfLandscape.ts`) now follow the biome too.
-          Creatures, sky colour and time of day still don't — trees, ground and water only,
-          so far. */}
+          engine's own generic default. Ground colour, hill colour, the landscape
+          (lake/river/meadow/mountains, `mfLandscape.ts`) and a touch of the sky's own tint
+          now follow the biome too (`_forms.js`'s `groundTheme`, blended rather than
+          swapped — see its own comment for why). Creatures and time of day still don't. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;

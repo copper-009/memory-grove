@@ -24,7 +24,7 @@ const NIPA_BARK = H6(['#6a6048', '#473e30', '#2c261c']);
 const nipaBody = palmBody(NIPA_BARK, 7, Math.PI * 1.3);
 
 AF.env('bo-mangroveriver', {
-  theme: window.MGForms.groundTheme(["#3a4a30","#2a3822","#4c603e"], ["#b4c0c8","#7a8a84"]),
+  theme: window.MGForms.groundTheme(["#3a4a30","#2a3822","#4c603e"], ["#b4c0c8","#7a8a84"], ["#6a9ac8","#8cb0d6","#b0c6e0","#cfdbe8","#e6ebe8","#f2f0e6"]),
   pals: { round: BAKAU_CROWN, pine: NIPA_CROWN },
   tree: {
     width: widthForm(0.9, 1),

@@ -21,7 +21,7 @@ const PAPERBARK_CROWN = H6(['#2b3a2c', '#3c5036', '#516a42', '#6c8a52', '#92ae6c
 const PAPERBARK_BARK = H6(['#e4ddcc', '#bdb5a2', '#8e8775']);
 
 AF.env('au-coastal', {
-  theme: window.MGForms.groundTheme(["#7d8a62","#5e7250","#8aa066"], ["#8fa2c0","#6e8a92"]),
+  theme: window.MGForms.groundTheme(["#7d8a62","#5e7250","#8aa066"], ["#8fa2c0","#6e8a92"], ["#6b9fd4","#86b4de","#a2c8e6","#bdd7ea","#d4e3ea","#e6efe8"]),
   pals: { pine: PANDANUS_CROWN, round: PAPERBARK_CROWN },
   tree: {
     width: widthForm(1.05, 0.95),

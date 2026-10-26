@@ -220,11 +220,12 @@ export interface MfAdapterOptions {
 }
 
 /** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — golden hour always, a
- * region-specific tree environment, ground colour and hill-silhouette colour when
- * `opts.biome` has one (`_forms.js`'s `groundTheme`, set per env file), and a landscape
- * (lake / river / meadow / mountains) that follows `opts.biome.hasWater` and, for a few
- * genuinely high-alpine biomes, `mfLandscape.ts`'s own judgment call (see module comment
- * for what's deliberately not wired up yet: time of day, weather, sky colour). */
+ * region-specific tree environment, ground colour, hill-silhouette colour and a touch of
+ * its own sky tint when `opts.biome` has one (`_forms.js`'s `groundTheme`, set per env
+ * file), and a landscape (lake / river / meadow / mountains) that follows
+ * `opts.biome.hasWater` and, for a few genuinely high-alpine biomes, `mfLandscape.ts`'s own
+ * judgment call (see module comment for what's deliberately not wired up yet: time of day,
+ * weather). */
 export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';

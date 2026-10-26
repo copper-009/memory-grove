@@ -22,7 +22,7 @@ const CEIBA_CROWN = H6(['#122a18', '#1d4324', '#2b5c30', '#3f7842', '#5d9656']);
 const CEIBA_BARK = H6(['#8a8470', '#615c4c', '#3a372c']);
 
 AF.env('cr-lowland', {
-  theme: window.MGForms.groundTheme(["#2e4228","#22331e","#3c5636"], ["#7a8a9a","#4e6052"]),
+  theme: window.MGForms.groundTheme(["#2e4228","#22331e","#3c5636"], ["#7a8a9a","#4e6052"], ["#5f8cc0","#82a6d0","#a6bfdc","#c7d6e6","#dde6ea","#eef2ea"]),
   pals: { pine: HELICONIA_CROWN, round: CEIBA_CROWN },
   tree: {
     width: widthForm(0.75, 1.3),

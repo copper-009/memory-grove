@@ -27,7 +27,7 @@ const ROUNDS = [FEVER, SYCAMORE];
 const BARKS = [FEVER_BARK, SYCAMORE_BARK];
 
 AF.env('ea-riverine', {
-  theme: window.MGForms.groundTheme(["#3c5636","#2c3e28","#4e6e46"], ["#c0ac72","#9a8a4e"]),
+  theme: window.MGForms.groundTheme(["#3c5636","#2c3e28","#4e6e46"], ["#c0ac72","#9a8a4e"], ["#6a9ac8","#8dafd2","#b6c6d8","#e0d4a8","#f0dc9a","#f8e8b8"]),
   pals: { rounds: ROUNDS },
   tree: {
     trunk: (c) => {

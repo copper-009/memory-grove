@@ -21,7 +21,7 @@ const BEECH_CROWN = H6(['#1c2a1e', '#283c28', '#365032', '#486a40', '#648856']);
 const BEECH_BARK = H6(['#60584a', '#443e34', '#2a2620']);
 
 AF.env('nz-alps', {
-  theme: window.MGForms.groundTheme(["#9a8e5e","#7d7248","#b0a068"], ["#c8d4e0","#7e8c90"]),
+  theme: window.MGForms.groundTheme(["#9a8e5e","#7d7248","#b0a068"], ["#c8d4e0","#7e8c90"], ["#5f8fc4","#7fa5d0","#9dbbdc","#bcd0e4","#d6e0e8","#eaeee8"]),
   pals: { pine: TUSSOCK_CROWN, round: BEECH_CROWN },
   tree: {
     width: widthForm(0.7, 0.9),

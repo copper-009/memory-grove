@@ -626,3 +626,19 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   `pt-beech`/`ea-riverine`'s pine-kind slot (no conifer exists in either biome, nothing to
   put there) is the one remaining gap of this kind, and it's a real absence of source
   species, not an unexercised hook.
+- **Sky colour, reconsidered — a blend, not the swap ruled out twice already.** Dumped
+  every matched backdrop's own six-stop `sky` array (same matching logic as the hill-colour
+  pairing) and found the earlier concern was right for most of them but not all: `ranges`,
+  `glacial-lake`, `granite-towers` and most others are cool daytime blue, which would read
+  as midday instead of golden hour if swapped in whole — but `peaks-sunrise` (Himalaya/
+  Terai) and `baobab-avenue` (Madagascar) are themselves warm sunset gradients that would
+  have been a perfectly reasonable full swap on their own. Rather than special-case the
+  biomes whose backdrop happens to already suit a swap, `groundTheme` now takes a third,
+  optional `sky` array and blends it into `th.sky` at a flat `SKY_BLEND = 0.22` for every
+  biome — tested at a few ratios against three biomes spanning both kinds (`eucalypt`'s
+  cool `ranges`, `himalaya`'s warm `peaks-sunrise`, `spiny-forest`'s warm `baobab-avenue`)
+  before settling here and rolling out to the rest. The result reads as hoped: alpine
+  biomes a little cooler/clearer overhead (real high-altitude air does read that way),
+  savanna and baobab country a little warmer toward the horizon, golden hour's own gold
+  never lost underneath either direction. Checked across five more biomes at full density
+  afterward — no errors, no biome where the shift reads as wrong rather than just distinct.

@@ -25,7 +25,7 @@ const PONGA_CROWN = H6(['#1e3422', '#2a4a2c', '#3a6238', '#4e7c48', '#8aa882']);
 const PONGA_BARK = H6(['#6e6252', '#4e453a', '#302a24']);
 
 AF.env('nz-kauri', {
-  theme: window.MGForms.groundTheme(["#3a4a34","#2b3a28","#47603c"], ["#4a5c66","#2e3e46"]),
+  theme: window.MGForms.groundTheme(["#3a4a34","#2b3a28","#47603c"], ["#4a5c66","#2e3e46"], ["#6e8296","#8296a8","#9aaab8","#b2bfc8","#c8d2d6","#dce2e2"]),
   pals: { pine: KAURI_CROWN, round: PONGA_CROWN },
   tree: {
     width: widthForm(1.2, 1.15),

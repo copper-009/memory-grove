@@ -26,7 +26,7 @@ const BAOBAB_BARK = H6(['#9a8a74', '#6e6050', '#473c30']);
 const baobabShape = bulbousBody(BAOBAB_BARK, 2, 0.1);
 
 AF.env('mg-spiny', {
-  theme: window.MGForms.groundTheme(["#b3794a","#8a5a36","#c79660"], ["#7a5a52","#5a4038"]),
+  theme: window.MGForms.groundTheme(["#b3794a","#8a5a36","#c79660"], ["#7a5a52","#5a4038"], ["#5a4a7a","#8a5a7a","#c76a6a","#e89a5e","#f3c07a","#f8dca0"]),
   pals: { round: OCTOPUS_CROWN, pine: BAOBAB_CROWN },
   tree: {
     width: widthForm(1.3, 1),

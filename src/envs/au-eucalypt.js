@@ -115,7 +115,7 @@ function trunk(c) {
 AF.env('au-eucalypt', {
   pals: { round: GUM, pine: SKIRT, bark: GUM_BARK },
   // ground colours from src/regions/australia/eucalypt.ts's own Biome.ground
-  theme: window.MGForms.groundTheme(['#9a8f63', '#7d8a52', '#9bab63'], ["#8fa2c0","#6e8a92"]),
+  theme: window.MGForms.groundTheme(['#9a8f63', '#7d8a52', '#9bab63'], ["#8fa2c0","#6e8a92"], ["#6b9fd4","#86b4de","#a2c8e6","#bdd7ea","#d4e3ea","#e6efe8"]),
   tree: {
     trunk,
     crown: c => (c.pine ? grassTreeCrown(c) : gumCrown(c)),
