@@ -3,6 +3,7 @@ import { GroveCanvas } from './GroveCanvas';
 import { HeatmapView } from './HeatmapView';
 import { useGrove } from './useGrove';
 import { resolveMood } from './mood';
+import { regionOptions } from '../regions';
 import '../style.css';
 
 /** The dedicated "Grove" page, opened via command / omnibar. */
@@ -16,7 +17,34 @@ function PaneWidget() {
     // text-reading width (the original 1000px) just left dead space on either side of it
     // in a wide pane. 1800px is still a sane ceiling on an ultrawide display.
     <div style={{ padding: 16, maxWidth: 1800, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, marginBottom: 4 }}>{bundle.region.label}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        {/* A quick region switch for testing every region's own trees/ground/sky without a
+            trip to Settings → Plugins each time — RemNote's `registerDropdownSetting` has
+            no API to change its value from a widget, so this is a separate override
+            (`useGrove.ts`'s `REGION_OVERRIDE_KEY`), the same pattern the biome pills below
+            already use, not a way to edit the registered setting itself. */}
+        <select
+          value={bundle.region.key}
+          onChange={(e) => bundle.setRegion(e.target.value)}
+          title="Switch region (for testing — the Settings page's own pick is separate)"
+          style={{
+            fontSize: 20, fontWeight: 600, border: 'none', background: 'transparent',
+            cursor: 'pointer', padding: 0, color: 'inherit',
+          }}
+        >
+          {regionOptions().map((r) => (
+            <option key={r.key} value={r.key}>{r.label}</option>
+          ))}
+        </select>
+        {bundle.regionOverride != null && (
+          <button
+            onClick={() => bundle.setRegion(null)}
+            style={{ fontSize: 12, padding: 0, border: 'none', background: 'none', textDecoration: 'underline', cursor: 'pointer', opacity: 0.7 }}
+          >
+            Follow setting
+          </button>
+        )}
+      </div>
       <p className="rn-clr-content-secondary" style={{ fontSize: 12.5, marginBottom: 10, opacity: 0.75 }}>
         {bundle.biome.label}
         {bundle.biomeOverride == null && ' · following the season'}

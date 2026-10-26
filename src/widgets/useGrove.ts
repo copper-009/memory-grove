@@ -27,6 +27,13 @@ function biomeKey(regionKey: string): string {
   return `forest.biome.${regionKey}`;
 }
 
+/** Storage key for an explicit region pick, overriding `GroveSettings.region` (the
+ * registered RemNote setting, only reachable from Settings → Plugins) the same way
+ * `biomeKey`'s override already does for biomes — added so testing every region's own
+ * trees/ground/sky doesn't mean a trip to Settings for each one. One key, not namespaced,
+ * since there's only ever one "current region" to override. */
+const REGION_OVERRIDE_KEY = 'forest.region.override';
+
 /**
  * Which biome to show when the user hasn't picked one: rotate through the region's own
  * biomes by the real calendar month. This is what used to be entirely hardcoded to
@@ -45,6 +52,9 @@ export interface GroveBundle {
   settings: GroveSettings;
   calendar: StudyCalendar;
   region: Region;
+  /** null = following `GroveSettings.region` (the registered setting). */
+  regionOverride: string | null;
+  setRegion: (key: string | null) => void;
   biome: Biome;
   biomeIndex: number;
   /** null = following the automatic month rotation. */
@@ -65,7 +75,7 @@ export interface GroveBundle {
 
 export function useGrove(): GroveBundle {
   const plugin = usePlugin();
-  const [bundle, setBundle] = useState<Omit<GroveBundle, 'loading' | 'error' | 'refresh' | 'setBiome'> | null>(null);
+  const [bundle, setBundle] = useState<Omit<GroveBundle, 'loading' | 'error' | 'refresh' | 'setBiome' | 'setRegion'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gen, setGen] = useState(0);
@@ -81,7 +91,9 @@ export function useGrove(): GroveBundle {
         const settings = await readSettings(plugin);
         const calendar = await loadStudyCalendar(plugin);
         const { grove, overdue, cardCount, dueByDay } = await buildOrLoadGrove(plugin);
-        const region = regionByKey(settings.region) ?? regionByKey(DEFAULT_REGION_KEY)!;
+        const storedRegionOverride = await plugin.storage.getSynced<string>(REGION_OVERRIDE_KEY);
+        const regionOverride = storedRegionOverride && regionByKey(storedRegionOverride) ? storedRegionOverride : null;
+        const region = regionByKey(regionOverride ?? settings.region) ?? regionByKey(DEFAULT_REGION_KEY)!;
         const storedBiomeOverride = await plugin.storage.getSynced<number>(biomeKey(region.key));
         const biomeOverride = storedBiomeOverride != null && storedBiomeOverride < region.biomes.length ? storedBiomeOverride : null;
         const biomeIndex = biomeOverride ?? defaultBiomeIndex(region);
@@ -115,7 +127,7 @@ export function useGrove(): GroveBundle {
 
         if (!cancelled) {
           setBundle({
-            grove, settings, calendar, region, biome, biomeIndex, biomeOverride, roster, health,
+            grove, settings, calendar, region, regionOverride, biome, biomeIndex, biomeOverride, roster, health,
             activeStudyDays: grove.stats.activeStudyDays,
             dueByDay,
           });
@@ -140,12 +152,20 @@ export function useGrove(): GroveBundle {
     [plugin, bundle, refresh],
   );
 
+  const setRegion = useCallback(
+    (key: string | null) => {
+      plugin.storage.setSynced(REGION_OVERRIDE_KEY, key ?? undefined).then(refresh);
+    },
+    [plugin, refresh],
+  );
+
   return {
     ...(bundle ?? {
       grove: null as unknown as Grove,
       settings: null as unknown as GroveSettings,
       calendar: null as unknown as StudyCalendar,
       region: null as unknown as Region,
+      regionOverride: null,
       biome: null as unknown as Biome,
       biomeIndex: 0,
       biomeOverride: null,
@@ -155,6 +175,7 @@ export function useGrove(): GroveBundle {
       dueByDay: new Map<number, number>(),
     }),
     setBiome,
+    setRegion,
     loading,
     error,
     refresh,
