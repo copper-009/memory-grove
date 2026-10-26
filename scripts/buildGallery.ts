@@ -126,6 +126,11 @@ const html = `<!doctype html>
   .toggle input:checked + label.keep { background: #2d5a2d; }
   .toggle input:checked + label.redo { background: #5a4a2d; }
   .toggle input:checked + label.drop { background: #5a2d2d; }
+  .tags { margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .tags button { font-size: 10px; padding: 2px 7px; background: #2a3022; border-color: #444; }
+  .tags button.on { background: #4a5c3a; border-color: #6a8a4a; color: #dfd; }
+  .note { margin-top: 6px; width: 100%; box-sizing: border-box; background: #171a12; color: #ddd; border: 1px solid #3a4030; border-radius: 4px; padding: 4px 6px; font-size: 11px; font-family: inherit; }
+  .note::placeholder { color: #667; }
 </style>
 </head>
 <body>
@@ -150,9 +155,24 @@ const REFERENCE = ${JSON.stringify(REFERENCE)};
 
 // entry.id -> current value ('keep'/'redo'/'drop'), filled in once the db loads.
 const decisions = {};
+// entry.id -> free-text note (e.g. "recolor only, matches elk" / "too big for a frog").
+const notes = {};
 // entry.id -> { keep: <input>, redo: <input>, drop: <input> }, so a db load after cards
 // are already on the page can still check the right radio.
 const radioInputs = {};
+// entry.id -> the note <input>, same reason.
+const noteInputs = {};
+// entry.id -> a function that re-highlights the quick-tag buttons from the current note, so
+// a db load that lands after the card is built still shows which tags are already set.
+const tagSyncers = {};
+
+// A redo is rarely just "redraw from scratch" — these are quick-tag shortcuts for the
+// three different reasons a sprite actually needs work, so a note doesn't have to be
+// retyped by hand every time: a shape shared with another creature might just need new
+// colours (two real species can legitimately look alike — a deer and a reindeer do), a
+// fine design can be sized wrong for its animal, or it can just be a blob needing an
+// actual redraw. Clicking a tag sets (or clears, if already on) that phrase in the note.
+const QUICK_TAGS = ['Recolor only', 'Wrong scale', 'Redraw (blob)'];
 
 let db = null;
 const dbStatus = document.getElementById('dbStatus');
@@ -171,10 +191,19 @@ const dbStatus = document.getElementById('dbStatus');
     const snap = await db.collection('decisions').get();
     for (const doc of snap.docs) {
       const data = doc.data();
-      if (!data || !data.value) continue;
-      decisions[doc.id] = data.value;
-      const inputs = radioInputs[doc.id];
-      if (inputs && inputs[data.value]) inputs[data.value].checked = true;
+      if (!data) continue;
+      if (data.value) {
+        decisions[doc.id] = data.value;
+        const inputs = radioInputs[doc.id];
+        if (inputs && inputs[data.value]) inputs[data.value].checked = true;
+      }
+      if (data.note) {
+        notes[doc.id] = data.note;
+        const input = noteInputs[doc.id];
+        if (input) input.value = data.note;
+        const sync = tagSyncers[doc.id];
+        if (sync) sync();
+      }
     }
     dbStatus.textContent = 'Decisions saved live';
     updateCount();
@@ -184,16 +213,28 @@ const dbStatus = document.getElementById('dbStatus');
   }
 })();
 
-function setDecision(entry, val) {
-  decisions[entry.id] = val;
-  updateCount();
+function saveDoc(entry) {
   if (!db) return;
   db.collection('decisions').doc(entry.id).set({
-    value: val, common: entry.common, region: entry.region, biome: entry.biome, source: entry.source,
+    value: decisions[entry.id] || null, note: notes[entry.id] || '',
+    common: entry.common, region: entry.region, biome: entry.biome, source: entry.source,
   }).catch(() => {
     dbStatus.textContent = 'A decision failed to save — reload and check your connection.';
     dbStatus.classList.add('err');
   });
+}
+
+function setDecision(entry, val) {
+  decisions[entry.id] = val;
+  updateCount();
+  saveDoc(entry);
+}
+
+const noteTimers = {};
+function setNote(entry, text) {
+  notes[entry.id] = text;
+  clearTimeout(noteTimers[entry.id]);
+  noteTimers[entry.id] = setTimeout(() => saveDoc(entry), 800);
 }
 
 function paintFrame(ctx, rows, pal, scale, flip) {
@@ -271,6 +312,41 @@ function card(entry, isRef) {
       toggle.appendChild(input); toggle.appendChild(lab);
     }
     div.appendChild(toggle);
+
+    const noteInput = document.createElement('input');
+    noteInput.type = 'text'; noteInput.className = 'note';
+    noteInput.placeholder = 'Note (why, or what kind of fix)';
+    noteInput.value = notes[entry.id] || '';
+    noteInput.addEventListener('input', () => setNote(entry, noteInput.value));
+    noteInput.addEventListener('blur', () => { clearTimeout(noteTimers[entry.id]); saveDoc(entry); });
+    noteInputs[entry.id] = noteInput;
+
+    const tags = document.createElement('div');
+    tags.className = 'tags';
+    const buttons = [];
+    function syncTags() {
+      const parts = (notes[entry.id] || '').split(', ').filter(Boolean);
+      for (const [tag, btn] of buttons) btn.classList.toggle('on', parts.includes(tag));
+    }
+    tagSyncers[entry.id] = syncTags;
+    for (const tag of QUICK_TAGS) {
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = tag;
+      buttons.push([tag, btn]);
+      btn.addEventListener('click', () => {
+        const parts = (notes[entry.id] || '').split(', ').filter(Boolean);
+        const i = parts.indexOf(tag);
+        if (i >= 0) parts.splice(i, 1); else parts.push(tag);
+        const next = parts.join(', ');
+        noteInput.value = next;
+        setNote(entry, next);
+        syncTags();
+      });
+      tags.appendChild(btn);
+    }
+    syncTags();
+    div.appendChild(tags);
+    div.appendChild(noteInput);
   }
   return div;
 }
