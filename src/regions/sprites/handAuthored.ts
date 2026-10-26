@@ -678,15 +678,21 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 5: "there aren't any teeth now for some reason" — a single tooth pixel was too
   // faint to register against the long snout line. A few more alternating marks instead.
   // Round 7: "add some more teeth (one more)" — a fourth alternating tooth mark.
+  // Round 8: "the teeth are on their head?" — teeth sat in a row entirely of their own
+  // above the body, with nothing connecting them to it, so they read as a decoration
+  // sitting on top of the head rather than a jaw. Rebuilt on the same structure the three
+  // regular crocodilians already use successfully: teeth embedded directly in the body/jaw
+  // row itself. A gharial's famously long, thin snout (carrying many more visible
+  // interlocking teeth than a regular croc) is kept as an extra-long front section.
   'nepal:gharial': {
     pal: { b: '#4a6a4a', d: '#2a3e2a', e: '#0c0c08', t: '#5e7e5e', w: '#e8e4d0' },
     frames: [
-      ['bwbwbwbwbe.............', '.bbbbbbbbbbbbbbbbbtt...', '.bbbbbbbbbbbbbbbbbtt...', '....ddbddbddbddbdd.tt..'],
-      ['bwbwbwbwbe.............', '.bbbbbbbbbbbbbbbbbbtt..', '.bbbbbbbbbbbbbbbbbbtt..', '....ddbddbddbddbdd..t..'],
+      ['..............e...........', 'bbbbbbbbbbbbbbbb..........', 'wbwbwbwbwbwbwbbbbbbbbbtt..', '............ddbddbddbdd.tt'],
+      ['..............e............', 'bbbbbbbbbbbbbbbb...........', 'wbwbwbwbwbwbwbbbbbbbbbbtt..', '............ddbddbddbdd..tt'],
     ] as const,
     young: [
-      ['bwbwbwbwbe........', '.bbbbbbbbbbtt.....', '.bbbbbbbbbbtt.....', '...dbdbdbdbd.t....'],
-      ['bwbwbwbwbe........', '.bbbbbbbbbbtt.....', '.bbbbbbbbbbtt.....', '...dbdbdbdbd.t....'],
+      ['..........e.........', 'bbbbbbbbbbbb........', 'wbwbwbwbbbbbbbbbtt..', '........ddbddbdd.t..'],
+      ['..........e.........', 'bbbbbbbbbbbb........', 'wbwbwbwbbbbbbbbbbtt.', '........ddbddbdd..t.'],
     ] as const,
   },
 
@@ -1063,21 +1069,25 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // head was sitting at the BOTTOM of the neck column, right where it met the body, instead
   // of at the top. Reordered so the head (with small ossicone horn tips) sits at the very
   // top of the sprite, with the long neck running down from it to the body.
+  // Round 8: "yes, good, now just make the lower body a bit better" — the shape/proportion
+  // was right, but the body was a flat solid-colour oval. Real giraffes are famous for their
+  // reticulated patch coat, so a few dark patches scattered across the body (irregular, not
+  // a border or a repeating grid) are the missing piece.
   'eastafrica:masai-giraffe': {
     pal: { b: '#c89850', d: '#6a4a26', e: '#120e08' },
     frames: [
       [
         '..d.d....', '.bbb.....', 'bebd.....', '.bbd.....', '.bd......', '.bd......', '.bd......', '.bd......', '.bd......',
-        '..bbbbb..', '.bbbbbbb.', '.bbbbbbb.', '..bbbbb..', '..d...d..', '..d...d..', '..d...d..', '.d.....d.', '.d.....d.',
+        '..bdbbd..', '.bbdbbdb.', '.bdbbdbb.', '..bdbdb..', '..d...d..', '..d...d..', '..d...d..', '.d.....d.', '.d.....d.',
       ],
       [
         '..d.d....', '.bbb.....', 'bebd.....', '.bbd.....', '.bd......', '.bd......', '.bd......', '.bd......', '.bd......',
-        '..bbbbb..', '.bbbbbbb.', '.bbbbbbb.', '..bbbbb..', '..d...d..', '..d...d..', '.d.....d.', '..d...d..', '.d.....d.',
+        '..bdbbd..', '.bbdbbdb.', '.bdbbdbb.', '..bdbdb..', '..d...d..', '..d...d..', '.d.....d.', '..d...d..', '.d.....d.',
       ],
     ] as const,
     young: [
-      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bbbb..', 'bbbbbb.', '.d...d.', '.d...d.'],
-      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bbbb..', 'bbbbbb.', 'd...d..', '.d...d.'],
+      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', '.d...d.', '.d...d.'],
+      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', 'd...d..', '.d...d.'],
     ] as const,
   },
   'aotearoa:kea': {
@@ -1369,6 +1379,23 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // into the leg dots.
   'madagascar:oustalets-chameleon': {
     pal: { b: '#6a7048', d: '#424a2a', l: '#9a9868', e: '#0a0a06', t: '#424a2a' },
+    frames: [
+      ['d......l....', '..bbbbllll..', '.bbbbbbbdle.', '.ddbbbbbb...', '..dd.dd..tt.', '...d..d...t.'],
+      ['d......l....', '..bbbbllll..', '.bbbbbbbdle.', '.ddbbbbbb...', '..dd.dd...t.', '...d..d..tt.'],
+    ] as const,
+    young: [
+      ['....l..', '.bblll.', 'bbbdle.', 'ddbbb.t', '.dd.d.t'],
+      ['....l..', '.bblll.', 'bbbdle.', 'ddbbb..', '.dd.dtt'],
+    ] as const,
+  },
+  // Round 8: "can you make it match the outstalet's chameleon look" — panther-chameleon had
+  // no hand-authored sprite of its own (still on the generic procedural fallback), even
+  // though the comment above references it as oustalet's own original starting shape.
+  // Restored using oustalet's current frames verbatim, recoloured to this species' own
+  // vivid green — "Brilliant variable colours, brightest in males" is its whole identity,
+  // matched to its region palette (`src/regions/madagascar/index.ts`).
+  'madagascar:panther-chameleon': {
+    pal: { b: '#2e9050', d: '#1a5c30', l: '#6ad880', e: '#0a0a06', t: '#1a5c30' },
     frames: [
       ['d......l....', '..bbbbllll..', '.bbbbbbbdle.', '.ddbbbbbb...', '..dd.dd..tt.', '...d..d...t.'],
       ['d......l....', '..bbbbllll..', '.bbbbbbbdle.', '.ddbbbbbb...', '..dd.dd...t.', '...d..d..tt.'],
