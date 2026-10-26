@@ -782,4 +782,335 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['...l', '..le', '.l..', '.bbb', 'bbb.', '.d.d'],
     ] as const,
   },
+
+  // -- Batch 4: the rest of the redo list, each judged on its own merits against a render
+  // rather than assumed. Several of these already had a reasonable shape in the first-pass
+  // bake — the takahe's blue body and red bill, the orangutan's big-ape posture, the
+  // woodpecker's black body — and just needed their actual signature mark fixed (the
+  // woodpecker's red-crest palette colour was defined but never painted onto a pixel) or an
+  // exaggerated proportion toned down (the takahe's four spindly single-pixel legs, four rows
+  // tall, read as spider legs on a chunky flightless rail — shortened and thickened to two).
+  // The rest — kiwi, the radiated tortoise, the sloth, the monal, the giant salamander — really
+  // were shapeless, and got a real redesign built around each one's one unmistakable feature:
+  // the kiwi's long beak on a near-spherical body, the tortoise's starburst shell pattern, the
+  // salamander's flat mottled toed body.
+  'aotearoa:kiwi': {
+    pal: { b: '#6a5a46', d: '#44382a', e: '#120e08', w: '#2a2218' },
+    frames: [
+      ['.bbbb.......', 'bbbbbb......', 'bbbbbbe.....', 'bbbbbbwww...', '.bbbb...ww..', '..d..d......'],
+      ['.bbbb.......', 'bbbbbb......', 'bbbbbbe.....', 'bbbbbbwww...', '.bbbb...ww..', '.d..d.......'],
+    ] as const,
+    young: [
+      ['.bbb....', 'bbbbe...', 'bbbww...', '.bb.ww..', '.d.d....'],
+      ['.bbb....', 'bbbbe...', 'bbbww...', '.bb.ww..', 'd.d.....'],
+    ] as const,
+  },
+  'madagascar:radiated-tortoise': {
+    // The starburst shell pattern this tortoise is named for.
+    pal: { b: '#2a2218', y: '#e0b840', l: '#f0d470', e: '#0a0806', d: '#140f0a' },
+    frames: [
+      ['..bbbb.....', '.byybyybb..', 'byybyybyybe', 'bbbbbbbbbb.', 'dd.dd.dd...'],
+      ['..bbbb.....', '.byybyybb..', 'byybyybyybe', 'bbbbbbbbbb.', '.dd.dd.dd..'],
+    ] as const,
+    young: [
+      ['.bbbb..', 'byybybe', 'bbbbbb.', 'd.d.d..'],
+      ['.bbbb..', 'byybybe', 'bbbbbb.', '.d.d.d.'],
+    ] as const,
+  },
+  'costarica:three-toed-sloth': {
+    pal: { b: '#8a8a6e', d: '#5e5e46', l: '#b4b494', e: '#1a1810', m: '#3a3828' },
+    frames: [
+      ['....bb......', '...bmbmb....', '..bbbbbbl...', '.l.bbbbbbd..', 'd..lbbbbl.d.', '.d......d...'],
+      ['....bb......', '...bmbmb....', '..bbbbbbl...', '.l.bbbbbbd..', '.d..lbbbbl.d', '..d......d..'],
+    ] as const,
+    young: [
+      ['.bmbm..', 'bbbbbl.', 'l.bbbd.', 'd..bb.d'],
+      ['.bmbm..', 'bbbbbl.', '.l.bbbd', 'd..bb.d'],
+    ] as const,
+  },
+  'nepal:himalayan-monal': {
+    // A small perching-bird body plus the one thing a monal actually reads as at this scale —
+    // a crest and genuinely iridescent, not just colourful, plumage.
+    pal: { b: '#1a3a6a', d: '#0c1a30', l: '#2a6a5a', e: '#140f0a', c: '#8a3ab0', y: '#c0392b', w: '#f0ece0' },
+    frames: [
+      ['..c..c..', '...ddd..', '...lll..', '...dlye.', '.ww.....', 'dww.....', '.dd.....'],
+      ['..c..c..', '...ddd..', '...lll..', '...dlye.', '.ww.....', 'dww.....', '.dd.....'],
+    ] as const,
+    young: [
+      ['..ddd.', '..lll.', '..dle.', '.ww...', 'dww...', '.dd...'],
+      ['..ddd.', '..lll.', '..dle.', '.ww...', 'dww...', '.dd...'],
+    ] as const,
+  },
+  'japan:giant-salamander': {
+    // Flat, low, mottled body with toes along both sides instead of the croc shape's smooth
+    // belly ridge — this is an amphibian lying still, not a reptile with legs tucked.
+    pal: { b: '#5a5444', d: '#36322a', e: '#0a0a06', w: '#7e7660' },
+    frames: [
+      ['........e..........', 'wbbwbbwbbwbbwbbwbb.', 'd.d.dd.d.dd.d.dd.dd'],
+      ['........e..........', 'wbbwbbwbbwbbwbbwbb.', '.d.dd.d.dd.d.dd.d.d'],
+    ] as const,
+    young: [
+      ['....e......', 'wbbwbbwbbwb', '.d.dd.d.dd.'],
+      ['....e......', 'wbbwbbwbbwb', 'd.dd.d.dd..'],
+    ] as const,
+  },
+  'nepal:greater-rhino': {
+    // The existing bulky body, with the one thing missing from it: a horn.
+    pal: { b: '#6a685c', d: '#403e34', l: '#8e8c7c', e: '#0c0a06', h: '#3a362a' },
+    frames: [
+      ['.......h....', '...bb.......', '..bbbb.l....', '.bbbbblll...', '.bbbbbbldll.', 'd.dbbd......', '..ddddd.....', '..dd.dd.....', '..dd.dd.....'],
+      ['.......h....', '...bb.......', '..bbbb.l....', '.bbbbblll...', '.bbbbbbldll.', 'd.dbbd......', '...dd.d.....', '..dd.dd.....', '..dd.dd.....'],
+    ] as const,
+    young: [
+      ['.....h.', '....l..', '.bblll.', 'bbbdle.', '.dd....', '.ddd...', '.ddd...'],
+      ['.....h.', '....l..', '.bblll.', 'bbbdle.', '.dd....', '..dd...', '.ddd...'],
+    ] as const,
+  },
+  'borneo:proboscis-monkey': {
+    // The existing seated-primate body, with its actual namesake feature: the big nose.
+    pal: { b: '#8a5438', d: '#5c3722', l: '#b07a54', e: '#100a06', n: '#e8a890' },
+    frames: [
+      ['......l...', '...bblll..', '..bbbdlll.', '......nn..', 'ddddd.....', '...ddd....', '...ddd....'],
+      ['......l...', '...bblll..', '..bbbdlll.', '......nn..', 'ddddd.....', '....dd....', '...ddd....'],
+    ] as const,
+    young: [
+      ['....l.', '...lll', '.bbdle', '...n..', 'bbbb..', 'ddd...', '.dd...'],
+      ['....l.', '...lll', '.bbdle', '...n..', 'bbbb..', 'ddd...', '.dd...'],
+    ] as const,
+  },
+  'eastafrica:plains-zebra': {
+    // Same shape, with more of the dark accent pixels it already had turned into actual
+    // stripes across the flank rather than a few scattered marks.
+    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806' },
+    frames: [
+      ['........dld', '...bdbb.lll', '..bdbdbllle', '..bdbdbdlld', '.ddbdbbd...', 'd..dddd....', '...dd.dd...', '...dd.dd...', '...dd.dd...'],
+      ['........dld', '...bdbb.lll', '..bdbdbllle', '..bdbdbdlld', '.ddbdbbd...', 'd..dddd....', '....d..d...', '...dd.dd...', '...dd.dd...'],
+    ] as const,
+    young: [
+      ['....l.', '.bdlll', 'bdbdle', 'ddd...', '.ddd..', '.ddd..'],
+      ['....l.', '.bdlll', 'bdbdle', 'ddd...', '..dd..', '.ddd..'],
+    ] as const,
+  },
+  'aotearoa:takahe': {
+    // Same head and body, legs shortened from four single-pixel rows to two thick ones — a
+    // chunky flightless rail doesn't stand on spider legs.
+    pal: { b: '#20467a', d: '#142c52', l: '#3a6a9a', e: '#c0302a', y: '#e04a30', w: '#2a6a4a' },
+    frames: [
+      ['.......bd..', '.......bd..', 'd...bbbbbb.', '.d.bbbllbbb', '...bbllllbb', '...bblllyyy', '...ddwddwdd', '.....dwwd..', '....dd...dd', '....dd...dd'],
+      ['.......bd..', '.......bd..', 'd...bbbbbb.', '.d.bbbllbbb', '...bbllllbb', '...bblllyyy', '...ddwddwdd', '.....dwwd..', '....dd...dd', '.....dd.dd.'],
+    ] as const,
+    young: [
+      ['...bd.', '..ll..', 'dbllyy', '..ww..', '..dd..'],
+      ['...bd.', '..ll..', 'dbllyy', '..ww..', '.dd.d.'],
+    ] as const,
+  },
+  'borneo:bornean-orangutan': {
+    // Same big upright ape body, with one arm drawn reaching down — a real orangutan's arms
+    // are famously, strikingly long.
+    pal: { b: '#9a5a2e', d: '#6a3a18', l: '#c0824a', e: '#120e08', n: '#1a1410' },
+    frames: [
+      ['.........l.', '.......lll.', '.bbbbbbllle', '.bbbbbbdll.', 'bbbbbbbb...', 'nbbbbbb....', '.ddbbdd....', '..dd.dd....', '..dd.dd....'],
+      ['.........l.', '.......lll.', '.bbbbbbllle', '.bbbbbbdll.', 'bbbbbbbb...', 'n.bbbbbb...', '.ddbbdd....', '...d..d....', '..dd.dd....'],
+    ] as const,
+    young: [
+      ['....l.', '....l.', '.bblll', 'bbbdle', '.dd...', '.ddd..', '.ddd..'],
+      ['....l.', '....l.', '.bblll', 'bbbdle', '.dd...', '..dd..', '.ddd..'],
+    ] as const,
+  },
+  'patagonia:magellanic-woodpecker': {
+    // Same black body — but the old bake's 'r' palette entry, meant for the red crest that
+    // actually identifies this bird, was never painted onto a single pixel. Painted now.
+    pal: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#120e08', r: '#c0392b' },
+    frames: [
+      ['....r..', '....r..', '...lll.', 'bbdlll.', 'dbb....', '.d.d...', '.d.d...'],
+      ['....r..', '....r..', '...lll.', 'bbdlll.', 'dbb....', '...d...', '.d.d...'],
+    ] as const,
+    young: [
+      ['...r.', '..lll', '..dle', 'bb...', 'bb...', 'dd...'],
+      ['...r.', '..lll', '..dle', 'bb...', 'bb...', 'dd...'],
+    ] as const,
+  },
+  'eastafrica:masai-giraffe': {
+    // Same patched hide and head, neck and legs each stretched by one row — the baked version
+    // read as a giraffe already, just a noticeably short-necked one.
+    pal: { b: '#c89850', d: '#6a4a26', l: '#e0c080', e: '#120e08', n: '#f0e8d4' },
+    frames: [
+      [
+        '......bd..', '......bd..', '.....bb...', '....bbbb..', '...bbbbbb.', '...bbddbb.',
+        '...bllllb.', '..bblllebb', '...bdlldb.', '.dddbbbbd.', 'd..dbbbbd.', '....dddd..', '.....dd...',
+        '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.',
+      ],
+      [
+        '......bd..', '......bd..', '.....bb...', '....bbbb..', '...bbbbbb.', '...bbddbb.',
+        '...bllllb.', '..bblllebb', '...bdlldb.', '.dddbbbbd.', 'd..dbbbbd.', '....dddd..', '.....d..d.',
+        '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.',
+      ],
+    ] as const,
+    young: [
+      ['..bd', '.bb.', '.dd.', 'blle', 'ddd.', '.dd.', '.ddd', '.ddd', '.ddd', '.ddd', '.ddd'],
+      ['..bd', '.bb.', '.dd.', 'blle', 'ddd.', '.dd.', '..dd', '.ddd', '.ddd', '.ddd', '.ddd'],
+    ] as const,
+  },
+  'aotearoa:kea': {
+    // Same mountain-parrot body, beak lengthened by one pixel for more of its real hooked
+    // profile.
+    pal: { b: '#5a6a34', d: '#3a4620', l: '#7f8e4e', e: '#120e08', y: '#e07a28', w: '#4a4438' },
+    frames: [
+      ['........l...', '.......lll..', '...bbbbdlyyy', '...bwwb.....', '.dddwwd.....', 'd...d..d....', '....d..d....'],
+      ['........l...', '.......lll..', '...bbbbdlyyy', '...bwwb.....', '.dddwwd.....', 'd......d....', '....d..d....'],
+    ] as const,
+    young: [
+      ['....l..', '...lll.', '...dlyy', '.ww....', 'dww....', '.dd....'],
+      ['....l..', '...lll.', '...dlyy', '.ww....', 'dww....', '.dd....'],
+    ] as const,
+  },
+
+  // -- The last of the redo list: eleven more creatures the earlier batch plan missed on a
+  // first pass (mostly Australia). Same per-creature judgment as Batch 4 — three butterflies
+  // and a flying fox were genuinely shapeless and got a real wing redesign; a kangaroo and a
+  // turtle needed their real signature posture (the kangaroo's prop tail, the turtle's long
+  // neck) built in rather than implied; a thorny devil and an echidna needed the spine texture
+  // that makes them read as spiny at all; a crane's legs got the same spindly-to-sturdy fix as
+  // the takahe. The common loon turned out to be sharing the black swan's exact body — a real
+  // loon has a shorter neck and a checkered back, not a swan's long curve — so it was
+  // redesigned to actually look like a different bird, and the swan (which already reads well)
+  // was left alone.
+  'australia:richmond-birdwing': {
+    pal: { d: '#15170f', y: '#d8c24a' },
+    frames: [
+      ['..........d', '.......yy.d', '..yyyyyyydd', '.ddddddddd.', '..dd.ddd...', '....d......'],
+      ['..........d', '.......yy.d', '.yyyyyyydd.', 'ddddddddd..', '.dd.ddd....', '...d.......'],
+    ] as const,
+    young: [
+      ['......d', '...yydd', '.ddddd.', '..ddd..'],
+      ['......d', '..yydd.', 'ddddd..', '.ddd...'],
+    ] as const,
+    flies: true,
+  },
+  'australia:ulysses-butterfly': {
+    pal: { d: '#0d0f1a', y: '#2f7fe0' },
+    frames: [
+      ['..........d', '.......yy.d', '..yyyyyyydd', '.ddddddddd.', '..dd.ddd...', '....d......'],
+      ['..........d', '.......yy.d', '.yyyyyyydd.', 'ddddddddd..', '.dd.ddd....', '...d.......'],
+    ] as const,
+    young: [
+      ['......d', '...yydd', '.ddddd.', '..ddd..'],
+      ['......d', '..yydd.', 'ddddd..', '.ddd...'],
+    ] as const,
+    flies: true,
+  },
+  'costarica:blue-morpho': {
+    pal: { d: '#120f1a', y: '#2050d0' },
+    frames: [
+      ['..........d', '.......yy.d', '..yyyyyyydd', '.ddddddddd.', '..dd.ddd...', '....d......'],
+      ['..........d', '.......yy.d', '.yyyyyyydd.', 'ddddddddd..', '.dd.ddd....', '...d.......'],
+    ] as const,
+    young: [
+      ['......d', '...yydd', '.ddddd.', '..ddd..'],
+      ['......d', '..yydd.', 'ddddd..', '.ddd...'],
+    ] as const,
+    flies: true,
+  },
+  'australia:spectacled-flying-fox': {
+    // The original wedge wing already read as a bat in flight — kept, with the pale eye-ring
+    // "spectacles" this species is actually named for added at the head.
+    pal: { d: '#2a2018', b: '#3e3024', y: '#d8c89a', s: '#e8ddc0' },
+    frames: [
+      ['........dsd', '.......dddd', '.dddddddddd', 'dddddddd...', 'dddddddd...', 'dddddddd...', '.dddddd....', '.dddddd....'],
+      ['........dsd', '.......dddd', '.dddddddddd', 'dddddddd...', 'dddddddd...', 'dddddddd...', '.dddddd....', '.dddddd....'],
+    ] as const,
+    young: [
+      ['....dsd.', '...dddd.', 'ddddd...', 'dddd....', '.dd.....'],
+      ['....dsd.', '...dddd.', 'ddddd...', 'dddd....', '.dd.....'],
+    ] as const,
+  },
+  'australia:long-necked-turtle': {
+    // Same shell and legs, neck stretched into an actual curve instead of a stub.
+    pal: { b: '#4a4232', d: '#2a251c', l: '#6e6448', e: '#0c0a06', y: '#c8c0a0' },
+    frames: [
+      ['.......bd', '......lld', '.....lle.', '....ddd..', '.bbbbbb..', '.bbbbbb..', 'dddbbdd..', '..dd.dd..', '..dd.dd..'],
+      ['.......bd', '......lld', '.....lle.', '....ddd..', '.bbbbbb..', '.bbbbbb..', 'dddbbdd..', '...d..d..', '..dd.dd..'],
+    ] as const,
+    young: [
+      ['.....lld', '....lle.', '....dd..', 'bbbbb...', 'ddd.....', '.dd.....'],
+      ['.....lld', '....lle.', '....dd..', 'bbbbb...', 'ddd.....', '.dd.....'],
+    ] as const,
+  },
+  'australia:red-kangaroo': {
+    // A real redesign around the one thing a kangaroo has to have: the upright posture, a
+    // thick tail propping up the rear, and small forearms rather than a generic quadruped.
+    pal: { b: '#a8613c', d: '#74402a', l: '#cf8f60', e: '#160f09' },
+    frames: [
+      ['....bb......', '...bbbbdd...', '...bbblll...', '.dddbbdlde..', 'd..b........', '..bb........', 'ddbbb.......', '.dd.b.......', '.dd.........'],
+      ['....bb......', '...bbbbdd...', '...bbblll...', '.dddbbdlde..', 'd..b........', '..bb........', '.dbbb.......', 'd.d.b.......', '.dd.........'],
+    ] as const,
+    young: [
+      ['....l.', '.bblll', '.bbdle', 'd.....', 'dbb...', '.dd...'],
+      ['....l.', '.bblll', '.bbdle', 'd.....', '.dbb..', '.dd...'],
+    ] as const,
+    hop: true,
+  },
+  'australia:thorny-devil': {
+    // Spines scattered across the whole back instead of a couple of dots at the crown — this
+    // lizard's entire body is covered in them.
+    pal: { b: '#b08048', d: '#7a5430', l: '#d8b478', e: '#120c06', y: '#e8d0a0' },
+    frames: [
+      ['.d.d.d.l.', '.bdbdblll', '.bbbdbdle', 'ddbdbd...', '..ddd....', '..ddd....'],
+      ['.d.d.d.l.', '.bdbdblll', '.bbbdbdle', 'ddbdbd...', '...dd....', '..ddd....'],
+    ] as const,
+    young: [
+      ['....l.', '.ddlll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+      ['....l.', '.ddlll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+    ] as const,
+  },
+  'australia:echidna': {
+    pal: { b: '#4a3a28', d: '#2a2018', l: '#c8a860', e: '#0e0a06' },
+    frames: [
+      ['.d.d.d.l.', '.bdbdblll', '.bbbdbdle', 'bdbdbd...', '.dd......', '.dd......'],
+      ['.d.d.d.l.', '.bdbdblll', '.bbbdbdle', 'bdbdbd...', '.dd......', '.dd......'],
+    ] as const,
+    young: [
+      ['....l.', '.ddlll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+      ['....l.', '.ddlll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+    ] as const,
+  },
+  'canada:common-loon': {
+    // Shorter, thicker neck than the swan it was sharing a body with, plus the checkered
+    // black-and-white back a real loon actually has.
+    pal: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#140e08', w: '#f0ece0' },
+    frames: [
+      ['...bd.....', '..llle....', '.bbdwbwbw.', '.bbbwbwbw.', 'bbbbbbbbbb', '.bbwwwwbb.', '.ddwwwwdd.', '.dddddddd.'],
+      ['...bd.....', '..llle....', '.bbdwbwbw.', '.bbbwbwbw.', 'bbbbbbbbbb', '.bbwwwwbb.', '.ddwwwwdd.', '.dddddddd.'],
+    ] as const,
+    young: [
+      ['.lle.', 'bdwbw', 'bbbbb', '.wwb.', 'ddwd.'],
+      ['.lle.', 'bdwbw', 'bbbbb', '.wwb.', 'ddwd.'],
+    ] as const,
+  },
+  'australia:brolga': {
+    // Same head and body, legs shortened from four single-pixel rows to two — the same fix
+    // the takahe needed.
+    pal: { b: '#9aa0a6', d: '#6a7076', l: '#c8ccd2', e: '#141414', r: '#c0392b', k: '#3a3a3a' },
+    frames: [
+      ['....bd.', '....bd.', '...bb..', '..bllb.', '..blle.', '..bddll', 'dddbbd.', '...dd..', '...d..d', '...d..d'],
+      ['....bd.', '....bd.', '...bb..', '..bllb.', '..blle.', '..bddll', 'dddbbd.', '...dd..', '......d', '...d..d'],
+    ] as const,
+    young: [
+      ['..bd', '.ll.', '.lle', 'ddd.', '.d.d'],
+      ['..bd', '.ll.', '.lle', 'ddd.', '...d'],
+    ] as const,
+  },
+  'australia:black-swan': {
+    // Already read clearly as a swan in review — the real problem was common-loon sharing this
+    // exact body. Left unchanged; the loon moved to its own shape instead.
+    pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc' },
+    frames: [
+      ['.....bd...', '.....bd...', '...llll...', '...llle...', '...dllll..', '.bbbbbbbb.', '.bbbbbbbb.', 'bbbbbbbbbb', '.bbwwwwbb.', '.ddwwwwdd.', '.dddddddd.'],
+      ['.....bd...', '.....bd...', '...llll...', '...llle...', '...dllll..', '.bbbbbbbb.', '.bbbbbbbb.', 'bbbbbbbbbb', '.bbwwwwbb.', '.ddwwwwdd.', '.dddddddd.'],
+    ] as const,
+    young: [
+      ['.lld', '.lle', '.dd.', 'bwwb', '.ww.', 'dddd'],
+      ['.lld', '.lle', '.dd.', 'bwwb', '.ww.', 'dddd'],
+    ] as const,
+  },
 };
