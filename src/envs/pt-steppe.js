@@ -1,4 +1,4 @@
-/* Memory Grove — Patagonia, Patagonian steppe (this region's second biome).
+/* Memory Garden — Patagonia, Patagonian steppe (this region's second biome).
  *
  * Coirón (`hummock`-formed, via `MGForms.hummockCrownForm`) and mata negra (`shrub`-formed,
  * via a small `roundCrownForm`), the biome's only two species

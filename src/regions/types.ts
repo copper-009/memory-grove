@@ -86,7 +86,7 @@ export type Palette = Record<string, string>;
  * One frame of a hand-authored creature sprite: a row of characters, `.` transparent, every
  * other character a key into the sprite's own `pal`. The format `reference/memory-forest`'s
  * `web/visitors.js` uses for every one of its animals (`VISITORS`) — see `DECISIONS.md`
- * § "Art and assets" for why Memory Grove now does the same instead of generating bodies
+ * § "Art and assets" for why Memory Garden now does the same instead of generating bodies
  * from a `BodyPlan`.
  */
 export type SpriteFrame = readonly string[];
@@ -94,7 +94,7 @@ export type SpriteFrame = readonly string[];
 /**
  * A hand-authored creature sprite, Memory Forest's own technique: a small fixed palette (4–8
  * hex colours, one picked as the darkest/outline tone), two frames (a resting pose and a
- * step/glance), and — since Memory Grove tracks four life stages where the original drew
+ * step/glance), and — since Memory Garden tracks four life stages where the original drew
  * only adults — an optional smaller `young` pair for the early stages, a separate hand-drawn
  * grid rather than the adult frames scaled down.
  */

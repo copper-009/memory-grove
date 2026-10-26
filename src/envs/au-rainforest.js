@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, subtropical rainforest.
+/* Memory Garden — Australia, subtropical rainforest.
  *
  * Antarctic beech (a broadleaf, default-shaped) and bangalow palm, two of the biome's five
  * species (`src/regions/australia/rainforest.ts`). Bangalow palm is `palm`-formed, via

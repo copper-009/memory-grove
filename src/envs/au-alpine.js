@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, alpine high country.
+/* Memory Garden — Australia, alpine high country.
  *
  * Snow gum (a broadleaf, default-shaped — its pale bark is its own colour) and alpine
  * everlasting, two of the biome's four species (`src/regions/australia/alpine.ts`). Alpine

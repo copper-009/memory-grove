@@ -69,7 +69,7 @@ knowledgebases"*, which drives the caching design in §3.
 
 ---
 
-## 2. The gaps, and what Memory Grove does about each
+## 2. The gaps, and what Memory Garden does about each
 
 ### 2.1 No interval, no FSRS stability — the big one
 
@@ -97,7 +97,7 @@ unchanged** and the feel is preserved. `src/data/memory.ts` keeps this behind on
 `cardStrength()`, so a future SDK that exposes real stability is a one-line change.
 
 **Retrievability.** The original uses the FSRS forgetting curve with each card's own decay. With no
-stability and no decay available, Memory Grove applies the same curve to the derived strength with
+stability and no decay available, Memory Garden applies the same curve to the derived strength with
 the FSRS-4.5/5 default decay of `0.5`:
 
 ```
@@ -135,7 +135,7 @@ recall. Logged in `DECISIONS.md` as a known approximation.
 ### 2.4 Leeches
 
 RemNote has no leech *tag*, but `QueueInteractionScore.VIEWED_AS_LEECH (2)` appears in the history
-when the leech dialog was shown, and `QueueItemType.Leech = 18` exists. Memory Grove counts a card
+when the leech dialog was shown, and `QueueItemType.Leech = 18` exists. Memory Garden counts a card
 as a leech if its history contains a `VIEWED_AS_LEECH` score and its current derived interval is
 under 21 days (upstream's `CURED_IVL`). Close enough for the "crow" style events; not used for
 anything load-bearing.
@@ -153,7 +153,7 @@ is skipped entirely, which is the fast path almost everyone is on.
 
 ### 2.6 No day rollover
 
-Anki's `day_cutoff` has no equivalent. Memory Grove exposes its **own** `dayRolloverHour` setting
+Anki's `day_cutoff` has no equivalent. Memory Garden exposes its **own** `dayRolloverHour` setting
 (default **4**, matching Anki's default), and all day bucketing goes through
 `src/data/day.ts: dayIndex(ts, rolloverHour)`. A review at 00:30 joins the previous day, as upstream.
 All day arithmetic is done on **local** calendar days, so DST shifts don't create phantom gaps.
@@ -165,7 +165,7 @@ streak alive across days when the user genuinely had nothing to do. Replicating 
 JS over `repetitionHistory` is possible — each rep's `scheduled` field gives the due date it was
 answered against — but it is O(reps) with a sort and would need care to stay fast.
 
-**Workaround:** Memory Grove approximates. A day counts as "free" when no card's `scheduled` date
+**Workaround:** Memory Garden approximates. A day counts as "free" when no card's `scheduled` date
 falls on or before it while still unanswered at that point. This is implemented in
 `src/data/freedays.ts` over the already-flattened rep list, so it adds one pass, not a second scan.
 More importantly, the **ecosystem health layer makes this far less critical than it is upstream** —

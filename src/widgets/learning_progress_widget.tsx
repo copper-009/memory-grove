@@ -23,7 +23,7 @@ import '../style.css';
  * `plugin.window.openWidgetInPane` from inside this already-mounted widget: that corrupted
  * RemNote's own pane window-string state in testing (a "Cannot parse window string" error
  * that broke folder navigation entirely until RemNote was reloaded) — a real functional
- * bug, not a cosmetic one. The "Open Memory Grove" command (omnibar / Cmd-K) is the one
+ * bug, not a cosmetic one. The "Open Memory Garden" command (omnibar / Cmd-K) is the one
  * supported way into the full page; this card still includes the heatmap for a fuller
  * picture without needing to leave the stats page at all.
  */
@@ -42,7 +42,7 @@ function LearningProgressWidget() {
         marginBottom: 12,
       }}
     >
-      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Memory Grove</h3>
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 2 }}>Memory Garden</h3>
       <p className="rn-clr-content-secondary" style={{ fontSize: 12.5, marginBottom: 10, opacity: 0.75 }}>
         {bundle.grove.stats.plants} plants · {bundle.grove.stats.streak}-day streak · ecosystem health{' '}
         {Math.round(bundle.health.visual)}/100

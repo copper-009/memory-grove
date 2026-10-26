@@ -18,28 +18,28 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
   await plugin.app.registerWidget('sidebar_widget', WidgetLocation.RightSidebar, {
     dimensions: { height: 'auto', width: '100%' },
     widgetTabIcon: ICON_DATA_URI,
-    widgetTabTitle: 'Memory Grove',
+    widgetTabTitle: 'Memory Garden',
   });
   await plugin.app.registerWidget('queue_widget', WidgetLocation.QueueBelowTopBar, {
     dimensions: { height: 'auto', width: '100%' },
     widgetTabIcon: ICON_DATA_URI,
-    widgetTabTitle: 'Memory Grove',
+    widgetTabTitle: 'Memory Garden',
   });
   await plugin.app.registerWidget('pane_widget', WidgetLocation.Pane, {
     dimensions: { height: 'auto', width: '100%' },
     widgetTabIcon: ICON_DATA_URI,
-    widgetTabTitle: 'Memory Grove',
+    widgetTabTitle: 'Memory Garden',
   });
   await plugin.app.registerWidget('learning_progress_widget', WidgetLocation.LearningProgressPage, {
     dimensions: { height: 'auto', width: '100%' },
     widgetTabIcon: ICON_DATA_URI,
-    widgetTabTitle: 'Memory Grove',
+    widgetTabTitle: 'Memory Garden',
   });
   // -- Commands -----------------------------------------------------------
   await plugin.app.registerCommand({
     id: 'memory-grove.open',
-    name: 'Open Memory Grove',
-    description: "Open your grove in its own pane.",
+    name: 'Open Memory Garden',
+    description: "Open your garden in its own pane.",
     action: async () => {
       await plugin.window.openWidgetInPane('pane_widget', {});
     },
@@ -47,19 +47,19 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
 
   await plugin.app.registerCommand({
     id: 'memory-grove.toggle-animation',
-    name: 'Toggle Memory Grove animation',
+    name: 'Toggle Memory Garden animation',
     action: async () => {
       const current = await plugin.settings.getSetting<string>('scenery.animate');
       const next = current === 'off' ? 'on' : 'off';
       await plugin.storage.setSynced('scenery.animate.override', next);
-      await plugin.app.toast(`Memory Grove animation: ${next}`);
+      await plugin.app.toast(`Memory Garden animation: ${next}`);
     },
   });
 
   await plugin.app.registerCommand({
     id: 'memory-grove.pause',
-    name: 'Memory Grove: Holiday mode (pause now)',
-    description: 'Pause the grove indefinitely. Studying while paused still helps; nothing counts against you.',
+    name: 'Memory Garden: Holiday mode (pause now)',
+    description: 'Pause the garden indefinitely. Studying while paused still helps; nothing counts against you.',
     action: async () => {
       const cal = await loadStudyCalendar(plugin);
       const today = dayIndex(Date.now(), 4);
@@ -69,7 +69,7 @@ async function onActivate(plugin: ReactRNPlugin): Promise<void> {
     },
   });
 
-  await plugin.app.toast('🌱 Memory Grove is ready. Try "Open Memory Grove" from the omnibar.');
+  await plugin.app.toast('🌱 Memory Garden is ready. Try "Open Memory Garden" from the omnibar.');
 }
 
 async function onDeactivate(_plugin: ReactRNPlugin): Promise<void> {}

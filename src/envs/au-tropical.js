@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, tropical north.
+/* Memory Garden — Australia, tropical north.
  *
  * Curtain fig (a broadleaf, default-shaped) and fan palm, two of the biome's three species
  * (`src/regions/australia/tropical.ts`). Fan palm is `palm`-formed — a trunk that's most of

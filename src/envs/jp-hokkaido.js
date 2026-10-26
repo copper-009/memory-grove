@@ -1,4 +1,4 @@
-/* Memory Grove — Japan, Hokkaido/northern snow country (this region's second biome).
+/* Memory Garden — Japan, Hokkaido/northern snow country (this region's second biome).
  *
  * Ezo spruce (a conifer) and shirakaba, Japanese white birch (a broadleaf) —
  * `src/regions/japan/index.ts`. Both forms the vendored engine's own default crowns already

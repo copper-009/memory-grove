@@ -1,4 +1,4 @@
-/* Memory Grove — Norway, taiga forest.
+/* Memory Garden — Norway, taiga forest.
  *
  * Norway spruce (a conifer) and rowan (a broadleaf) — both default-shaped, no custom crown
  * hook, same as `ca-boreal.js` and for the same reason. Rowan's highlight tone is its own

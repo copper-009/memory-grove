@@ -10,7 +10,7 @@ import '../style.css';
 function PaneWidget() {
   const bundle = useGrove();
   if (bundle.loading) return <div style={{ padding: 24 }}>Growing your grove…</div>;
-  if (bundle.error) return <div style={{ padding: 24, color: '#c0392b' }}>Memory Grove: {bundle.error}</div>;
+  if (bundle.error) return <div style={{ padding: 24, color: '#c0392b' }}>Memory Garden: {bundle.error}</div>;
 
   return (
     // No tight maxWidth here: the grove is a wide-format scene, and capping it at a

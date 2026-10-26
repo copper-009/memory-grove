@@ -1,4 +1,4 @@
-/* Memory Grove — Borneo, lowland dipterocarp rainforest.
+/* Memory Garden — Borneo, lowland dipterocarp rainforest.
  *
  * Giant dipterocarp (the canopy giant this biome is named for) and rafflesia, two of the
  * biome's four species (`src/regions/borneo/index.ts`). Rafflesia is `shrub`-formed — low

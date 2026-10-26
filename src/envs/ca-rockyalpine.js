@@ -1,4 +1,4 @@
-/* Memory Grove — Canada, Rocky Mountain alpine (this region's second biome).
+/* Memory Garden — Canada, Rocky Mountain alpine (this region's second biome).
  *
  * Subalpine fir (a conifer, default-shaped) and alpine fleabane, the biome's only two
  * species (`src/regions/canada/index.ts`). Fleabane is `shrub`-formed and sits on the

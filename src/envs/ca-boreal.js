@@ -1,4 +1,4 @@
-/* Memory Grove — Canada, boreal forest and lakes.
+/* Memory Garden — Canada, boreal forest and lakes.
  *
  * Black spruce (a conifer) and paper birch (a broadleaf) — the vendored engine's own default
  * crowns already draw both forms correctly, so no custom crown hook, just this biome's own

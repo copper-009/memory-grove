@@ -1,4 +1,4 @@
-/* Memory Grove — Madagascar, eastern rainforest.
+/* Memory Garden — Madagascar, eastern rainforest.
  *
  * Traveller's palm and Madagascar rosewood, two of the biome's three species
  * (`src/regions/madagascar/index.ts`). Traveller's palm — this biome's most recognisable

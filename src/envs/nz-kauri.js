@@ -1,4 +1,4 @@
-/* Memory Grove — Aotearoa New Zealand, kauri and podocarp forest.
+/* Memory Garden — Aotearoa New Zealand, kauri and podocarp forest.
  *
  * Two of the biome's four species, chosen for the most distinct silhouettes (the same
  * judgment call `au-eucalypt.js` makes, for the same reason): kauri, a true conifer whose

@@ -1,7 +1,7 @@
 /**
  * Render harness for the vendored Memory Forest engine (`src/vendor/memory-forest/web/`),
  * mounted through `mfAdapter.ts` instead of our own `drawScene` — Phase 2's milestone:
- * confirm the vendored engine actually renders Golden Lake from Memory Grove data. Loaded
+ * confirm the vendored engine actually renders Golden Lake from Memory Garden data. Loaded
  * by `tools/harness/mf.html`, which brings in the vendored core scripts (`catalog.py`'s own
  * `SCRIPTS` order) via plain `<script>` tags first; scenery (landscape, and a region's own
  * tree environment when `biomeKey` has one in `mfEnvs.ts`) loads dynamically through

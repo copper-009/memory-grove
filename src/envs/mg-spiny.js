@@ -1,4 +1,4 @@
-/* Memory Grove — Madagascar, spiny forest (this region's second biome).
+/* Memory Garden — Madagascar, spiny forest (this region's second biome).
  *
  * Octopus tree (round-kind, `columnar`-formed via a half-height `MGForms.roundCrownForm` +
  * `crownShadeForm`, the same pairing `au-coastal.js`'s pandanus uses) and Grandidier's

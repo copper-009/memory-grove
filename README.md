@@ -1,4 +1,4 @@
-# Memory Grove
+# Memory Garden
 
 **A living grove that grows from your RemNote flashcard history.** Every day you learn new
 cards, a plant goes in. It grows as those cards settle into memory, goes a little dry if you
@@ -7,7 +7,7 @@ underneath, and over time a whole small ecosystem — ground cover, water, nativ
 responds to how consistently you've been studying.
 
 Inspired by [**Memory Forest**](https://github.com/baraklevy20/memory-forest), Barak Levy's
-much-loved Anki add-on (MIT licensed). Memory Grove ports its concept and rendering approach
+much-loved Anki add-on (MIT licensed). Memory Garden ports its concept and rendering approach
 to RemNote, keeps the same growth-stage thresholds and health model, and adds a few things
 that aren't in the original: a kinder, tunable ecosystem health layer instead of a strict
 streak, a full pause/study-calendar system that genuinely protects your progress across
@@ -66,7 +66,7 @@ npm install
 npm run build
 ```
 
-Upload the resulting `MemoryGrove.zip` from RemNote's Settings → Plugins → Build → Upload.
+Upload the resulting `MemoryGarden.zip` from RemNote's Settings → Plugins → Build → Upload.
 See [`DEVELOPMENT.md`](DEVELOPMENT.md) for running it live with `npm run dev`, and
 [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md) for publishing it.
 

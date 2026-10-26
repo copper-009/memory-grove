@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, outback.
+/* Memory Garden — Australia, outback.
  *
  * Ghost gum (a broadleaf, default-shaped — its pale, almost-white bark is its own colour)
  * and desert oak, two of the biome's four species (`src/regions/australia/outback.ts`).

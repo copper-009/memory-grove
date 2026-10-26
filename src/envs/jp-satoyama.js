@@ -1,4 +1,4 @@
-/* Memory Grove — Japan, satoyama woodland.
+/* Memory Garden — Japan, satoyama woodland.
  *
  * Sugi (Japanese cedar, a conifer) and yamazakura (wild cherry, a broadleaf) — both forms
  * the vendored engine's own default crowns already draw correctly, so there is no custom

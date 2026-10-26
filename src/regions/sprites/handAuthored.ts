@@ -327,7 +327,7 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // brown-to-white change a real one makes), the same low slinking shape as the native
     // red fox it's built from — padded a trailing `.` onto every other row to match row 2's
     // own width (12, one wider than the rest); the native sprite itself is ragged there and
-    // the vendored engine's own renderer doesn't care, but Memory Grove's stricter
+    // the vendored engine's own renderer doesn't care, but Memory Garden's stricter
     // `validate.ts` requires every row in a frame to be the same width.
     pal: { o: '#e8eef2', w: '#ffffff', d: '#8a96a0', e: '#1a1c20' },
     frames: [

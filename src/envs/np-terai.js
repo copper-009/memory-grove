@@ -1,4 +1,4 @@
-/* Memory Grove — Nepal, Terai lowland.
+/* Memory Garden — Nepal, Terai lowland.
  *
  * Sal (a broadleaf) and elephant grass, the biome's only two species
  * (`src/regions/nepal/index.ts`). Elephant grass is `columnar`-formed — tall and narrow, not

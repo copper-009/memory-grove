@@ -1,7 +1,7 @@
 # Memory Forest — how the original works
 
 Notes taken from a read of `reference/memory-forest` (Barak Levy, MIT, v1.3.0, `min_point_version` 45).
-Written to guide the RemNote port (**Memory Grove**). File references are to the upstream repo.
+Written to guide the RemNote port (**Memory Garden**). File references are to the upstream repo.
 
 Upstream is a **Qt/Anki add-on in Python** that renders its scene by generating a web page and
 handing it to Anki's embedded web view. All of the art is **JavaScript drawing procedurally onto a
@@ -92,7 +92,7 @@ sessions** and only changes when the data does.
   and is placed a few trees later rather than leaving holes.
 
 > Note: the task brief says "gaps of 2+ weeks become a pond". The original's threshold is actually
-> **7 days**. Logged in `DECISIONS.md`; Memory Grove makes it configurable, defaulting to 14 to
+> **7 days**. Logged in `DECISIONS.md`; Memory Garden makes it configurable, defaulting to 14 to
 > match the brief.
 
 ### Streaks (`_streaks`)
@@ -147,7 +147,7 @@ rabbit: { pal: { b:'#b9a38a', d:'#7a6450', e:'#2a2018', l:'#f1ebe2' }, frames: [
 ```
 `.` is transparent; every other character indexes the palette. `paintSprite()` renders a frame once
 onto its own small canvas, keyed by `(frame, flip, resolved colours)`, and blits it thereafter.
-Memory Grove adopts this format wholesale for its creatures.
+Memory Garden adopts this format wholesale for its creatures.
 
 ### Movement
 Deliberately calm. Each front animal gets its own stretch of ground and wanders to a new spot every
@@ -286,12 +286,12 @@ sunrise equation rather than fetched. Careful citizenship throughout: a declared
 which it falls back to the preset's own weather, and coordinates rounded to 4 dp so nearby users
 share MET's cache.
 
-> Memory Grove uses **Open-Meteo** instead (the brief asks for it); it provides both geocoding and
+> Memory Garden uses **Open-Meteo** instead (the brief asks for it); it provides both geocoding and
 > forecast from one account-less API. Same discipline: opt-in, city name only, cached, documented.
 
 ---
 
-## 10. What Memory Grove takes, and what it changes
+## 10. What Memory Garden takes, and what it changes
 
 **Takes:** the one-tree-per-learning-day model; median-stability staging with the same six stages and
 thresholds; crown size from card count; health from a struggling share with the same thresholds and

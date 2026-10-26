@@ -1,4 +1,4 @@
-/* Memory Grove — shared tree-shape functions, reused by every region's own env file
+/* Memory Garden — shared tree-shape functions, reused by every region's own env file
  * (src/envs/*.js, not just au-eucalypt.js). Loaded once, always, before any env script
  * (mfLoader.ts's loadMfCore) since every env references window.MGForms at registration time.
  *

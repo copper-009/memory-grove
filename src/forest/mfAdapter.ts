@@ -1,11 +1,11 @@
 /**
- * The adapter between Memory Grove's own data layer and the vendored Memory Forest engine
+ * The adapter between Memory Garden's own data layer and the vendored Memory Forest engine
  * (`src/vendor/memory-forest/web/`).
  *
  * `payload.py` builds this shape from a live Anki collection (`mw.col`); nothing here ports
  * that file line-for-line (it's 512 lines of Anki-specific collection queries, deck
  * scoping and settings-dialog caching — see `DECISIONS.md`). Instead this replicates the
- * *shape* `AF.mount(root, data, opts)` actually reads, built from Memory Grove's existing
+ * *shape* `AF.mount(root, data, opts)` actually reads, built from Memory Garden's existing
  * `Grove`/`CreatureRoster` (`src/data/*.ts`) instead of an Anki collection.
  *
  * Golden hour always (`presets.py`'s first preset's `weather: 'clear'`, `time:
@@ -19,7 +19,7 @@
  * grass under generic hills by a generic lake.
  * Milestone animals are Memory Forest's own stock roster (rabbit/deer/fox/owl/heron/stag/
  * cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/`visitors()`
- * directly, not Memory Grove's own per-region creature roster, since the vendored
+ * directly, not Memory Garden's own per-region creature roster, since the vendored
  * `visitors.js` only knows its own built-in `VISITORS` table) — creatures aren't
  * region-specific yet, for any biome.
  *
@@ -40,10 +40,10 @@ import type { LandscapeKey } from './mfLandscape';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
- * flat per-seed roll, since the vendored engine has no concept of Memory Grove's own
+ * flat per-seed roll, since the vendored engine has no concept of Memory Garden's own
  * per-region species yet (Phase 3).
  *
- * `speciesName` is Memory Grove's own addition, not part of the original shape — `tooltips.js`
+ * `speciesName` is Memory Garden's own addition, not part of the original shape — `tooltips.js`
  * has no field or hook for it (checked directly: no `AF.ENVS`/`species` reference anywhere in
  * that file), so nothing in the vendored engine reads it on its own. `src/envs/species-
  * tooltip.js` is what actually uses it, wrapping `AF.tips.tree` rather than editing the
@@ -109,7 +109,7 @@ export function toMfTree(p: Plant, biome?: Biome): MfTree {
   return out;
 }
 
-/** `forest_data.make_forest`'s stats shape, from Memory Grove's own `GroveStats`. */
+/** `forest_data.make_forest`'s stats shape, from Memory Garden's own `GroveStats`. */
 export function toMfStats(g: Grove): Record<string, unknown> {
   const s = g.stats;
   return {
@@ -123,7 +123,7 @@ export function toMfStats(g: Grove): Record<string, unknown> {
 
 /** `milestones.py`'s stock `VISITORS` table — Memory Forest's own fixed roster, which
  * `visitors.js`'s built-in `VISITORS` sprite data matches by key. Ported directly rather
- * than routed through Memory Grove's own per-region `Creature`/`CreatureRoster` system,
+ * than routed through Memory Garden's own per-region `Creature`/`CreatureRoster` system,
  * which the vendored engine doesn't know about (Phase 3). */
 const MF_VISITORS: ReadonlyArray<{ key: string; label: string; why: string; test: (s: Record<string, unknown>) => boolean }> = [
   { key: 'rabbit', label: 'a rabbit', why: 'your forest reached 50 trees', test: (s) => (s.trees as number) >= 50 },
@@ -139,7 +139,7 @@ const MF_VISITORS: ReadonlyArray<{ key: string; label: string; why: string; test
 ];
 
 /** Whichever of the stock milestones the grove's stats have already earned — unconditioned
- * on arrival history (Memory Grove's own `CreatureRoster` tracks that per-species already;
+ * on arrival history (Memory Garden's own `CreatureRoster` tracks that per-species already;
  * this stock table is only a stand-in until Phase 3 wires real regions through, so "new" is
  * always false rather than guessing at a day it arrived). */
 export function toMfVisitors(stats: Record<string, unknown>): Array<{ key: string; label: string; why: string; new: boolean }> {
@@ -219,7 +219,7 @@ export interface MfAdapterOptions {
   biome?: Biome;
 }
 
-/** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — golden hour always, a
+/** Build the payload `AF.mount` needs, from a Memory Garden `Grove` — golden hour always, a
  * region-specific tree environment, ground colour, hill-silhouette colour and a touch of
  * its own sky tint when `opts.biome` has one (`_forms.js`'s `groundTheme`, set per env
  * file), and a landscape (lake / river / meadow / mountains) that follows

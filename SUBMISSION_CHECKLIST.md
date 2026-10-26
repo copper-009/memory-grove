@@ -1,6 +1,6 @@
 # Submission checklist
 
-Steps to take Memory Grove from this repo to a public RemNote plugin listing.
+Steps to take Memory Garden from this repo to a public RemNote plugin listing.
 
 ## 1. Create the public repository ✅
 
@@ -24,20 +24,20 @@ npm run build
 ```
 
 This runs `tsc --noEmit`, the production webpack build, and zips `dist/` into
-`MemoryGrove.zip`. The build must succeed with no errors — it's the same command reviewers
+`MemoryGarden.zip`. The build must succeed with no errors — it's the same command reviewers
 effectively run against your source.
 
 ## 5. Upload
 
-In RemNote: **Settings → Plugins → Build → Upload Plugin ZIP**, and pick `MemoryGrove.zip`.
+In RemNote: **Settings → Plugins → Build → Upload Plugin ZIP**, and pick `MemoryGarden.zip`.
 Test it there before publishing — widgets should appear in the right sidebar, the finished
-queue screen, and via the "Open Memory Grove" command (try it from the omnibar).
+queue screen, and via the "Open Memory Garden" command (try it from the omnibar).
 
 ## 6. What reviewers check
 
 Based on RemNote's plugin guidelines, before submitting double-check:
 
-- [ ] `requiredScopes` in `manifest.json` is the minimum the plugin needs. Memory Grove
+- [ ] `requiredScopes` in `manifest.json` is the minimum the plugin needs. Memory Garden
       currently requests `{ type: "All", level: "Read" }` — read-only, no write access,
       matching "minimal required scopes (read-only access to cards/rem is enough for v1)"
       from the project brief. If a future version needs to write (e.g. jumping to a card),

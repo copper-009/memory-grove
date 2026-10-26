@@ -3,10 +3,10 @@
   "name": "memory-grove",
   "version": "0.1.0",
   "license": "MIT",
-  "description": "A living grove that grows from your RemNote flashcard history.",
+  "description": "A living garden that grows from your RemNote flashcard history.",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --color --progress --no-open",
-    "build": "npm run typecheck && shx rm -rf dist && cross-env NODE_ENV=production webpack --color && cd dist && bestzip ../MemoryGrove.zip ./*",
+    "build": "npm run typecheck && shx rm -rf dist && cross-env NODE_ENV=production webpack --color && cd dist && bestzip ../MemoryGarden.zip ./*",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"tools/**/*.{ts,mjs}\"",
     "lint:fix": "npm run lint -- --fix",

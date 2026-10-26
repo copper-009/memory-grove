@@ -1,4 +1,4 @@
-/* Memory Grove — Nepal, high Himalaya (this region's second biome).
+/* Memory Garden — Nepal, high Himalaya (this region's second biome).
  *
  * Juniper (a conifer, default-shaped) and rhododendron, two of the biome's three species
  * (`src/regions/nepal/index.ts`) — both default-shaped, no custom crown hook, same as

@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, eucalypt woodland. A new environment plugging into the
+/* Memory Garden — Australia, eucalypt woodland. A new environment plugging into the
  * vendored Memory Forest engine's own registry (AF.env, scenery.js), not an edit to
  * anything under src/vendor/ — see DECISIONS.md's Phase 3 entry.
  *

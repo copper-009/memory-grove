@@ -7,7 +7,7 @@
  * deliberately mirroring how the original's own deck-list page loads them and how
  * `tools/harness/mf.html` already proved the exact same list works.
  *
- * Also loads Memory Grove's own environments (`src/envs/*.js`, `mfEnvs.ts`'s registry) the
+ * Also loads Memory Garden's own environments (`src/envs/*.js`, `mfEnvs.ts`'s registry) the
  * same way, from a separate `envs/` URL namespace — `AF.env()` doesn't care which file
  * registered a key, so this is the one place that needs to.
  */
@@ -92,7 +92,7 @@ export function loadMfCore(): Promise<void> {
  * it's swallowed rather than failing the whole mount; `landscapes`/`landmarks` are always
  * drawn by a real file when referenced, so a 404 there is a genuine error.
  *
- * A Memory Grove env (`mfEnvs.ts`'s registry) failing to load is handled the same
+ * A Memory Garden env (`mfEnvs.ts`'s registry) failing to load is handled the same
  * fail-soft way, even though `mfEnvs.ts` only ever maps to a file that's genuinely there —
  * a real build can still be missing it for reasons outside this code's control (a stale
  * dev-server bundle predating the file, a deploy that didn't finish copying `src/envs/`),
@@ -111,7 +111,7 @@ export async function loadMfScenery(mood: { special?: string; landscape?: string
       try {
         await loadScript(own ? `${base}${rel}` : `${base}vendor/${rel}`);
       } catch (e) {
-        if (own) console.error(`Memory Grove env "${mood.special}" failed to load; falling back to the default trees.`, e);
+        if (own) console.error(`Memory Garden env "${mood.special}" failed to load; falling back to the default trees.`, e);
         /* vendored: no special script for this environment — e.g. "natural" — nothing to draw */
       }
       sceneryLoaded.add(key);

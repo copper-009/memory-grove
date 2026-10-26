@@ -1,4 +1,4 @@
-/* Memory Grove — Norway, fjord coast and plateau (this region's second biome).
+/* Memory Garden — Norway, fjord coast and plateau (this region's second biome).
  *
  * Both of the biome's two species (`src/regions/norway/index.ts`) are `shrub` — heather
  * (purple-flower highlight, `#9a6a94`, its own) and dwarf birch (red-autumn highlight,

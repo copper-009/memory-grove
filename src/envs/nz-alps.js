@@ -1,4 +1,4 @@
-/* Memory Grove — Aotearoa New Zealand, the Southern Alps (this region's second biome).
+/* Memory Garden — Aotearoa New Zealand, the Southern Alps (this region's second biome).
  *
  * Mountain beech (a broadleaf, default-shaped) and snow tussock, two of the biome's three
  * species (`src/regions/aotearoa/index.ts`). Snow tussock is `hummock`-formed — drawn by

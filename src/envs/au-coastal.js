@@ -1,4 +1,4 @@
-/* Memory Grove — Australia, coastal heath and wetland.
+/* Memory Garden — Australia, coastal heath and wetland.
  *
  * Paperbark (a broadleaf, default-shaped — its pale, papery bark is its own colour, not
  * added here) and pandanus, two of the biome's five species

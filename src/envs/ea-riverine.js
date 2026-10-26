@@ -1,4 +1,4 @@
-/* Memory Grove — East Africa, riverine woodland (this region's second biome).
+/* Memory Garden — East Africa, riverine woodland (this region's second biome).
  *
  * Both of the biome's species (`src/regions/eastafrica/index.ts`) are `broadleaf` — no
  * second form for the pine-kind slot, so this uses the engine's own per-seed palette

@@ -1,5 +1,5 @@
 /**
- * The only network call in Memory Grove. Fires when, and only when, the user has typed a
+ * The only network call in Memory Garden. Fires when, and only when, the user has typed a
  * city into the Weather setting — see `README.md`'s privacy section, which this file is
  * what makes true.
  *

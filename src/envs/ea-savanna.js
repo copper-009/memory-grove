@@ -1,4 +1,4 @@
-/* Memory Grove — East African acacia savanna.
+/* Memory Garden — East African acacia savanna.
  *
  * Umbrella thorn (round-kind, default broadleaf crown) and the baobab — this biome's most
  * recognisable tree, `bulbous`-formed via `MGForms.bulbousBody`, replacing this env's

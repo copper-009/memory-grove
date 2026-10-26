@@ -1,4 +1,4 @@
-/* Memory Grove — species names in tree tooltips.
+/* Memory Garden — species names in tree tooltips.
  *
  * tooltips.js has no species/name field and no AF.ENVS hook to plug into (checked directly:
  * no `species` or `AF.ENVS` reference anywhere in that 61-line file) — unlike trees.js's own
@@ -8,7 +8,7 @@
  * just without a registry already built for it.
  *
  * Loaded once, always, regardless of biome (mfLoader.ts's `loadMfCore`) — species names come
- * from Memory Grove's own data (`mfAdapter.ts`'s `toMfTree`, resolved from the current
+ * from Memory Garden's own data (`mfAdapter.ts`'s `toMfTree`, resolved from the current
  * biome's `plants` list), not from an environment's tree-shape hooks.
  */
 (function () {

@@ -63,7 +63,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
         // visible message over a mysterious empty box, even though it shouldn't happen in
         // a correctly-served build.
         if (cancelled) return;
-        console.error('Memory Grove: the grove scene failed to load.', e);
+        console.error('Memory Garden: the grove scene failed to load.', e);
         setError(e.message);
       });
     return () => {

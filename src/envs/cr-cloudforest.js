@@ -1,4 +1,4 @@
-/* Memory Grove — Costa Rica, cloud forest.
+/* Memory Garden — Costa Rica, cloud forest.
  *
  * Tree fern and Costa Rican oak, two of the biome's three species, the same
  * frond-vs-default-broadleaf pairing as `mg-rainforest.js` (and for the same reason: it's

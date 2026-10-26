@@ -1,4 +1,4 @@
-/* Memory Grove — Patagonia, southern beech forest.
+/* Memory Garden — Patagonia, southern beech forest.
  *
  * All three of this biome's species (`src/regions/patagonia/index.ts`) are `broadleaf` —
  * there's no second form here to give the pine-kind slot the way every other region env

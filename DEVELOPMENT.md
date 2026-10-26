@@ -1,4 +1,4 @@
-# Developing Memory Grove
+# Developing Memory Garden
 
 ## Setup
 
@@ -32,7 +32,7 @@ npm run lint        # eslint
 npm run typecheck   # tsc --noEmit
 npm test             # vitest run — 163 tests as of this writing
 npm run bench        # vitest bench, if any benchmark files are added later
-npm run build        # typecheck -> production webpack build -> MemoryGrove.zip
+npm run build        # typecheck -> production webpack build -> MemoryGarden.zip
 npm run species-doc  # regenerate reference/SPECIES.md from the region packs
 ```
 
@@ -142,7 +142,7 @@ Kept honest here rather than glossed over:
   `schedulePresets.ts`) is complete and tested, but today the only way to set a pause is the
   "Holiday mode" command. A calendar popup widget is the natural next addition.
 - **A "Cannot parse window string" toast can appear while developing from localhost.**
-  Seen once, immediately after using the "Open Memory Grove" command, which calls
+  Seen once, immediately after using the "Open Memory Garden" command, which calls
   `plugin.window.openWidgetInPane`. RemNote persists its pane layout, and a dev-server
   rebuild changes the bundle's content hash between loads, so a layout string saved before
   a rebuild can fail to parse against the widget RemNote now sees. This looks like a

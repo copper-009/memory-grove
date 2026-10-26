@@ -8,7 +8,7 @@
  * single day without reviews and an asteroid wipes out the grove. Peaceful only ever brings
  * good things (a big day of learning leaves flowers); Wild and Merciless add the rest.
  *
- * Memory Forest counts days as `ago` (0 today, increasing into the past); Memory Grove uses
+ * Memory Forest counts days as `ago` (0 today, increasing into the past); Memory Garden uses
  * absolute day numbers (`src/data/day.ts`, increasing into the future) everywhere else, so
  * every loop direction here is inverted from the original accordingly — the same conversion
  * `forest.ts`'s own `streaks`/`findBreaks` already made porting `forest_data.py`.
@@ -27,11 +27,11 @@ export const NATURE_LABELS: Record<Nature, string> = { peaceful: 'Peaceful', wil
 export const DEFAULT_NATURE: Nature = 'peaceful';
 
 export const NATURE_NOTES: Record<Nature, string> = {
-  peaceful: 'Missing days costs nothing, and the grove never scolds you.',
+  peaceful: 'Missing days costs nothing, and the garden never scolds you.',
   wild: 'Miss two days of reviews in a row and smoke rises; miss a third and a fire spreads until seven days of study put it out. Bad habits leave marks too.',
-  merciless: 'Miss a single day of reviews and an asteroid wipes out the grove. Bad habits leave marks too.',
+  merciless: 'Miss a single day of reviews and an asteroid wipes out the garden. Bad habits leave marks too.',
 };
-export const NATURE_SWITCH_NOTE = 'Switch back any time and the grove is as it was.';
+export const NATURE_SWITCH_NOTE = 'Switch back any time and the garden is as it was.';
 
 export function natureLevel(value: unknown): Nature {
   return typeof value === 'string' && value in NATURE_LABELS ? (value as Nature) : DEFAULT_NATURE;

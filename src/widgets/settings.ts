@@ -102,7 +102,7 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
   });
   await plugin.settings.registerDropdownSetting({
     id: 'scenery.animate',
-    title: 'Animate the grove',
+    title: 'Animate the garden',
     options: options(ANIMATE_OPTIONS, ANIMATE_LABELS),
     defaultValue: 'system',
   });
@@ -111,7 +111,7 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
   await plugin.settings.registerDropdownSetting({
     id: 'forest.region',
     title: 'Region',
-    description: 'Which native ecosystem your grove draws from. Switching keeps your progress — your unlocked creatures, their ages and names all carry over.',
+    description: 'Which native ecosystem your garden draws from. Switching keeps your progress — your unlocked creatures, their ages and names all carry over.',
     options: options(REGION_KEYS, REGION_LABELS),
     defaultValue: 'australia',
   });
@@ -139,20 +139,20 @@ export async function registerSettings(plugin: RNPlugin): Promise<void> {
   await plugin.settings.registerBooleanSetting({
     id: 'forest.showOnLearningProgress',
     title: 'Show on the Learning Progress page',
-    description: 'Adds the grove to RemNote\'s own stats page, styled to match its other cards.',
+    description: 'Adds the garden to RemNote\'s own stats page, styled to match its other cards.',
     defaultValue: true,
   });
   await plugin.settings.registerDropdownSetting({
     id: 'forest.layout',
-    title: 'Grove shape',
-    description: 'Which shape the grove draws in, wherever it appears.',
+    title: 'Garden shape',
+    description: 'Which shape the garden draws in, wherever it appears.',
     options: options(LAYOUT_OPTIONS, LAYOUT_LABELS),
     defaultValue: 'auto',
   });
   await plugin.settings.registerStringSetting({
     id: 'forest.excludedRemIds',
     title: 'Exclude these Rem (comma-separated IDs)',
-    description: 'Cards under these Rem, and their descendants, are left out of the grove.',
+    description: 'Cards under these Rem, and their descendants, are left out of the garden.',
     defaultValue: '',
   });
 

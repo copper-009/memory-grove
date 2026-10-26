@@ -1,4 +1,4 @@
-/* Memory Grove — Costa Rica, lowland rainforest (this region's second biome).
+/* Memory Garden — Costa Rica, lowland rainforest (this region's second biome).
  *
  * Ceiba (a broadleaf, default-shaped — the rainforest's classic emergent giant) and
  * heliconia, two of the biome's three species (`src/regions/costarica/index.ts`). Heliconia

@@ -24,7 +24,7 @@ const previewB64 = readFileSync(join(ROOT, 'art/golden-lake/memory-grove-layers/
 
 // Memory Forest's own VISITORS entries, transcribed verbatim from
 // reference/memory-forest/web/visitors.js (MIT licensed) — for scale comparison only, not
-// part of Memory Grove's roster.
+// part of Memory Garden's roster.
 const REFERENCE = {
   fox: {
     pal: { o: '#d9772e', w: '#f3ece2', d: '#3a2418', e: '#1a1008' },
@@ -91,7 +91,7 @@ const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Memory Grove — creature sprite gallery</title>
+<title>Memory Garden — creature sprite gallery</title>
 <style>
   :root { color-scheme: light dark; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 24px; background: #1b1f16; color: #eee; }
@@ -134,8 +134,8 @@ const html = `<!doctype html>
 </style>
 </head>
 <body>
-<h1>Memory Grove — creature sprite gallery</h1>
-<div class="credit">Fox, deer and owl reference sprites are Memory Forest's own (© Barak Levy, MIT licence) — shown for scale only, not part of Memory Grove's roster. Background: the golden-lake reference scenery. <a href="../DECISIONS.md">DECISIONS.md</a> has the full account of this rewrite.</div>
+<h1>Memory Garden — creature sprite gallery</h1>
+<div class="credit">Fox, deer and owl reference sprites are Memory Forest's own (© Barak Levy, MIT licence) — shown for scale only, not part of Memory Garden's roster. Background: the golden-lake reference scenery. <a href="../DECISIONS.md">DECISIONS.md</a> has the full account of this rewrite.</div>
 <img class="preview" src="data:image/png;base64,${previewB64}" alt="Golden Lake reference scene">
 <div class="toolbar">
   <button id="animBtn">Pause animation</button>
@@ -146,7 +146,7 @@ const html = `<!doctype html>
 <div class="section-title">Memory Forest reference (for scale — not reviewed)</div>
 <div class="grid" id="refGrid"></div>
 
-<div class="section-title">Memory Grove roster (${entries.length} creatures)</div>
+<div class="section-title">Memory Garden roster (${entries.length} creatures)</div>
 <div class="grid" id="mainGrid"></div>
 
 <script>

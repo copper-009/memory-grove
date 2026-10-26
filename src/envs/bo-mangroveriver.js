@@ -1,4 +1,4 @@
-/* Memory Grove — Borneo, mangrove river (this region's second biome).
+/* Memory Garden — Borneo, mangrove river (this region's second biome).
  *
  * Bakau mangrove (round-kind, `shrub`-formed via a small `MGForms.roundCrownForm`) and nipa
  * palm (pine-kind, via `MGForms.palmBody` — a trunk that's most of its height with a frond
