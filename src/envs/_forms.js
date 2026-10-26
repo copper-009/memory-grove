@@ -78,6 +78,22 @@ function trunkForm(pineBark, roundBark) {
   };
 }
 
+/** `tree.trunk()` hook for a biome rotating several species across its round-kind slot
+ * (`pals.rounds`, `trees.js`'s own `EP.rounds[t.seed % EP.rounds.length]`) — the matching
+ * bark for whichever crown that same seed picked, by the same modulo, rather than the one
+ * shared bark `trunkForm` gives every round-kind tree regardless of which species it drew.
+ * `pt-beech.js`/`ea-riverine.js` each reimplemented `paintTrunk`'s loop by hand for this,
+ * before this existed to call instead — not wrong, just the same few lines three more times
+ * for every biome after them. Pine-kind is still a single bark: nothing here rotates it
+ * (`trees.js` has no `EP.pines` array to match — `EP.pine` only), same limitation
+ * `pt-beech.js`'s own header already states for its own pine-kind gap. */
+function trunkRotateForm(pineBark, roundBarks) {
+  return (c) => {
+    paintTrunk(c, c.pine ? pineBark : roundBarks[c.t.seed % roundBarks.length], c.trunkH, c.tw, c.tx0);
+    return true;
+  };
+}
+
 /** A rounded crown as a cluster of overlapping ellipses — trees.js's own default
  * `roundCrown`, parameterised: `blobsN` (fewer for a tight shrub), `holeExtra` (more open
  * than the dying-tree hole the engine already applies), `chFrac` (less than the full crown
@@ -280,5 +296,5 @@ function groundTheme(ground, hills, sky) {
   };
 }
 
-window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme, palmBody, bulbousBody };
+window.MGForms = { widthForm, trunkForm, trunkRotateForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme, palmBody, bulbousBody };
 })();

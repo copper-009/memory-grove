@@ -686,3 +686,23 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   transient event than a lake appearing where a user took a study break. Verified with the
   `gappy` fixture (several ponds) against `outback` (dry, cracked, no blue) and `satoyama`
   as a control (ordinary water, unaffected).
+- **A third species drawn in four more biomes, via the round-kind rotation `pt-beech.js`/
+  `ea-riverine.js` already proved.** New `MGForms.trunkRotateForm` (`_forms.js`) factors out
+  the bark-rotation loop those two files each reimplemented by hand before it existed —
+  picks `roundBarks[seed % n]` the same way `trees.js`'s own `EP.rounds[seed % n]` picks the
+  matching crown, so crown and bark always agree. Applied where the undrawn species
+  genuinely shares its already-drawn neighbour's form (broadleaf, default-shaped — the same
+  precondition rotation always needed): `cr-lowland` (ceiba + strangler fig), `jp-hokkaido`
+  (shirakaba + Erman's birch), `np-himalaya` (rhododendron + Himalayan birch), `no-taiga`
+  (rowan + downy birch). Checked the rest of the "documented but not drawn separately yet"
+  list and left them alone rather than force a fit: East Africa's whistling thorn and
+  Aotearoa's Mount Cook lily are `shrub`-formed, not broadleaf, so they'd need their own
+  crown treatment, not a palette swap on an existing one; Aotearoa's harakeke is
+  `columnar` (strap leaves), nothing like either of `nz-kauri`'s current shapes; Norway's
+  Scots pine and `nz-kauri`'s rimu are both conifers that would need a *pine*-kind rotation,
+  which `trees.js` has no array for (`EP.pine` is singular, unlike `EP.rounds`) — adding one
+  would mean a second vendor-file edit this session, on top of `ponds.js`'s, for a
+  nice-to-have rather than something actually asked for, so left as a stated gap instead
+  (each file's own header says so). Verified with the render harness at both low density
+  (two-tree clarity) and a dense 255-tree render per biome — all four read correctly, no
+  errors, `tsc`/`vitest` clean throughout (153/153).
