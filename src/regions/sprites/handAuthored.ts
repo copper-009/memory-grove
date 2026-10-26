@@ -53,16 +53,17 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // not kangaroo shaped" — the swooping bird-like body curve wasn't upright enough and had no
   // tail. Rebuilt genuinely vertical: small head on a tall torso, tucked forearms, a bent hind
   // leg, and a thick tail that actually reaches the ground as its own balancing "third leg,"
-  // connected to the body rather than floating beside it.
+  // connected to the body rather than floating beside it. Round 4: "not enough of a tail" —
+  // the tail was still only 1-2px wide; thickened to a real triangular prop reaching the ground.
   'australia:eastern-grey-kangaroo': {
     pal: { b: '#9a9383', d: '#6c6557', l: '#c4bdab', e: '#17130d', w: '#c4bdab', t: '#6c6557' },
     frames: [
-      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldt.', 'd.lldtt.', '..ddtt..', '..dd.tt.'],
-      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldt.', 'd.lldtt.', '..dd.tt.', '..ddtt..'],
+      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldtt', 'd.lldttt', '..ddttt.', '..dd.tt.', '.....tt.'],
+      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldtt', 'd.lldttt', '..dd.tt.', '..ddttt.', '.....tt.'],
     ] as const,
     young: [
-      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldt.', '.dd.tt.'],
-      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldt.', '.dd.tt.'],
+      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldtt', '.dd.tt.'],
+      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldtt', '.dd.tt.'],
     ] as const,
   },
   // Round 3: "it was better looking side on, the previous design was better" — the round-2
@@ -146,9 +147,10 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // wider-wingspan variant of the same flying-eagle shape, not a recolour of the small one.
   // Round 3: shape approved, just wants a recolour — warmer chocolate-brown with a lighter
   // golden-brown nape patch, a real wedge-tailed eagle's actual colouring, instead of the
-  // near-uniform near-black it had.
+  // near-uniform near-black it had. Round 4: still wanted a recolour — lighter golden-brown
+  // this time, a bigger jump from the original than the round-3 attempt was.
   'australia:wedge-tailed-eagle': {
-    pal: { d: '#3a2a1a', b: '#5a4030', h: '#2a1c10', y: '#9a7840' },
+    pal: { d: '#5a4428', b: '#7a5c38', h: '#3a2c18', y: '#c4a050' },
     flies: true,
     frames: [
       ['........hh.........', '.dd.....bbhy.....dd', '..ddd.bbbbbbbbdd.d.', '..dddbbbbbbbbbbdd..', '....dddbbbbbddd....', '........hh.........'],
@@ -509,65 +511,67 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // that has a member of it, recoloured (and for the few with a genuine physical difference —
   // the gharial's elongated snout, the lynx's tufted ears, elephant ear size by species — a
   // small shape change, same as Batch 1's reused-shape technique).
-  // Round 3: round 2 fixed "looks too much like a fox" but overcorrected into "too blobby in
-  // the body" on nearly every one of these. Kept the round head, ears, and connected tail from
-  // round 2, cut the torso down from four solid rows to two — a leaner build, same proportions
-  // as a real cat, not a fox's low slink or a bear's bulk.
+  // Round 4: three independent notes converged — "the fox body shape was fine, maybe add
+  // another layer... not whatever that is" / "weirdly shaped" / "glitchy." The round-3 custom
+  // redesign (reworked head, connected tail) was the problem, not the fix. Reverted to the
+  // native fox topology exactly as the vendored engine drew it — the shape nobody called
+  // glitchy — with one extra body row underneath for bulk, nothing else changed.
   'eastafrica:lion': {
-    // The mane — a shaggy ring that widens the head/neck silhouette, the one unmistakable
-    // lion cue nothing else sharing this base has. Approved in round 3; only the body slimmed.
-    pal: { o: '#c89a52', e: '#120e08', w: '#f0dca0', d: '#5a3e1c', m: '#8a5a24', t: '#5a3e1c' },
+    // Mane as its own ring around the head, touching it directly rather than merged into a
+    // reshaped head (that merge is what read as "glitchy").
+    pal: { o: '#c89a52', e: '#120e08', w: '#f0dca0', d: '#5a3e1c', m: '#8a5a24' },
     frames: [
-      ['.........mmm..', '........mooom.', '.......moeowm.', '.ttt..mooom...', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['.........mmm..', '........mooom.', '.......moeowm.', '..ttt.mooom...', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['......mmmm...', '.....mo...om.', '.....mmoooom.', '......moeowm.', 'ww.oooooooo..', '.wooooooooo..', '.wooooooo....', '..d.d..d.d...'],
+      ['......mmmm...', '.....mo...om.', '.....mmoooom.', '......moeowm.', '.w.oooooooo..', 'w.ooooooooo..', 'w.ooooooo....', '..d.d..d.d...'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
+  // Round 4: "still doesn't have stripes" — a couple of dark stripe marks added to the flank.
   'nepal:bengal-tiger': {
-    pal: { o: '#d8762c', e: '#120e08', w: '#f4e4c8', d: '#2a1a0c', t: '#2a1a0c' },
+    pal: { o: '#d8762c', e: '#120e08', w: '#f4e4c8', d: '#2a1a0c' },
     frames: [
-      ['..........o.o.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........o.o.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.odoooodo.', '.woodoooodo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.odoooodo.', 'w.oodoooodo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ododooo.', '.ooodooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oodoodoo', '.ooodooo.', '.d.d..d.d'],
     ] as const,
   },
   'nepal:snow-leopard': {
-    pal: { o: '#d8d4c8', e: '#1a1612', w: '#ffffff', d: '#8a8478', t: '#8a8478' },
+    pal: { o: '#d8d4c8', e: '#1a1612', w: '#ffffff', d: '#8a8478' },
     frames: [
-      ['..........o.o.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........o.o.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
   'borneo:sunda-clouded-leopard': {
-    pal: { o: '#9a8258', e: '#140f0a', w: '#d8c8a0', d: '#3a2e1c', t: '#3a2e1c' },
+    pal: { o: '#9a8258', e: '#140f0a', w: '#d8c8a0', d: '#3a2e1c' },
     frames: [
-      ['..........o.o.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........o.o.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
   'patagonia:puma-patagonia': {
-    pal: { o: '#b89868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30', t: '#5a4a30' },
+    pal: { o: '#b89868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30' },
     frames: [
-      ['..........o.o.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........o.o.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
 
@@ -575,25 +579,25 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // signature mark at this scale. Canada lynx and the Eurasian lynx (gaupe) look close enough
   // in silhouette to share it.
   'canada:canada-lynx': {
-    pal: { o: '#8a7a5c', e: '#140f0a', w: '#e0d4b8', d: '#4a3e2a', k: '#1a1410', t: '#4a3e2a' },
+    pal: { o: '#8a7a5c', e: '#140f0a', w: '#e0d4b8', d: '#4a3e2a', k: '#1a1410' },
     frames: [
-      ['..........k.k.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........k.k.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......k...k', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......k...k', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
   'norway:gaupe': {
-    pal: { o: '#9a8868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30', k: '#1a1410', t: '#5a4a30' },
+    pal: { o: '#9a8868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30', k: '#1a1410' },
     frames: [
-      ['..........k.k.', '.........oooo.', '........oeow..', '.tttooooooooo.', '..t..ooooooooo', '.....ooooooooo', '..d..d..d..d..'],
-      ['..........k.k.', '.........oooo.', '........oeow..', '..tttoooooooo.', '...t.ooooooooo', '....ooooooooo.', '..d..d..d..d..'],
+      ['.......k...k', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......k...k', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
     ] as const,
     young: [
-      ['......o.o', '.....oooo', '....oeow.', '.ttoooooo', '..oooooo.', '.d.d.d.d.'],
-      ['......o.o', '.....oooo', '....oeow.', '..ttooooo', '.oooooo..', '.d.d.d.d.'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
     ] as const,
   },
 
@@ -602,56 +606,60 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // legs would). Saltwater and estuarine crocodile are the same real species — Crocodylus
   // porosus — under this project's two different regional common names, so they share the
   // identical shape AND palette, not just the shape.
-  // Round 3: "still too thin with no texture or idea where the mouth is" — a visible row of
-  // pale teeth along the snout now marks the jaw line, the one thing a crocodilian silhouette
-  // needs to actually read as having a mouth.
+  // Round 4: "teeth are too big now" across all four — cut from four teeth to two, and sized
+  // down.
   'australia:saltwater-crocodile': {
     pal: { b: '#4a5a34', d: '#2a3420', e: '#0c0c08', t: '#5e6e44', w: '#e8e4d0' },
     frames: [
-      ['......e............', 'bbbbbbbb...........', 'wbwbwbwbbbbbbbbbtt.', 'bbbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt.'],
-      ['......e............', 'bbbbbbbb...........', 'wbwbwbwbbbbbbbbbbtt', 'bbbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..t.'],
+      ['......e............', 'bbbbbbbb...........', '.wbwbbbbbbbbbbbbtt.', 'bbbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt.'],
+      ['......e............', 'bbbbbbbb...........', '.wbwbbbbbbbbbbbbbtt', 'bbbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..tt'],
     ] as const,
     young: [
-      ['....e.......', 'bbbb........', 'wbwbbbbbbbtt', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
-      ['....e.......', 'bbbb........', 'wbwbbbbbbbtt', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e.......', 'bbbb........', '.wbwbbbbbtt.', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e........', 'bbbb.........', '.wbwbbbbbbtt.', 'bbbbbbbbbbbtt', '.dbdbdbdbd..t'],
     ] as const,
   },
+  // Round 4: "probably the best of them, make sure all the crocs are different in some way
+  // though" — saltwater and estuarine are the literal same species (Crocodylus porosus) under
+  // this project's two regional common names, so a slightly muddier, more olive-brown tone for
+  // Borneo's peat-stained blackwater rivers is the honest difference to draw, not a invented one.
   'borneo:estuarine-crocodile': {
-    pal: { b: '#4a5a34', d: '#2a3420', e: '#0c0c08', t: '#5e6e44', w: '#e8e4d0' },
+    pal: { b: '#5a5a30', d: '#343420', e: '#0c0c08', t: '#6e6e3e', w: '#e8e4d0' },
     frames: [
-      ['......e............', 'bbbbbbbb...........', 'wbwbwbwbbbbbbbbbtt.', 'bbbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt.'],
-      ['......e............', 'bbbbbbbb...........', 'wbwbwbwbbbbbbbbbbtt', 'bbbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..t.'],
+      ['......e............', 'bbbbbbbb...........', '.wbwbbbbbbbbbbbbtt.', 'bbbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt.'],
+      ['......e............', 'bbbbbbbb...........', '.wbwbbbbbbbbbbbbbtt', 'bbbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..tt'],
     ] as const,
     young: [
-      ['....e.......', 'bbbb........', 'wbwbbbbbbbtt', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
-      ['....e.......', 'bbbb........', 'wbwbbbbbbbtt', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e.......', 'bbbb........', '.wbwbbbbbtt.', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e........', 'bbbb.........', '.wbwbbbbbbtt.', 'bbbbbbbbbbbtt', '.dbdbdbdbd..t'],
     ] as const,
   },
+  // Round 4: "teeth a bit big, maybe a bit more of a tail" — smaller teeth, tail stretched
+  // further still.
   'eastafrica:nile-crocodile': {
-    // Same shape, a more yellow-olive tan than the saltwater crocodile's dark green-grey.
-    // Round 3 also asked for more tail — the pale tip stretched out an extra column.
     pal: { b: '#7a7a42', d: '#4a4a26', e: '#0c0c08', t: '#8e8e56', w: '#e8e4d0' },
     frames: [
-      ['......e.............', 'bbbbbbbb............', 'wbwbwbwbbbbbbbbbttt.', 'bbbbbbbbbbbbbbbbttt.', '.ddbddbddbddbdd.ttt.'],
-      ['......e.............', 'bbbbbbbb............', 'wbwbwbwbbbbbbbbbbttt', 'bbbbbbbbbbbbbbbbbttt', '.ddbddbddbddbdd..ttt'],
+      ['......e..............', 'bbbbbbbb.............', '.wbwbbbbbbbbbbbbtttt.', 'bbbbbbbbbbbbbbbbtttt.', '.ddbddbddbddbdd.tttt.'],
+      ['......e..............', 'bbbbbbbb.............', '.wbwbbbbbbbbbbbbbtttt', 'bbbbbbbbbbbbbbbbbtttt', '.ddbddbddbddbdd..tttt'],
     ] as const,
     young: [
-      ['....e.........', 'bbbb..........', 'wbwbbbbbbbttt.', 'bbbbbbbbbbttt.', '.dbdbdbdbd.ttt'],
-      ['....e.........', 'bbbb..........', 'wbwbbbbbbbttt.', 'bbbbbbbbbbttt.', '.dbdbdbdbd.ttt'],
+      ['....e.........', 'bbbb..........', '.wbwbbbbbttt..', 'bbbbbbbbbbttt.', '.dbdbdbdbd.ttt'],
+      ['....e..........', 'bbbb...........', '.wbwbbbbbbttt..', 'bbbbbbbbbbbttt.', '.dbdbdbdbd..ttt'],
     ] as const,
   },
+  // Round 4: "teeth are too big and on the top of the head?, I like the snout though" — the
+  // round-3 tooth row sat at the head/body junction instead of on the snout itself. Reverted
+  // the body to its round-2 shape (the one the user still likes) and moved the teeth to two
+  // small marks right at the snout tip, next to the eye, where a gharial's jaw actually is.
   'nepal:gharial': {
-    // The crocodile body, with its snout stretched into its own thin connected line ending in
-    // the gharial's real signature mark — the bulbous "ghara" tip male gharials grow. Teeth
-    // added along the thin snout too, same fix as the other three.
     pal: { b: '#4a6a4a', d: '#2a3e2a', e: '#0c0c08', t: '#5e7e5e', w: '#e8e4d0' },
     frames: [
-      ['be...................', '.wbwbwbwbbbbbbbbbbtt.', '.bbbbbbbbbbbbbbbbbtt.', '....ddbddbddbddbdd.tt'],
-      ['be...................', '.wbwbwbwbbbbbbbbbbbtt', '.bbbbbbbbbbbbbbbbbbtt', '....ddbddbddbddbdd..t'],
+      ['bwbe.................', '.bbbbbbbbbbbbbbbbbtt.', '.bbbbbbbbbbbbbbbbbtt.', '....ddbddbddbddbdd.tt'],
+      ['bwbe.................', '.bbbbbbbbbbbbbbbbbbtt', '.bbbbbbbbbbbbbbbbbbtt', '....ddbddbddbddbdd..t'],
     ] as const,
     young: [
-      ['be............', '.wbwbbbbbbbtt.', '.bbbbbbbbbbtt.', '...dbdbdbdbd.t'],
-      ['be............', '.wbwbbbbbbbtt.', '.bbbbbbbbbbtt.', '...dbdbdbdbd.t'],
+      ['bwbe............', '.bbbbbbbbbbtt...', '.bbbbbbbbbbtt...', '...dbdbdbdbd.t..'],
+      ['bwbe............', '.bbbbbbbbbbtt...', '.bbbbbbbbbbtt...', '...dbdbdbdbd.t..'],
     ] as const,
   },
 
@@ -786,30 +794,31 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     ] as const,
   },
 
-  // Guanaco: long leaning camelid neck, slender body, long legs, no hump. The steppe biome
-  // entry is the literal same species in a second Patagonia biome, so it's the same shape and
-  // palette, not a variant. Round 3: the top-most neck pixel sat alone above the head and read
-  // as a horn — camelids don't have one — so the neck line now starts flush with the head.
+  // Round 4: "what's the massive horn doing there still... this is just like a slimmer deer so
+  // use that basis without the horns" — the custom neck-sweep shape is gone. Built on the
+  // native deer body directly (ears instead of antlers), unmodified otherwise. The steppe
+  // biome entry is the literal same species in a second Patagonia biome, so it's the same
+  // shape and palette, not a variant.
   'patagonia:guanaco': {
-    pal: { b: '#c4a878', d: '#8a7050', e: '#140f0a', l: '#e8dcc0' },
+    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
-      ['.....l..', '....le..', '...l....', 'bb.l....', 'bbbbbbb.', '.bbbbbb.', '.d.d.d.d', '.d.d.d.d'],
-      ['.....l..', '....le..', '...l....', '.bb.l...', 'bbbbbbb.', '.bbbbbb.', 'd.d.d.d.', '.d.d.d.d'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', '.bbbbbbbbd.', 'wbbbbbbbb..', '.d.d..d.bbl', '.d.d..d.d..'],
     ] as const,
     young: [
-      ['...l', '..le', '.l..', 'bbb.', 'bbb.', 'd.d.'],
-      ['...l', '..le', '.l..', '.bbb', 'bbb.', '.d.d'],
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbbbd.', '.bbbbbbbb..', '.d.d..d.d..'],
     ] as const,
   },
   'patagonia:guanaco-steppe': {
-    pal: { b: '#c4a878', d: '#8a7050', e: '#140f0a', l: '#e8dcc0' },
+    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
-      ['.....l..', '....le..', '...l....', 'bb.l....', 'bbbbbbb.', '.bbbbbb.', '.d.d.d.d', '.d.d.d.d'],
-      ['.....l..', '....le..', '...l....', '.bb.l...', 'bbbbbbb.', '.bbbbbb.', 'd.d.d.d.', '.d.d.d.d'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', '.bbbbbbbbd.', 'wbbbbbbbb..', '.d.d..d.bbl', '.d.d..d.d..'],
     ] as const,
     young: [
-      ['...l', '..le', '.l..', 'bbb.', 'bbb.', 'd.d.'],
-      ['...l', '..le', '.l..', '.bbb', 'bbb.', '.d.d'],
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbbbd.', '.bbbbbbbb..', '.d.d..d.d..'],
     ] as const,
   },
 
@@ -826,8 +835,10 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // salamander's flat mottled toed body.
   // Round 3: "a little too round with no colour variation" — a lighter highlight tone across
   // the top of the body breaks up the solid brown mass.
+  // Round 4: "Recolor only" — warmer reddish-brown, closer to a real North Island brown
+  // kiwi's actual shaggy coat.
   'aotearoa:kiwi': {
-    pal: { b: '#6a5a46', d: '#3a2e20', e: '#120e08', w: '#2a2218', l: '#8a7a5e' },
+    pal: { b: '#7a4a32', d: '#4a2416', e: '#120e08', w: '#2a1810', l: '#a06a48' },
     frames: [
       ['.llbb.......', 'lbbbbb......', 'bbbbbbe.....', 'bbbbbbwww...', '.dbbb...ww..', '..d..d......'],
       ['.llbb.......', 'lbbbbb......', 'bbbbbbe.....', 'bbbbbbwww...', '.dbbb...ww..', '.d..d.......'],
@@ -849,27 +860,30 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['.bbbb..', 'byybybe', 'bbbbbb.', '.d.d.d.'],
     ] as const,
   },
-  // Round 3: still "Redraw (blob)" — a real sloth's signature is the dark mask around its
-  // eyes against a pale face, which the first version didn't make clear. Round head separated
-  // from the body, limbs reaching out to the sides.
+  // Round 4: "can't actually tell where the arms and legs are, supposed to perch in the
+  // trees/on trunks so needs that shape" — a standing silhouette was never going to say
+  // "sloth." Rebuilt as a genuine tree-clinging pose: one arm reaching up, the body hanging
+  // below it, the other limbs reaching out and down to grip — the same idea as the lace
+  // monitor's vertical clinging design, which read well.
   'costarica:three-toed-sloth': {
     pal: { b: '#8a8a6e', d: '#5e5e46', l: '#b4b494', e: '#1a1810', m: '#3a3828' },
     frames: [
-      ['...mmmm.....', '..lmeleml...', '..lllll.....', '.bbbbbbb....', 'dbbbbbbbd...', '.d.....d....'],
-      ['...mmmm.....', '..lmeleml...', '..lllll.....', '.bbbbbbb....', '.dbbbbbbbd..', '..d.....d...'],
+      ['..d.......', '.dmmmm....', 'dlmeleml..', '.dlllll...', '..bbbbb...', '.d.....d..', 'd.......d.'],
+      ['..d.......', '.dmmmm....', 'dlmeleml..', '.dlllll...', '..bbbbb...', 'd.....d...', '.d.......d'],
     ] as const,
     young: [
-      ['.mmm.', 'lmelm', '.lll.', 'bbbb.', 'd...d'],
-      ['.mmm..', 'lmelm.', '.lll..', 'bbbb..', '.d...d'],
+      ['d........', '.mmmm....', 'lmelm....', '.bbbb....', 'd.....d..'],
+      ['d........', '.mmmm....', 'lmelm....', '.bbbb....', '.d.....d.'],
     ] as const,
   },
+  // Round 4: "give it a bit more of a tail" — a trailing tail added behind the body.
   'nepal:himalayan-monal': {
     // A small perching-bird body plus the one thing a monal actually reads as at this scale —
     // a crest and genuinely iridescent, not just colourful, plumage.
     pal: { b: '#1a3a6a', d: '#0c1a30', l: '#2a6a5a', e: '#140f0a', c: '#8a3ab0', y: '#c0392b', w: '#f0ece0' },
     frames: [
-      ['..c..c..', '...ddd..', '...lll..', '...dlye.', '.ww.....', 'dww.....', '.dd.....'],
-      ['..c..c..', '...ddd..', '...lll..', '...dlye.', '.ww.....', 'dww.....', '.dd.....'],
+      ['..c..c....', '...ddd....', '...lll....', '...dlye...', '.ww.ddd...', 'dww..ddd..', '.dd...dd..'],
+      ['..c..c....', '...ddd....', '...lll....', '...dlye...', '.ww.ddd...', 'dww...ddd.', '.dd..dd...'],
     ] as const,
     young: [
       ['..ddd.', '..lll.', '..dle.', '.ww...', 'dww...', '.dd...'],
@@ -880,31 +894,32 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // legs, the same failure as lace-monitor's banding. Cut down to the two leg pairs a
   // salamander actually has, with mottled (not repeating) skin texture in between. Round 3:
   // "still looks a bit like a centipede, add one more layer on top for more girth" — a second
-  // body row doubles the thickness.
+  // body row doubles the thickness. Round 4: "still a bit like a centipede, maybe taper head
+  // and tail so you can tell where they are" — both ends narrowed relative to the middle.
   'japan:giant-salamander': {
     pal: { b: '#5a5444', d: '#36322a', e: '#0a0a06', w: '#7e7660' },
     frames: [
-      ['........e...........', 'wbwbbbbwbbbbwbwbbb..', 'wbwbbbbwbbbbwbwbbb..', 'dd..d.........dd.dd.'],
-      ['........e...........', '.wbwbbbbwbbbbwbwbbb.', '..wbwbbbbwbbbbwbwbbb', '.dd..d.........dd.dd'],
+      ['.......e.............', '..wbwbbbwbbbwbwbbb...', '..wbwbbbwbbbwbwbbb...', '...dd.........dd.....'],
+      ['.......e.............', '...wbwbbbwbbbwbwbb...', '...wbwbbbwbbbwbwbb...', '....dd.........dd....'],
     ] as const,
     young: [
       ['....e......', 'wbwbbbwbwbb', 'wbwbbbwbwbb', 'dd.....dd.d'],
       ['....e.......', '.wbwbbbwbwb.', '..wbwbbbwbw.', '.dd.....dd.d'],
     ] as const,
   },
-  // Round 2: still "wrong scale, redraw shape" — wider and bulkier, a real horn instead of a
-  // single pixel, and legs under both ends of the body instead of one bunched-up cluster.
-  // Round 3: "the horn is on its back" — it sat over the centre of the body instead of above
-  // the snout at the far right. Moved to line up with the face.
+  // Round 4: still "horn is on the back of the head instead of the front, body too round" —
+  // the horn was still several rows above the snout with head bulk in between, reading as
+  // mounted on a hump rather than the nose. Rebuilt flatter and more elongated (less round),
+  // with the horn as a short mark directly touching the snout tip, not floating above it.
   'nepal:greater-rhino': {
     pal: { b: '#6a685c', d: '#403e34', l: '#8e8c7c', e: '#0c0a06', h: '#3a362a' },
     frames: [
-      ['.........hhh.', '.........h...', '...bbbb.l....', '..bbbbbblll..', '.bbbbbbbbldll', '.bbbbbbbbb...', 'd.dbbbbd.....', '..ddddddd....', '..dd.dd.dd...', '..dd.dd.dd...'],
-      ['.........hhh.', '.........h...', '...bbbb.l....', '..bbbbbblll..', '.bbbbbbbbldll', '.bbbbbbbbb...', 'd.dbbbbd.....', '...dd.dd.....', '..dd.dd.dd...', '..dd.dd.dd...'],
+      ['....l.............', '.bbbbbb...........', 'bbbbbbbbbl..h.....', 'bbbbbbbbbbldh.....', '.bbbbbbbbbbb......', 'd.dbbbbbbd........', '..ddddddddd.......', '..dd.dd.dd........'],
+      ['....l.............', '.bbbbbb...........', 'bbbbbbbbbl..h.....', 'bbbbbbbbbbldh.....', '.bbbbbbbbbbb......', 'd.dbbbbbbd........', '...dd.dd.d........', '..dd.dd.dd........'],
     ] as const,
     young: [
-      ['.....h.', '....l..', '.bblll.', 'bbbdle.', '.dd....', '.ddd...', '.ddd...'],
-      ['.....h.', '....l..', '.bblll.', 'bbbdle.', '.dd....', '..dd...', '.ddd...'],
+      ['.bbbb.l..', 'bbbbbdhe.', '.bbbbb...', '.dd......', '.ddd.....', '.ddd.....'],
+      ['.bbbb.l..', 'bbbbbdhe.', '.bbbbb...', '.dd......', '..dd.....', '.ddd.....'],
     ] as const,
   },
   // Round 3: "got a gap in its body now" — the nose row had nothing else in it, breaking the
@@ -922,18 +937,19 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     ] as const,
   },
   // Round 3: "not horse shaped" — turned out the issue was the all-over alternating stripe
-  // pattern eating the body mass down to a thin zigzag. Rebuilt on the deer/stag quadruped
-  // body (proven for every other ungulate here), ears instead of antlers, a couple of clear
-  // dark stripe bands crossing a solid body instead of checkering every pixel.
+  // pattern eating the body mass down to a thin zigzag. Round 4: "better, maybe use the deer
+  // shape as a basis just without the horns and keep the colouring like that" — now built
+  // directly on the exact native deer body rows (ears instead of antlers), with the stripe
+  // colouring kept.
   'eastafrica:plains-zebra': {
-    pal: { b: '#f0ece0', d: '#1a1814', e: '#0a0806' },
+    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', w: '#ffffff' },
     frames: [
-      ['.......e.e.', '.......bbb.', '.......bdbe', 'dbbdbbdbbb.', '.bbdbbdbbd.', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bdbe', '.dbbdbbdbbd', 'bbdbbdbbd..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bdbl', 'lbbdbbdbb..', '.bbdbbdbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bdbl', '.bbdbbdbbd.', 'bbdbbdbb...', '.d.d..d.bbl', '.d.d..d.d..'],
     ] as const,
     young: [
-      ['.....e.', '.....bb', '....bdb', 'dbbdbb.', '.bbdbb.'],
-      ['.....e.', '.....bb', '....bdb', '.dbbdbb', 'bbdbb..'],
+      ['.......bbb.', 'lbbdbbdbb..', '.bbdbbdbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbdbbdbbd.', '.bbdbbdbb..', '.d.d..d.d..'],
     ] as const,
   },
   // Round 2: still read as a blob at the first fixed-up size — rounder, taller body mass this
@@ -941,29 +957,31 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // two attempts — dropped the 12-row, five-colour design for the proven big-bird template
   // that already worked for emu and lesser rhea (short neck instead of their long one), red
   // beak, plain round body.
+  // Round 4: "a little too big of a body" — one fewer row of body bulk.
   'aotearoa:takahe': {
     pal: { b: '#20467a', l: '#3a6a9a', e: '#c0302a', d: '#142c52' },
     frames: [
-      ['....l...', '...lee..', '....b...', '..bbbbb.', '.bbbbbbb', '.bbbbbbb', '..bbbbb.', '...d.d..', '...d.d..'],
-      ['....l...', '...lee..', '....b...', '..bbbbb.', '.bbbbbbb', '.bbbbbbb', '..bbbbb.', '..d.d...', '..d.d...'],
+      ['...l...', '..lee..', '...b...', '.bbbbb.', '.bbbbb.', '..d.d..', '..d.d..'],
+      ['...l...', '..lee..', '...b...', '.bbbbb.', '.bbbbb.', '.d.d...', '.d.d...'],
     ] as const,
     young: [
       ['..l...', '.lee..', '..b...', 'bbbbb.', '.bbb..', '..d.d.'],
       ['..l...', '.lee..', '..b...', 'bbbbb.', '.bbb..', '.d.d..'],
     ] as const,
   },
-  // Round 3: "now too much like a bear, needs to be more upright" — the trailing arm broke the
-  // read. Dropped it; the plain upright ape body (unmodified from its first version) is the
-  // one that actually reads as a primate.
+  // Round 4: still "too much like a bear, needs to be more upright" even after dropping the
+  // arm — the base shape itself (a four-on-the-ground stance) was the problem, not just the
+  // arm. Rebuilt genuinely upright: head held high, long arms reaching down both sides to the
+  // ground (a real orangutan's actual signature), shorter legs under a narrower torso.
   'borneo:bornean-orangutan': {
     pal: { b: '#9a5a2e', d: '#6a3a18', l: '#c0824a', e: '#120e08' },
     frames: [
-      ['.........l.', '.......lll.', '.bbbbbbllle', '.bbbbbbdll.', 'bbbbbbbb...', '.bbbbbb....', '.ddbbdd....', '..dd.dd....', '..dd.dd....'],
-      ['.........l.', '.......lll.', '.bbbbbbllle', '.bbbbbbdll.', 'bbbbbbbb...', '.bbbbbb....', '.ddbbdd....', '...d..d....', '..dd.dd....'],
+      ['...ll...', '..llll..', '..dlle..', '.bbbbb..', 'dbbbbbd.', 'dbbbbbd.', 'd.bbb.d.', 'd..b..d.', '...d.d..'],
+      ['...ll...', '..llll..', '..dlle..', '.bbbbb..', 'dbbbbbd.', 'dbbbbbd.', 'd.bbb.d.', '...d.d..', 'd..b..d.'],
     ] as const,
     young: [
-      ['....l.', '....l.', '.bblll', 'bbbdle', '.dd...', '.ddd..', '.ddd..'],
-      ['....l.', '....l.', '.bblll', 'bbbdle', '.dd...', '..dd..', '.ddd..'],
+      ['.ll..', 'dlle.', 'bbbb.', 'dbbd.', '.bb..', '.d.d.'],
+      ['.ll..', 'dlle.', 'bbbb.', 'dbbd.', '.bb..', 'd.d..'],
     ] as const,
   },
   // Round 3: "the beak is on the top of head for some reason" — the red crest dots floated
@@ -980,27 +998,24 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['..rr.', 'rlll.', 'dlew.', 'bb...', 'dd...'],
     ] as const,
   },
+  // Round 4: still the exact pass-1 note after two lighter touches — the wide multi-row block
+  // was the real problem, not the colour count. Rebuilt genuinely narrow and vertical: mostly
+  // neck, small head, thin legs, the actual proportions a side-on giraffe needs.
   'eastafrica:masai-giraffe': {
-    // Same patched hide and head, neck and legs each stretched by one row — the baked version
-    // read as a giraffe already, just a noticeably short-necked one. Round 3: still flagged
-    // (never revisited after the neck/leg stretch) — fewer colours in the body patches so they
-    // don't blend into noise at this scale.
-    pal: { b: '#c89850', d: '#6a4a26', l: '#e0c080', e: '#120e08' },
+    pal: { b: '#c89850', d: '#6a4a26', e: '#120e08' },
     frames: [
       [
-        '......bd..', '......bd..', '.....bb...', '....bbbb..', '...bbbbbb.', '...bbddbb.',
-        '...bbbbbb.', '..bbbbebb.', '...bddddb.', '.dddbbbbd.', 'd..dbbbbd.', '....dddd..', '.....dd...',
-        '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.',
+        '.bd.', '.bd.', '.bd.', '.bd.', '.bd.', '.bb.', 'bbbd', 'bebd', 'bddb',
+        '.bb.', '.bb.', '.bb.', '.bb.', '.dd.', '.dd.', '.dd.', 'd.d.', 'd.d.',
       ],
       [
-        '......bd..', '......bd..', '.....bb...', '....bbbb..', '...bbbbbb.', '...bbddbb.',
-        '...bbbbbb.', '..bbbbebb.', '...bddddb.', '.dddbbbbd.', 'd..dbbbbd.', '....dddd..', '.....d..d.',
-        '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.', '....dd.dd.',
+        '.bd.', '.bd.', '.bd.', '.bd.', '.bd.', '.bb.', 'bbbd', 'bebd', 'bddb',
+        '.bb.', '.bb.', '.bb.', '.bb.', '.dd.', '.dd.', 'd.d.', '.dd.', 'd.d.',
       ],
     ] as const,
     young: [
-      ['..bd', '.bb.', '.dd.', 'blle', 'ddd.', '.dd.', '.ddd', '.ddd', '.ddd', '.ddd', '.ddd'],
-      ['..bd', '.bb.', '.dd.', 'blle', 'ddd.', '.dd.', '..dd', '.ddd', '.ddd', '.ddd', '.ddd'],
+      ['.bd', '.bd', '.bb', 'bbd', 'beb', '.bb', '.bb', '.dd', '.dd', 'd.d'],
+      ['.bd', '.bd', '.bb', 'bbd', 'beb', '.bb', '.bb', '.dd', 'd.d', '.dd'],
     ] as const,
   },
   'aotearoa:kea': {
@@ -1096,16 +1111,17 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // the native rabbit visitor's hop (its `hop: true` already does that), not the rabbit's own
   // low crouching body shape. Built genuinely vertical: small head, tall torso, tucked
   // forearms, a bent hind leg, and a thick tail reaching the ground as its own connected
-  // balancing stroke — same shape as the eastern grey, recoloured.
+  // balancing stroke — same shape as the eastern grey, recoloured. Round 4: "not enough of a
+  // tail" — thickened to a real triangular prop reaching the ground.
   'australia:red-kangaroo': {
     pal: { l: '#cf8f60', e: '#160f09', w: '#e8c49a', d: '#74402a', t: '#74402a' },
     frames: [
-      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldt.', 'd.lldtt.', '..ddtt..', '..dd.tt.'],
-      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldt.', 'd.lldtt.', '..dd.tt.', '..ddtt..'],
+      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldtt', 'd.lldttt', '..ddttt.', '..dd.tt.', '.....tt.'],
+      ['..l.l...', '..lelw..', '..l.....', '..lll...', '.lllll..', '.llllld.', '.dllldtt', 'd.lldttt', '..dd.tt.', '..ddttt.', '.....tt.'],
     ] as const,
     young: [
-      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldt.', '.dd.tt.'],
-      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldt.', '.dd.tt.'],
+      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldtt', '.dd.tt.'],
+      ['.l.l...', '.lelw..', '.l.....', '.lll...', 'llllld.', '.dlldtt', '.dd.tt.'],
     ] as const,
     hop: true,
   },
@@ -1125,8 +1141,9 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 3: "too much leg" — the dense bdbdbd checker running through the body read as many
   // small legs, the same failure as the centipede complaints elsewhere. Solid body, two real
   // legs, spines kept only at the crown.
+  // Round 4: "Recolor only" — darker charcoal body, brighter cream spines for real contrast.
   'australia:echidna': {
-    pal: { b: '#4a3a28', d: '#2a2018', l: '#c8a860', e: '#0e0a06' },
+    pal: { b: '#3a2e20', d: '#1e160e', l: '#e0c088', e: '#0a0806' },
     frames: [
       ['.d.d.d.l.', '.bbbblll.', '.bbbbdle.', 'bbbbb....', '.dd..dd..', '.dd..dd..'],
       ['.d.d.d.l.', '.bbbblll.', '.bbbbdle.', 'bbbbb....', '.dd..dd..', '.dd..dd..'],
