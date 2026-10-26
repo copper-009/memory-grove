@@ -22,12 +22,13 @@ function PaneWidget() {
         {bundle.biomeOverride == null && ' · following the season'}
       </p>
       {/* Every biome in every region now has real trees through `mfEnvs.ts`'s registry
-          (Phase 3) — picking anything here changes what's drawn. `mg-spiny.js` (its other
-          species is a baobab, `bulbous`-formed, needing its own `tree.body()` hook not yet
-          attempted — see `_forms.js`'s header) and the all-one-form `pt-beech.js`/
-          `ea-riverine.js` are the only biomes still only covering one kind-slot's worth of
-          real species. Ground colour, hill colour and the landscape (lake/river/meadow/
-          mountains, `mfLandscape.ts`) now follow the biome too.
+          (Phase 3) — picking anything here changes what's drawn, both kind-slots, every
+          region, `palm` and `bulbous` species included (`_forms.js`'s `palmBody`/
+          `bulbousBody`). The all-one-form `pt-beech.js`/`ea-riverine.js` are the only
+          biomes still only covering one kind-slot's worth of real species — no conifer
+          exists among either biome's own species, so their pine-kind slot stays on the
+          engine's own generic default. Ground colour, hill colour and the landscape
+          (lake/river/meadow/mountains, `mfLandscape.ts`) now follow the biome too.
           Creatures, sky colour and time of day still don't — trees, ground and water only,
           so far. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>

@@ -185,6 +185,44 @@ function palmBody(bark, fronds, arcSpan) {
   };
 }
 
+/** `tree.body()` hook: a baobab — a trunk that swells near the ground and tapers as it
+ * rises, carrying a small, sparse crown at the top, rather than any width `trees.js`'s own
+ * trunk-painting (a flat `tw` the whole way up) can give it. A genuinely different problem
+ * from `palmBody`'s: that one changes *how much* of the height is trunk; this one changes
+ * the trunk's own *width* row by row. The old renderer's own `bulbousTrunk`
+ * (`plantSprite.ts`, retrieved from git history as a reference only, same as every other
+ * form here) was consulted for the general idea — swell near one end, taper toward the
+ * other — but not copied formula-for-formula, since re-deriving it directly against this
+ * engine's own ground-relative coordinates (`base` down to `base - trunkH`, not that
+ * file's own `top`-relative ones) was more reliable than translating between the two by
+ * hand without a way to check the translation. Verified against a real render, same as
+ * `palmBody` was, not just read as code. */
+function bulbousBody(bark, crownBlobs, crownHoleExtra) {
+  return (c) => {
+    const { t, h, ancient, cx, base, put, pick, tone, W, H } = c;
+    const trunkH = Math.max(5, Math.round(h * 0.6));
+    const baseW = ancient ? 3 : t.stage >= OLD || h >= THICK_TRUNK_H ? 2 : 1;
+    const bulgeW = baseW + Math.max(2, Math.round(baseW * 2.2));
+    const bulgeH = Math.round(trunkH * 0.75); // how far up from the ground the swell reaches
+    for (let y = base - trunkH; y <= base; y++) {
+      const fromGround = base - y; // 0 at the ground, trunkH at the top of the trunk region
+      const intoBulge = fromGround < bulgeH ? 1 - fromGround / bulgeH : 0;
+      const halfW = (baseW / 2) + (bulgeW / 2 - baseW / 2) * intoBulge;
+      const x0 = Math.round(cx - halfW), x1 = Math.round(cx + halfW);
+      for (let x = x0; x <= x1; x++) {
+        let col = x === x0 ? bark[0] : x === x1 ? bark[2] : bark[1];
+        if (fromGround < 3) col = bark[2]; // a dark skirt where the roots flare into the ground
+        put(x, y, col);
+      }
+    }
+    const tw = baseW, tx0 = cx - Math.floor(tw / 2);
+    const top = 1, ch = Math.max(2, h - trunkH + 2);
+    Object.assign(c, { trunkH, tw, tx0, top, ch });
+    roundCrownForm(c, crownBlobs, crownHoleExtra, 0.55);
+    return { top, ch };
+  };
+}
+
 /** A low spiky dome: a grass tree's skirt, a tussock, elephant grass. */
 function hummockCrownForm(c, bladesScale) {
   const { tone, W, H, w, top, ch, cx, R } = c;
@@ -225,5 +263,5 @@ function groundTheme(ground, hills) {
   };
 }
 
-window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme, palmBody };
+window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme, palmBody, bulbousBody };
 })();

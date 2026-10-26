@@ -37,7 +37,7 @@ export const BIOME_SPECIES: Record<string, BiomeSpeciesSlots> = {
   satoyama: { pine: 'sugi', round: 'yamazakura' },
   hokkaido: { pine: 'ezo-spruce', round: 'shirakaba' },
   'eastern-rainforest': { pine: 'traveller-palm', round: 'madagascar-rosewood' },
-  'spiny-forest': { round: 'octopus-tree' },
+  'spiny-forest': { pine: 'grandidiers-baobab', round: 'octopus-tree' },
   'cloud-forest': { pine: 'tree-fern-cr', round: 'oak-costa-rica' },
   'lowland-rainforest': { pine: 'heliconia', round: 'ceiba' },
   'acacia-savanna': { pine: 'whistling-thorn', round: 'umbrella-thorn' },

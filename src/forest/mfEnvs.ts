@@ -1,16 +1,16 @@
 /**
  * Which `src/envs/*.js` file (if any) draws a given biome through the vendored engine's own
  * `AF.env` registry — Phase 3 (`DECISIONS.md`). Every biome in every region has an entry
- * now. `mg-spiny` is the one biome still only covering its round-kind slot — its other
- * species is `bulbous` (a baobab's swollen trunk), which needs its own `tree.body()` hook,
- * a different problem from `palmBody`'s (see `_forms.js`'s own header); every `palm`
- * species across every region now draws for real (`bo-mangroveriver`, `au-tropical`,
- * `au-rainforest`, `mg-rainforest`, via `MGForms.palmBody`). `pt-beech`/`ea-riverine` cover
- * round-kind with a palette rotation instead of a shape change, since every species in
- * those two biomes shares one `PlantForm`. A biome with no entry here still renders: the
- * vendored engine's own default (no special environment, `trees.js`'s generic pine/round
- * trees) is what every biome got before this registry existed at all, same as it still
- * gets for an untouched kind-slot in the biomes above.
+ * now, and (`pt-beech`/`ea-riverine` aside — see below) both kind-slots draw a real species
+ * everywhere: every `palm` (`bo-mangroveriver`, `au-tropical`, `au-rainforest`,
+ * `mg-rainforest`) and the one `bulbous` species tried (`mg-spiny`'s baobab) all draw for
+ * real now, via `MGForms.palmBody`/`bulbousBody` (see `_forms.js`'s own header for what
+ * distinguishes the two). `pt-beech`/`ea-riverine` cover round-kind with a palette rotation
+ * instead of a shape change, since every species in those two biomes shares one
+ * `PlantForm` — their pine-kind slot stays on the engine's own generic default, the one
+ * genuine remaining gap. A biome with no entry here still renders: that same generic
+ * default (no special environment, `trees.js`'s generic pine/round trees) is what every
+ * biome got before this registry existed at all.
  */
 export const BIOME_ENVS: Record<string, string> = {
   eucalypt: 'au-eucalypt',

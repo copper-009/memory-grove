@@ -610,3 +610,19 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     header comment corrected — `mg-spiny` (a baobab, `bulbous`-formed, a genuinely different
     problem: a trunk whose *width* varies by row, not just one that's taller) is now the
     only biome left with an empty kind-slot.
+- **`bulbous`, the same evening — Grandidier's baobab, `mg-spiny`'s last empty slot.** A
+  genuinely different problem from `palmBody`'s (a taller trunk, same constant width): the
+  trunk swells near the ground and tapers as it rises. Read the old renderer's own
+  `bulbousTrunk` (`plantSprite.ts`, retrieved from git history, reference only) for the
+  general idea, but didn't trust a hand-translation of its particular `top`-relative
+  coordinate math into this engine's ground-relative one (`base` downward) — re-derived it
+  directly instead (`fromGround = base - y`, 1 at the ground tapering to 0 by `bulgeH`
+  rows up), on the basis that getting a translation subtly backwards and not noticing until
+  a render is exactly the failure mode this session's whole harness habit exists to catch.
+  Rendered first try: an immediately recognisable baobab, swollen base, small sparse crown,
+  right next to the octopus tree for comparison — no second attempt needed this time,
+  unlike the gum crown earlier tonight. Checked at density too (513 trees), no artefacts.
+  `_forms.js`'s own header, `mfEnvs.ts`'s, and `pane_widget.tsx`'s comments all updated —
+  `pt-beech`/`ea-riverine`'s pine-kind slot (no conifer exists in either biome, nothing to
+  put there) is the one remaining gap of this kind, and it's a real absence of source
+  species, not an unexercised hook.

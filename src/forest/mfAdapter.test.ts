@@ -56,9 +56,9 @@ describe('toMfTree species name', () => {
   });
 
   it('leaves a kind-slot unnamed when the env draws the engine\'s own generic default', () => {
-    const spiny = ALL_BIOMES.get('spiny-forest')!; // mg-spiny.js: round only, pine left generic
-    expect(toMfTree(makePlant(PINE_SEED), spiny).speciesName).toBeUndefined();
-    expect(toMfTree(makePlant(ROUND_SEED), spiny).speciesName).toBe('Octopus tree');
+    const beech = ALL_BIOMES.get('southern-beech')!; // pt-beech.js: round only (rotation), no conifer in the biome so pine is left generic
+    expect(toMfTree(makePlant(PINE_SEED), beech).speciesName).toBeUndefined();
+    expect(toMfTree(makePlant(ROUND_SEED), beech).speciesName).toBe('Coihue'); // 50 % 3 === 2
   });
 
   it('leaves speciesName unset with no biome at all (the synthetic-fixture harness path)', () => {
