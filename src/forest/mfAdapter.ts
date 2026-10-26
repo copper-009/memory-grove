@@ -34,6 +34,7 @@ import type { Biome } from '../regions/types';
 import { envForBiome } from './mfEnvs';
 import { BIOME_SPECIES } from './mfSpecies';
 import { landscapeForBiome } from './mfLandscape';
+import type { LandscapeKey } from './mfLandscape';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -163,7 +164,7 @@ export interface MfMood {
  * `special` swaps in a region-specific tree environment (`mfEnvs.ts`) when the current
  * biome has one; `landscape` now follows the biome too (`mfLandscape.ts`), rather than
  * always being Golden LAKE regardless of what's picked. */
-export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: 'lake' | 'river' | 'meadow' = 'lake'): MfMood {
+export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: LandscapeKey = 'lake'): MfMood {
   return {
     time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
     environment: special, landscape, landmark: 'none',

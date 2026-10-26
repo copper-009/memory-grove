@@ -521,3 +521,37 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     further, more considered pass rather than guessed at alongside it. Sky colour and time
     of day still don't follow the biome either, for the same reason: `Backdrop`'s own sky
     arrays are a separate concept from `Biome` with no stated mapping between them yet.
+- **The `mountains` landscape, decided properly this time: by what each place is actually
+  like, not by `landform` alone.** The user's own instruction after the entry above: "go to
+  the actual ecological and environmental data, likelihood of there being mountainous
+  regions with that ecosystem and general idea of what the place looks like." Went through
+  all 26 biomes against that test — `landform: 'peaks'` turned out to be a poor proxy on its
+  own, since `mountains.js` draws snow unconditionally above a fixed height
+  (`SNOW_LINE`), and several `peaks`-tagged biomes are tropical/subtropical rainforest that
+  would never see snow at any elevation they actually reach.
+  - **Five biomes get it**, each checked against what the real place is: `alpine`
+    (Australia) — the Snowy Mountains/Australian Alps, snow most winters; `southern-alps`
+    (Aotearoa) — literally the Southern Alps, Aoraki/Mount Cook; `rocky-alpine` (Canada) —
+    literally Rocky Mountain alpine; `himalaya` (Nepal) — literally the High Himalaya,
+    Earth's highest range; `southern-beech` (Patagonia) — Nothofagus forest growing right
+    up against the Andes (Torres del Paine, Fitz Roy) — the forest itself sits lower, but
+    the snow-capped backdrop is part of what makes it recognisably Patagonian.
+  - **Left on `meadow` despite `landform: 'peaks'`**, deliberately: `rainforest`
+    (Australia), `eastern-rainforest` (Madagascar) and `cloud-forest` (Costa Rica) are all
+    subtropical/tropical montane rainforest — genuinely hilly, never near a snow line at
+    any elevation within the biome — and `dipterocarp` (Borneo) is explicitly *lowland*
+    rainforest by name. `satoyama` (Japan) sits at village/foothill elevation by
+    definition, below whatever peak its `volcano` landform describes seeing in the
+    distance.
+  - **A real tradeoff, stated rather than hidden:** `fjord-plateau` (Norway) is genuinely a
+    case for `mountains` too — fjord country is classically snow-capped — but `hasWater`
+    already claims it for `lake`, since the water is the more defining feature of a fjord
+    than the walls around it, and a biome can only have one landscape. Checked visually:
+    the lake with plain hills still reads fine, just without the snow a fjord would really
+    have.
+  - Verified with a sparse-fixture render (the earlier dense renders mostly hid the far
+    ridge, where the difference actually shows, behind hundreds of overlapping crowns) —
+    `alpine` and `southern-beech` both show clear, sharp, snow-capped peaks against
+    `eucalypt`'s plain rolling hills for direct comparison. No errors across any of the six
+    checked (five new `mountains` biomes plus `fjord-plateau`, confirming the lake tradeoff
+    looks right).
