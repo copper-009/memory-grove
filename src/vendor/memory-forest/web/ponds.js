@@ -65,9 +65,29 @@ function flatBox(env, p, xs) {
   return { cx, cy: y0 + h / 2, w, h, x0: cx - w / 2, x1: cx + w / 2, y0, y1: y0 + h };
 }
 AF.POND = { OVERHANG: POND_OVERHANG, BACK: POND_BACK, ROWS: POND_ROWS };  // for a visit's ponds (web/visit.js)
+// Memory Garden change: an arid biome's own env (`AF.envOf(env).arid` — set per `src/envs/
+// *.js` file, `scenery.js`'s normal registry mechanism, not a new one) has no real
+// watercourse a study break could plausibly fill — a lake appearing in the outback or
+// Madagascar's spiny forest would be the wrong read entirely. Drawn as a dry, cracked
+// depression instead: no reeds (nothing grows at its edge), no glint (nothing to catch the
+// light), coloured from the biome's own ground tone rather than a fixed desert palette so
+// it still matches whichever arid biome it's in.
+function drawDryPond(g, env, p, cx, cy, w, h) {
+  const th = env.theme;
+  const base = mix(hex(th.g1), [40, 30, 20], 0.15), edge = mix(base, [0, 0, 0], 0.3), speck = mix(base, [0, 0, 0], 0.4), crackLine = mix(base, [0, 0, 0], 0.7);
+  ellipseFill(g, cx, cy, w, h, (q, x, y) => q > 0.8 ? edge : ((x * 5 + y * 3) % 13 === 0 ? speck : base));
+  const R = rng(p.it.seed);
+  g.fillStyle = rgb(crackLine);
+  for (let k = 0; k < 5; k++) {
+    const ang = R() * Math.PI * 2, len = (0.3 + R() * 0.35) * Math.min(w, h);
+    pxLine(g, cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len * 0.5);
+  }
+  if (env.afterItem) env.afterItem(g, p);
+}
 AF.drawPond = function (g, env, p) {
   if (!p.it.first) return;
   const th = env.theme, { cx, cy, w, h } = AF.pondBox(env, p);
+  if (AF.envOf(env).arid) { drawDryPond(g, env, p, cx, cy, w, h); return; }
   const water = hex((th.frozen ? '#dfe8f0' : th.water) || DEFAULT_WATER);
   const hz = p.hz * (th.hzStep || 0.1) * 3, c0 = mix(water, hex(th.haze), hz), c1 = mix(c0, [255, 255, 255], 0.45), deep = mix(c0, [0, 0, 0], th.frozen ? 0.06 : 0.18), edge = mix(hex(th.g1), [0, 0, 0], 0.2);
   ellipseFill(g, cx, cy, w, h, (q, x, y) => q > 0.8 ? edge : y < cy - h * 0.2 ? deep : ((x * 3 + y * 7) % 11 === 0 ? c1 : c0));

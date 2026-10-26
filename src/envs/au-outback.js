@@ -21,6 +21,9 @@ const GHOST_BARK = H6(['#f2efe6', '#d4cfc0', '#ada798']);
 
 AF.env('au-outback', {
   theme: window.MGForms.groundTheme(["#b06a42","#9a5433","#c08a52"], ["#8fa2c0","#6e8a92"], ["#6b9fd4","#86b4de","#a2c8e6","#bdd7ea","#d4e3ea","#e6efe8"]),
+  // ponds.js: a long-break "pond" here is a dry cracked depression, not water — red-centre
+  // desert, nowhere near any real watercourse.
+  arid: true,
   pals: { pine: OAK_CROWN, round: GHOST_CROWN },
   tree: {
     width: widthForm(0.8, 1),

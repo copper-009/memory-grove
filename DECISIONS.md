@@ -649,3 +649,40 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   biome's most recognisable tree and arguably one of Africa's. Swapped it in, same pattern
   as the four palm swaps earlier tonight. Verified isolated and at density — an immediately
   recognisable baobab silhouette next to the umbrella thorn, no errors.
+- **Cherry blossom made seasonal instead of always-on.** Yamazakura (`jp-satoyama.js`) had
+  its pale pink blossom tone baked permanently into its crown palette, so the live grove was
+  always in bloom regardless of the real date. `pals` is now a getter rather than a plain
+  object — `trees.js`'s `sprite()` reads `spec.pals` fresh on every tree drawn, never
+  caches it — so a plain `isSpringInJapan()` check (`new Date().getMonth()`, matching
+  Japan's own `seasons.months`) can swap in the pink crown only in March–May, with no
+  vendor file needing to know seasons exist at all. `src/regions/japan/index.ts`'s own
+  yamazakura record is left showing the blossom deliberately — that's the species'
+  identifying illustration, not the live scene. Verified with the Playwright render harness:
+  screenshotted under today's real date (plain green) and with the check temporarily forced
+  true (pink bloom), then reverted the force.
+- **The `peak` landmark wired up, three biomes.** `mfAdapter.ts` hardcoded `landmark:
+  'none'` always, even though `mfLoader.ts`'s `loadMfScenery` already fully supported
+  loading `landmarks/${mood.landmark}.js` on demand and the vendored engine ships a
+  ready-made `landmarks/peak.js` nothing had ever pointed at. New `mfLandmark.ts`, same
+  shape as `mfLandscape.ts`'s own `MOUNTAIN_BIOMES` call: `satoyama` (Mt Fuji — the
+  region's own `volcanic-cone` backdrop already describes "snow on its upper third"),
+  `himalaya` (Everest), `alpine` (Kosciuszko, "under snow in winter" per the biome's own
+  note). Deliberately left out despite a real single famous peak in each case: Costa Rica's
+  volcano is smoking and tropical (no snow, no plume support in `peak.js`), Borneo's
+  Kinabalu is bare granite (never snow-capped), East Africa's Kilimanjaro is real and
+  ice-capped but the region's own backdrop calls it "far off... on the heat-shimmered
+  plain" while `peak.js` draws close and large — reasoning kept in `mfLandmark.ts`'s own
+  header. Verified with the render harness: `peak` visible in all three target biomes,
+  absent from `outback` as a control.
+- **A long-break "pond" in an arid biome draws dry, not blue — the one vendor-file edit
+  this session, marked inline per this file's own rule.** `ponds.js` has no concept of
+  biome ecology on its own; `AF.envOf(env).arid`, set per `src/envs/*.js` file through the
+  normal `scenery.js` registry (not a new mechanism), is the one signal available to it.
+  `au-outback.js` and `mg-spiny.js` (the two biomes a lake genuinely couldn't form in) now
+  set it; `AF.drawPond` branches on it to draw a cracked, reed-less, glint-less depression
+  coloured from the biome's own ground tone (`th.g1`) instead of calling into the water
+  path at all. Scoped to the long-break pond only, not `findPuddles`/`drawPuddle` — real
+  deserts do get occasional rain and transient puddles, a genuinely different, more
+  transient event than a lake appearing where a user took a study break. Verified with the
+  `gappy` fixture (several ponds) against `outback` (dry, cracked, no blue) and `satoyama`
+  as a control (ordinary water, unaffected).
