@@ -10,9 +10,10 @@
  *
  * Golden hour always (`presets.py`'s first preset's `weather: 'clear'`, `time:
  * 'golden_hour'` — porting the full preset-picker/live-weather system is further work, not
- * this); `landmark: 'none'` always too. The trees, ground colour, hill-silhouette colour
- * and landscape (lake / river / meadow / mountains, `mfLandscape.ts`) all follow the biome
- * now. Every biome has an entry in `mfEnvs.ts`'s registry (Phase 3), each one naming its
+ * this). The trees, ground colour, hill-silhouette colour, landscape (lake / river / meadow
+ * / mountains, `mfLandscape.ts`) and landmark (a single snow-capped peak, `mfLandmark.ts`,
+ * `'none'` everywhere else) all follow the biome now. Every biome has an entry in
+ * `mfEnvs.ts`'s registry (Phase 3), each one naming its
  * own two species via `mfSpecies.ts` (`speciesNameFor`, below) and colouring the ground and
  * hills from `Biome.ground` and the region's own matching `Backdrop` (`_forms.js`'s
  * `groundTheme`), rather than drawing the vendored engine's generic trees on its generic
@@ -37,6 +38,7 @@ import { envForBiome } from './mfEnvs';
 import { BIOME_SPECIES } from './mfSpecies';
 import { landscapeForBiome } from './mfLandscape';
 import type { LandscapeKey } from './mfLandscape';
+import { landmarkForBiome } from './mfLandmark';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -165,11 +167,13 @@ export interface MfMood {
  * biome changes the *time of day* or *weather* yet, only its trees, ground and water).
  * `special` swaps in a region-specific tree environment (`mfEnvs.ts`) when the current
  * biome has one; `landscape` now follows the biome too (`mfLandscape.ts`), rather than
- * always being Golden LAKE regardless of what's picked. */
-export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: LandscapeKey = 'lake'): MfMood {
+ * always being Golden LAKE regardless of what's picked. `landmark` follows the biome the
+ * same way (`mfLandmark.ts`) — `'none'` for every biome without one defining snow-capped
+ * peak of its own. */
+export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: LandscapeKey = 'lake', landmark = 'none'): MfMood {
   return {
     time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
-    environment: special, landscape, landmark: 'none',
+    environment: special, landscape, landmark,
     moon: Math.round(moonPhase * 1000) / 1000, source: 'preset',
   };
 }
@@ -230,12 +234,13 @@ export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAd
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';
   const { landscape, sceneSuffix } = landscapeForBiome(opts.biome);
+  const landmark = landmarkForBiome(opts.biome?.key);
   return {
     trees: grove.plants.map((p) => toMfTree(p, opts.biome)),
     stats,
     visitors: toMfVisitors(stats),
     anniversaries: [],
-    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape),
+    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark),
     journal: '',
     events: [],
     merged: null,
