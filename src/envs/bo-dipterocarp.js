@@ -24,6 +24,7 @@ const RAFFLESIA_CROWN = H6(['#2a1a18', '#4a2420', '#7a3a2e', '#a85a40', '#f0e0d0
 const RAFFLESIA_BARK = H6(['#3a2a24', '#281c18', '#181210']);
 
 AF.env('bo-dipterocarp', {
+  theme: window.MGForms.groundTheme(["#2e4228","#22331e","#3c5636"]),
   pals: { pine: RAFFLESIA_CROWN, round: DIPTEROCARP_CROWN },
   tree: {
     width: widthForm(0.5, 1.25),

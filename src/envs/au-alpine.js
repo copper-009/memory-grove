@@ -22,6 +22,7 @@ const SNOWGUM_CROWN = H6(['#2e3a2e', '#3e4e38', '#526444', '#6c8054', '#8fa470']
 const SNOWGUM_BARK = H6(['#e0d8c6', '#a89a84', '#7a6a58']);
 
 AF.env('au-alpine', {
+  theme: window.MGForms.groundTheme(["#7f8a6e","#5e6b52","#8c9a72"]),
   pals: { pine: EVERLASTING_CROWN, round: SNOWGUM_CROWN },
   tree: {
     width: widthForm(0.6, 1.1),

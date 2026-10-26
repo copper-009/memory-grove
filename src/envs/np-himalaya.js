@@ -21,6 +21,7 @@ const RHODO_CROWN = H6(['#1e301e', '#2c462a', '#3c5e38', '#527a4a', '#c0302a']);
 const RHODO_BARK = H6(['#7a6a58', '#564a3c', '#342c24']);
 
 AF.env('np-himalaya', {
+  theme: window.MGForms.groundTheme(["#8a8878","#6a6858","#9ca08a"]),
   pals: { pine: JUNIPER_CROWN, round: RHODO_CROWN },
   tree: {
     width: widthForm(0.6, 0.95),

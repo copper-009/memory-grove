@@ -23,6 +23,7 @@ const SAKURA_CROWN = H6(['#2e3a28', '#405034', '#556842', '#708654', '#f0c8d4'])
 const SAKURA_BARK = H6(['#8a7a6a', '#60544a', '#3a322c']);
 
 AF.env('jp-satoyama', {
+  theme: window.MGForms.groundTheme(["#6a7a4e","#4e6038","#7d9056"]),
   pals: { pine: SUGI_CROWN, round: SAKURA_CROWN },
   tree: {
     width: widthForm(0.75, 1.05),

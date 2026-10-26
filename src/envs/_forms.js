@@ -162,5 +162,19 @@ function hummockCrownForm(c, bladesScale) {
   }
 }
 
-window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm };
+/** `tree.theme(th, mood, night)` hook (`theme.js`'s `AF.theme`, called before weather):
+ * the ground plane's own colours, from `Biome.ground` (`[far, near, grass]` —
+ * `src/regions/types.ts`'s own doc comment, written for the old renderer and never read
+ * since the engine switch until now) mapped onto `g0`/`g1`/`grass` in that same order.
+ * Hill silhouette colours (`th.far`/`th.near`) are deliberately left at the time-of-day
+ * default — real hills read hazier/bluer than the ground in front of them (atmospheric
+ * perspective), and `Biome` has no separate hill-colour data to pull from; reusing the
+ * ground tones there would likely read too saturated for something meant to sit at a
+ * distance, so this leaves them alone rather than guessing without a way to check it. */
+function groundTheme(ground) {
+  const [g0, g1, grass] = ground;
+  return (th) => { th.g0 = g0; th.g1 = g1; th.grass = grass; };
+}
+
+window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme };
 })();

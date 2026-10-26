@@ -21,6 +21,7 @@ const FIG_CROWN = H6(['#122a18', '#1d4324', '#2b5c30', '#3f7842', '#5d9656']);
 const FIG_BARK = H6(['#8a8470', '#615c4c', '#3a372c']);
 
 AF.env('au-tropical', {
+  theme: window.MGForms.groundTheme(["#35492e","#273a24","#426038"]),
   pals: { pine: MANGROVE_CROWN, round: FIG_CROWN },
   tree: {
     width: widthForm(1, 1.3),

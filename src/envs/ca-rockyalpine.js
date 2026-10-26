@@ -21,6 +21,7 @@ const FLEABANE_CROWN = H6(['#3a4030', '#4c5640', '#606e50', '#788a62', '#b090c8'
 const FLEABANE_BARK = H6(['#5a5444', '#403c30', '#28251c']);
 
 AF.env('ca-rockyalpine', {
+  theme: window.MGForms.groundTheme(["#8a8a7e","#6a6a5e","#9c9c8e"]),
   pals: { pine: FIR_CROWN, round: FLEABANE_CROWN },
   tree: {
     width: widthForm(0.65, 0.55),

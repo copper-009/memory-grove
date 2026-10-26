@@ -21,6 +21,7 @@ const BIRCH_CROWN = H6(['#36442a', '#485a34', '#5e7242', '#7a8e54', '#9eac70']);
 const BIRCH_BARK = H6(['#f0ece2', '#c8c2b4', '#8a8478']);
 
 AF.env('jp-hokkaido', {
+  theme: window.MGForms.groundTheme(["#c6d0da","#a6b4c2","#dce4ec"]),
   pals: { pine: SPRUCE_CROWN, round: BIRCH_CROWN },
   tree: {
     width: widthForm(0.7, 0.85),

@@ -8,15 +8,18 @@
  * *shape* `AF.mount(root, data, opts)` actually reads, built from Memory Grove's existing
  * `Grove`/`CreatureRoster` (`src/data/*.ts`) instead of an Anki collection.
  *
- * Golden Lake's own landscape/weather/time always (`presets.py`'s first preset —
- * `landscape: 'lake'`, `landmark: 'none'`, `weather: 'clear'`, `time: 'golden_hour'`); only
- * the trees change per biome. Every biome now has an entry in `mfEnvs.ts`'s registry
- * (Phase 3), each one naming its own two species via `mfSpecies.ts` (`speciesNameFor`,
- * below) rather than drawing generic trees. Milestone animals are Memory Forest's own stock
- * roster (rabbit/deer/fox/owl/heron/stag/cabin/bear/squirrel/eagle — ported from
- * `milestones.py`'s `VISITORS`/`visitors()` directly, not Memory Grove's own per-region
- * creature roster, since the vendored `visitors.js` only knows its own built-in `VISITORS`
- * table) — creatures aren't region-specific yet, for any biome.
+ * Golden hour always (`presets.py`'s first preset's `weather: 'clear'`, `time:
+ * 'golden_hour'` — porting the full preset-picker/live-weather system is further work, not
+ * this); `landmark: 'none'` always too. The trees, ground colour and landscape (lake /
+ * river / meadow, `mfLandscape.ts`) all follow the biome now. Every biome has an entry in
+ * `mfEnvs.ts`'s registry (Phase 3), each one naming its own two species via `mfSpecies.ts`
+ * (`speciesNameFor`, below) and colouring the ground from `Biome.ground`, rather than
+ * drawing the vendored engine's generic trees on its generic grass by a generic lake.
+ * Milestone animals are Memory Forest's own stock roster (rabbit/deer/fox/owl/heron/stag/
+ * cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/`visitors()`
+ * directly, not Memory Grove's own per-region creature roster, since the vendored
+ * `visitors.js` only knows its own built-in `VISITORS` table) — creatures aren't
+ * region-specific yet, for any biome.
  *
  * Not yet wired: `calendar` (the study heatmap — a separate panel below the forest, not
  * needed for the forest scene itself), `journal` (a stub empty string — `journal.py` isn't
@@ -30,6 +33,7 @@ import type { CreatureRoster } from '../data/milestones';
 import type { Biome } from '../regions/types';
 import { envForBiome } from './mfEnvs';
 import { BIOME_SPECIES } from './mfSpecies';
+import { landscapeForBiome } from './mfLandscape';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -153,15 +157,16 @@ export interface MfMood {
 }
 
 /** `presets.py`'s first preset, "Golden hour by the lake" (`envs/natural.json`'s own
- * `preset` block) — Memory Forest's default scene, hardcoded for this first milestone
- * rather than porting the full preset-picker/live-weather system. `special` swaps in a
- * region-specific environment (`mfEnvs.ts`) when the current biome has one; everything else
- * about the scene (landscape, weather, time) stays Golden Lake's regardless — swapping
- * those too, per biome, is further Phase 3 work, not this. */
-export function goldenLakeMood(moonPhase = 0, special = 'natural'): MfMood {
+ * `preset` block) — Memory Forest's default scene, with its own time/weather hardcoded
+ * rather than porting the full preset-picker/live-weather system (still a stated gap: no
+ * biome changes the *time of day* or *weather* yet, only its trees, ground and water).
+ * `special` swaps in a region-specific tree environment (`mfEnvs.ts`) when the current
+ * biome has one; `landscape` now follows the biome too (`mfLandscape.ts`), rather than
+ * always being Golden LAKE regardless of what's picked. */
+export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: 'lake' | 'river' | 'meadow' = 'lake'): MfMood {
   return {
     time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
-    environment: special, landscape: 'lake', landmark: 'none',
+    environment: special, landscape, landmark: 'none',
     moon: Math.round(moonPhase * 1000) / 1000, source: 'preset',
   };
 }
@@ -211,18 +216,20 @@ export interface MfAdapterOptions {
   biome?: Biome;
 }
 
-/** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — Golden Lake's own
- * landscape/weather/time always, a region-specific tree environment when `opts.biomeKey`
- * has one (see module comment for what else is deliberately not wired up yet). */
+/** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — golden hour always, a
+ * region-specific tree environment and ground colour when `opts.biome` has one, and a
+ * landscape (lake / river / meadow) that follows `opts.biome.hasWater` (see module comment
+ * for what's deliberately not wired up yet: time of day, weather, hill-silhouette colour). */
 export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';
+  const { landscape, sceneSuffix } = landscapeForBiome(opts.biome);
   return {
     trees: grove.plants.map((p) => toMfTree(p, opts.biome)),
     stats,
     visitors: toMfVisitors(stats),
     anniversaries: [],
-    mood: goldenLakeMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural'),
+    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape),
     journal: '',
     events: [],
     merged: null,
@@ -235,7 +242,7 @@ export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAd
     maxWidth: opts.maxWidth ?? 900,
     credit: false,
     environmentName: 'Natural',
-    sceneName: 'Golden hour by the lake',
+    sceneName: `Golden hour ${sceneSuffix}`,
     inAnki: false,
     showForest: true,
     calendar: null,

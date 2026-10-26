@@ -4,10 +4,12 @@
  * `mfAdapter`/`mfLoader` — not our own renderer, which this replaced (see `DECISIONS.md`
  * § "Region packs" / "Phase 2" for the full account of the switch).
  *
- * Known gap, honestly: the vendored engine still always draws Golden Lake's own landscape/
- * weather/time — only the *trees* change per biome (`mfEnvs.ts`'s registry, Phase 3).
- * Every biome in every region now has an entry there, though a few only cover one
- * kind-slot's worth of real species (`mfEnvs.ts`'s own comment explains which, and why).
+ * Known gap, honestly: the vendored engine still always draws golden hour, in clear
+ * weather — time of day and weather don't follow the biome yet, only its trees (`mfEnvs.ts`'s
+ * registry, Phase 3), ground colour and landscape (`mfLandscape.ts` — lake, river or
+ * meadow, from `Biome.hasWater`). Every biome in every region now has a tree entry, though
+ * a few only cover one kind-slot's worth of real species (`mfEnvs.ts`'s own comment
+ * explains which, and why).
  * Per-tree/per-creature tooltips and hover are the vendored engine's own
  * (`tooltips.js`, `hover.js`) — nothing to wire up here for those, unlike the old renderer's
  * `hitTest.ts`; the one addition is each tree's species name, carried through by

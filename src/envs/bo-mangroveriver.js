@@ -19,6 +19,7 @@ const BAKAU_CROWN = H6(['#1c3220', '#28492c', '#386138', '#4c7a48', '#6a9660']);
 const BAKAU_BARK = H6(['#7a6450', '#55463a', '#332b24']);
 
 AF.env('bo-mangroveriver', {
+  theme: window.MGForms.groundTheme(["#3a4a30","#2a3822","#4c603e"]),
   pals: { round: BAKAU_CROWN },
   tree: {
     trunk: (c) => {

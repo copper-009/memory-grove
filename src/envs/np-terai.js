@@ -22,6 +22,7 @@ const GRASS_CROWN = H6(['#4a5430', '#5e6c3c', '#76864c', '#92a260', '#d8d4b8']);
 const GRASS_BARK = H6(['#6a6244', '#4c4630', '#302c1e']);
 
 AF.env('np-terai', {
+  theme: window.MGForms.groundTheme(["#6a7a3e","#4e5e2c","#8a9850"]),
   pals: { pine: GRASS_CROWN, round: SAL_CROWN },
   tree: {
     width: widthForm(0.8, 1.1),

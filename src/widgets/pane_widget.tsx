@@ -26,8 +26,10 @@ function PaneWidget() {
           (`mg-spiny.js`, `bo-mangroveriver.js`, and the all-one-form `pt-beech.js`/
           `ea-riverine.js`) only cover one kind-slot's worth of real species, the other
           left on the engine's own generic default — see those files' own headers for why
-          (mostly `tree.body()`, not exercised yet, for palm/bulbous forms). Creatures,
-          ground and sky still don't change per biome yet — trees only, so far. */}
+          (mostly `tree.body()`, not exercised yet, for palm/bulbous forms). Ground colour
+          and the landscape (lake/river/meadow, `mfLandscape.ts`) now follow the biome too.
+          Creatures, sky colour and time of day still don't — trees, ground and water only,
+          so far. */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {bundle.region.biomes.map((b, i) => {
           const active = i === bundle.biomeIndex;

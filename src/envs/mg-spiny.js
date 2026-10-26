@@ -20,6 +20,7 @@ const OCTOPUS_CROWN = H6(['#2c3a26', '#3c4e32', '#4e6640', '#668052', '#849c6a']
 const OCTOPUS_BARK = H6(['#8a8068', '#625a48', '#3c382c']);
 
 AF.env('mg-spiny', {
+  theme: window.MGForms.groundTheme(["#b3794a","#8a5a36","#c79660"]),
   pals: { round: OCTOPUS_CROWN },
   tree: {
     trunk: (c) => {

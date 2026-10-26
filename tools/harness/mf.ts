@@ -15,6 +15,8 @@ import { buildMfPayload } from '../../src/forest/mfAdapter';
 import { loadMfScenery } from '../../src/forest/mfLoader';
 import type { AnkiForestApi } from '../../src/forest/mfLoader';
 import type { FixtureName } from '../../src/data/fixtures';
+import { REGIONS } from '../../src/regions';
+import type { Biome } from '../../src/regions/types';
 
 declare global {
   interface Window {
@@ -22,11 +24,17 @@ declare global {
   }
 }
 
+function findBiome(biomeKey: string | undefined): Biome | undefined {
+  if (!biomeKey) return undefined;
+  for (const region of REGIONS) for (const biome of region.biomes) if (biome.key === biomeKey) return biome;
+  return undefined;
+}
+
 window.__renderMf = (opts) => {
   const cards = fixture(opts.fixtureName, FIXED_NOW);
   const scan = scanCards(cards, { now: FIXED_NOW, rolloverHour: 4 });
   const grove = mergeOld(buildGrove(scan));
-  const payload = buildMfPayload(grove, emptyRoster(), { maxWidth: opts.width, biomeKey: opts.biomeKey });
+  const payload = buildMfPayload(grove, emptyRoster(), { maxWidth: opts.width, biomeKey: opts.biomeKey, biome: findBiome(opts.biomeKey) });
   const root = document.getElementById('stage')!;
   loadMfScenery(payload.mood).then(() => {
     (window.AnkiForest as AnkiForestApi).mount(root, payload, { now: true });

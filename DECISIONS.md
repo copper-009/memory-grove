@@ -473,3 +473,51 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   the one piece that's purely additive regardless of how the rest resolves, since the
   docstring states Peaceful gets it too ("Peaceful only ever brings good things") — a
   reasonable place to start once the relationship above is actually decided.
+- **Real bug reported live: species names didn't match the tree shape drawn.** Root cause:
+  `toMfTree`'s species name used to come from `p.species` (`forest.ts`'s `seed % 1024`, then
+  taken modulo the biome's own plant count) — a completely independent roll from `kind`
+  (`seed % 100 < 34`), the one that actually decides the shape. No reason for the two to
+  agree; for a four-species biome, roughly a 75% chance the tooltip named something other
+  than what was on screen. Fixed with a new single source of truth, `mfSpecies.ts`'s
+  `BIOME_SPECIES`, naming exactly which plant key each env file draws on each kind-slot
+  (including the two biomes — `pt-beech`, `ea-riverine` — that rotate several species
+  across one slot by seed, matching the rotation each env's own hooks already use). A new
+  `mfAdapter.test.ts` checks every registered biome against the real region data, not a
+  fixture, which would have caught a typo in any of the 27 hand-written key mappings.
+- **"Slowly start customising per biome for landscape changes that make sense
+  ecologically,"** the user's next ask, turned out to be mostly reconnecting data that
+  already existed. `Biome.ground: [far, near, grass]` and `Biome.hasWater` (`src/regions/
+  types.ts`) were written for the old renderer, fully populated for all 26 biomes, and
+  unused since the engine switch — their own doc comments state exactly the intent this
+  now fulfils. The vendored engine's own `AF.env()` registry (the same one every tree hook
+  already uses) also takes a `theme(th, mood, night)` hook that can set the ground plane's
+  colour directly, and the engine ships four ready-made landscapes
+  (`src/vendor/memory-forest/web/landscapes/`: `lake`, `river`, `meadow`, `mountains`) —
+  no new rendering code needed, just picking and wiring what's already there.
+  - `_forms.js`'s new `groundTheme([g0, g1, grass])` sets the ground gradient and grass
+    accent from a biome's own `Biome.ground` array, added to all 26 env files' `AF.env()`
+    registration (one line each, generated from a small script rather than typed by hand,
+    then checked with `node --check` and reviewed in a dense render — orange-red outback,
+    near-black boreal floor, icy hokkaido, golden savanna, all visibly distinct from each
+    other and from the single green every biome shared before). Hill-silhouette colours
+    (`th.far`/`th.near`) are deliberately left alone — `Biome` has no separate hill-colour
+    data, and reusing the ground tones there would likely read too saturated for something
+    meant to sit at a distance (atmospheric perspective), not something to guess at without
+    a way to check it against real hills.
+  - `mfLandscape.ts`'s `landscapeForBiome` picks `lake`, `river` or `meadow` straight from
+    `Biome.hasWater` and whether the key contains "river" — not a second table, so it can't
+    drift from the data that already states the intent. `goldenLakeMood` (renamed
+    `goldenHourMood` — it isn't always the lake any more) and `sceneName` (now "Golden hour
+    by the lake" / "by the river" / "in the grove", not hardcoded) both follow. Verified
+    across seven biomes spanning all three landscapes and a wide colour range — a real
+    winding river splitting the forest for `riverine-woodland`, a lake and reflection for
+    `boreal` and `hokkaido`, plain ground for `outback`/`himalaya`/`acacia-savanna`/
+    `eucalypt` — all in one dense render each, no errors.
+  - Deliberately not this round: `mountains` (the fourth landscape — a taller, sharper
+    horizon with snow above the treeline). `landform: 'peaks'` isn't a reliable signal on
+    its own (several lush rainforest biomes use it for their own ridgelines, not snow), so
+    picking which biomes earn the dramatic mountain silhouette is a smaller, more
+    deliberate judgment call than the data-driven water/ground work above — left for a
+    further, more considered pass rather than guessed at alongside it. Sky colour and time
+    of day still don't follow the biome either, for the same reason: `Backdrop`'s own sky
+    arrays are a separate concept from `Biome` with no stated mapping between them yet.
