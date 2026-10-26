@@ -450,4 +450,336 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
     ] as const,
   },
+
+  // -- Batch 2: not a redesign but a re-pairing. `baked.generated.ts` drew japan:macaque and
+  // madagascar:indri from a different, smaller procedural template than the one it gave
+  // vervet-monkey, spider-monkey, ring-tailed-lemur and silvered-langur — and the gallery
+  // review kept every one of THOSE, so that's the template that actually reads well at this
+  // scale. Both entries below swap onto it, keeping each species' own already-chosen palette
+  // intent (macaque's pink face tone, indri's amber eyes) rather than inventing new ones.
+  'japan:macaque': {
+    // Same seated-primate shape as the kept vervet-monkey/spider-monkey/ring-tailed-lemur —
+    // the compact template baked.generated.ts gave macaque instead didn't read well. Keeps the
+    // old bake's own three tones, just repointed: its spare pink-red `n` becomes the macaque's
+    // signature bare face, sitting right where the shape already carries a single accent pixel.
+    pal: { b: '#9a8a70', d: '#6a5c48', l: '#c2b299', e: '#d4766a' },
+    frames: [
+      ['d.....l.', '.d.bblll', '..bbbdle', '...dd...', '...ddd..', '...ddd..'],
+      ['d.....l.', '.d.bblll', '..bbbdle', '...dd...', '....dd..', '...ddd..'],
+    ] as const,
+    young: [
+      ['....l.', '...lll', '.bbdle', 'bbbb..', '.dd...', '.dd...'],
+      ['....l.', '...lll', '.bbdle', 'bbbb..', '.dd...', '.dd...'],
+    ] as const,
+  },
+  'madagascar:indri': {
+    // Same tailless, upright shape as the kept sifaka — a close cousin, both Indriidae, and a
+    // much better fit than the oversized bespoke template baked.generated.ts drew indri with.
+    // Palette is the old bake's own: black body, white rump patch, and the amber-gold eyes a
+    // real indri actually has.
+    pal: { b: '#1a1814', d: '#0a0908', l: '#f0ece2', e: '#d8c060' },
+    frames: [
+      ['.....l.', '..bblll', '.bbbdle', 'dddd...', '..ddd..', '..ddd..'],
+      ['.....l.', '..bblll', '.bbbdle', 'dddd...', '...dd..', '..ddd..'],
+    ] as const,
+    young: [
+      ['....l.', '...lll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+      ['....l.', '...lll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+    ] as const,
+  },
+
+  // -- Batch 3: fresh shapes for species groups with no kept sibling to borrow and nothing in
+  // the vendored visitor set that fits — a big cat, a crocodilian, an elephant, a horned
+  // ungulate and a ratite don't resemble a fox, heron, owl, bear, squirrel or deer closely
+  // enough to just recolour one. Each shape below was sketched, rendered to a PNG with a small
+  // throwaway Node script and eyeballed before being written here, specifically because this
+  // round has no proven shape to lean on and the first-pass bake's own "blob" failures came
+  // from skipping that step. One shape per real-world body plan, reused across every region
+  // that has a member of it, recoloured (and for the few with a genuine physical difference —
+  // the gharial's elongated snout, the lynx's tufted ears, elephant ear size by species — a
+  // small shape change, same as Batch 1's reused-shape technique).
+  'eastafrica:lion': {
+    pal: { o: '#c89a52', e: '#120e08', w: '#f0dca0', d: '#5a3e1c' },
+    frames: [
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  'nepal:bengal-tiger': {
+    pal: { o: '#d8762c', e: '#120e08', w: '#f4e4c8', d: '#2a1a0c' },
+    frames: [
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  'nepal:snow-leopard': {
+    pal: { o: '#d8d4c8', e: '#1a1612', w: '#ffffff', d: '#8a8478' },
+    frames: [
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  'borneo:sunda-clouded-leopard': {
+    pal: { o: '#9a8258', e: '#140f0a', w: '#d8c8a0', d: '#3a2e1c' },
+    frames: [
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  'patagonia:puma-patagonia': {
+    pal: { o: '#b89868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30' },
+    frames: [
+      ['.......o...o', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......o...o', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+
+  // Same cat shape, tufted (dark-tipped) ears instead of plain ones — a lynx's one real
+  // signature mark at this scale. Canada lynx and the Eurasian lynx (gaupe) look close enough
+  // in silhouette to share it.
+  'canada:canada-lynx': {
+    pal: { o: '#8a7a5c', e: '#140f0a', w: '#e0d4b8', d: '#4a3e2a', k: '#1a1410' },
+    frames: [
+      ['.......k...k', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......k...k', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  'norway:gaupe': {
+    pal: { o: '#9a8868', e: '#140f0a', w: '#e8dcc0', d: '#5a4a30', k: '#1a1410' },
+    frames: [
+      ['.......k...k', '.......oooo.', '........oeow', 'ww.oooooooo.', '.wooooooo...', '..d.d..d.d..'],
+      ['.......k...k', '.......oooo.', '........oeow', '.w.oooooooo.', 'w.ooooooo...', '..d.d..d.d..'],
+    ] as const,
+    young: [
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+      ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+
+  // Crocodile: low flat body, pale tail tip, legs rendered as belly-ridge texture rather than
+  // individual limbs (reads better for a reptile lying flush with the ground than discrete
+  // legs would). Saltwater and estuarine crocodile are the same real species — Crocodylus
+  // porosus — under this project's two different regional common names, so they share the
+  // identical shape AND palette, not just the shape.
+  'australia:saltwater-crocodile': {
+    pal: { b: '#4a5a34', d: '#2a3420', e: '#0c0c08', t: '#5e6e44' },
+    frames: [
+      ['......e...........', 'bbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt'],
+      ['......e...........', 'bbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..t'],
+    ] as const,
+    young: [
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+    ] as const,
+  },
+  'borneo:estuarine-crocodile': {
+    pal: { b: '#4a5a34', d: '#2a3420', e: '#0c0c08', t: '#5e6e44' },
+    frames: [
+      ['......e...........', 'bbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt'],
+      ['......e...........', 'bbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..t'],
+    ] as const,
+    young: [
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+    ] as const,
+  },
+  'eastafrica:nile-crocodile': {
+    // Same shape, a more yellow-olive tan than the saltwater crocodile's dark green-grey.
+    pal: { b: '#7a7a42', d: '#4a4a26', e: '#0c0c08', t: '#8e8e56' },
+    frames: [
+      ['......e...........', 'bbbbbbbbbbbbbbbtt.', '.ddbddbddbddbdd.tt'],
+      ['......e...........', 'bbbbbbbbbbbbbbbbtt', '.ddbddbddbddbdd..t'],
+    ] as const,
+    young: [
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+      ['....e.......', 'bbbbbbbbbbtt', '.dbdbdbdbd.t'],
+    ] as const,
+  },
+  'nepal:gharial': {
+    // The crocodile body, with its snout stretched into its own thin connected line ending in
+    // the gharial's real signature mark — the bulbous "ghara" tip male gharials grow.
+    pal: { b: '#4a6a4a', d: '#2a3e2a', e: '#0c0c08', t: '#5e7e5e' },
+    frames: [
+      ['be...................', '.bbbbbbbbbbbbbbbbbtt.', '....ddbddbddbddbdd.tt'],
+      ['be...................', '.bbbbbbbbbbbbbbbbbbtt', '....ddbddbddbddbdd..t'],
+    ] as const,
+    young: [
+      ['be............', '.bbbbbbbbbbtt.', '...dbdbdbdbd.t'],
+      ['be............', '.bbbbbbbbbbtt.', '...dbdbdbdbd.t'],
+    ] as const,
+  },
+
+  // Elephant: ear flap, trunk hanging and curling forward from the head, four distinct legs.
+  // African elephants have noticeably larger ears than Asian (and Bornean, a Asian-elephant
+  // subspecies) — the one real difference between these three, so the ear flap is trimmed for
+  // the smaller-eared two rather than drawing a second body shape.
+  'eastafrica:african-elephant': {
+    pal: { b: '#8a8a88', d: '#5a5a58', e: '#0c0c0a', l: '#b4b4b0' },
+    frames: [
+      ['...lllll...........', '..lllllllbb........', '.lllllbbbbbb.......', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbd......', 'bb.b..bb.b..d......', '............d......', '............dd.....'],
+      ['...lllll...........', '..lllllllbb........', '.lllllbbbbbb.......', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbb......', '.bb.b..bb.b.d......', '............d......', '...........dd......'],
+    ] as const,
+    young: [
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', 'bb.b..b...', '.......b..', '.......b..'],
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', '.bb.b..b..', '........b.', '.......b..'],
+    ] as const,
+  },
+  'borneo:bornean-elephant': {
+    pal: { b: '#9a8a78', d: '#6a5a4a', e: '#0c0c0a', l: '#c4b4a0' },
+    frames: [
+      ['....lll............', '...lllllbb.........', '..lllbbbbbb........', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbd......', 'bb.b..bb.b..d......', '............d......', '............dd.....'],
+      ['....lll............', '...lllllbb.........', '..lllbbbbbb........', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbb......', '.bb.b..bb.b.d......', '............d......', '...........dd......'],
+    ] as const,
+    young: [
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', 'bb.b..b...', '.......b..', '.......b..'],
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', '.bb.b..b..', '........b.', '.......b..'],
+    ] as const,
+  },
+  'nepal:asian-elephant': {
+    pal: { b: '#8a7a68', d: '#5a4a3a', e: '#0c0c0a', l: '#b4a490' },
+    frames: [
+      ['....lll............', '...lllllbb.........', '..lllbbbbbb........', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbd......', 'bb.b..bb.b..d......', '............d......', '............dd.....'],
+      ['....lll............', '...lllllbb.........', '..lllbbbbbb........', 'bbbbbbbbbbbbe......', 'bbbbbbbbbbbbb......', '.bb.b..bb.b.d......', '............d......', '...........dd......'],
+    ] as const,
+    young: [
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', 'bb.b..b...', '.......b..', '.......b..'],
+      ['.lll......', 'lllbbb....', 'bbbbbbe...', '.bb.b..b..', '........b.', '.......b..'],
+    ] as const,
+  },
+
+  // Horned ungulates: the native deer/stag body and legs (already proven), with the branching
+  // antler rows swapped for a single horn shape — short straight spikes for the goat-family
+  // members whose real horns are short and fairly straight, a backward curl for the two whose
+  // horns actually curve (bighorn ram, and bharal — the "blue sheep," closer kin to sheep than
+  // to true goats despite the name).
+  'canada:mountain-goat': {
+    pal: { b: '#e8e4d8', l: '#ffffff', w: '#ffffff', d: '#b8b4a4', h: '#3a342a' },
+    frames: [
+      ['.......h.h.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......h.h.', '...........', '.......d.d.', 'wbbbbbbbd..', '.bbbbbbbbb.', '.d.d..d.bbl'],
+    ] as const,
+    young: [
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
+    ] as const,
+  },
+  'nepal:himalayan-tahr': {
+    pal: { b: '#8a6a44', l: '#b89468', w: '#d8bc94', d: '#5a4228', h: '#2a2018' },
+    frames: [
+      ['.......h.h.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......h.h.', '...........', '.......d.d.', 'wbbbbbbbd..', '.bbbbbbbbb.', '.d.d..d.bbl'],
+    ] as const,
+    young: [
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
+    ] as const,
+  },
+  'japan:serow': {
+    pal: { b: '#4a4038', l: '#6a5e52', w: '#8a7e70', d: '#2a2420', h: '#141210' },
+    frames: [
+      ['.......h.h.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......h.h.', '...........', '.......d.d.', 'wbbbbbbbd..', '.bbbbbbbbb.', '.d.d..d.bbl'],
+    ] as const,
+    young: [
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
+    ] as const,
+  },
+  'canada:bighorn-sheep': {
+    pal: { b: '#a4886a', l: '#d8c4a0', w: '#e8dcc0', d: '#6a5640', h: '#4a3e2c' },
+    frames: [
+      ['......hh...', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['......h....', '...........', '.......d.d.', 'wbbbbbbbd..', '.bbbbbbbbb.', '.d.d..d.bbl'],
+    ] as const,
+    young: [
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
+    ] as const,
+  },
+  'nepal:bharal': {
+    pal: { b: '#7a8290', l: '#a8aebc', w: '#c8ccd4', d: '#4a4e58', h: '#2a2c30' },
+    frames: [
+      ['......hh...', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['......h....', '...........', '.......d.d.', 'wbbbbbbbd..', '.bbbbbbbbb.', '.d.d..d.bbl'],
+    ] as const,
+    young: [
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'wbbbbbbb...', '.bbbbbbbb..', '.d.d..d.d..'],
+    ] as const,
+  },
+
+  // Ratite: long neck, small head, round flightless body, two strong legs. Emu and lesser
+  // rhea differ mainly in colour (sooty black-brown vs a paler grey-brown).
+  'australia:emu': {
+    pal: { b: '#4a3e2e', d: '#241c14', e: '#0a0806', l: '#6e5e48' },
+    frames: [
+      ['....b.', '....b.', '....be', '....b.', '.bbbb.', 'bbbbb.', 'bbbbb.', '..d.d.', '..d.d.'],
+      ['....b.', '....b.', '....be', '....b.', '.bbbb.', 'bbbbb.', 'bbbbb.', '.d.d..', '.d.d..'],
+    ] as const,
+    young: [
+      ['..b.', '..b.', '..be', '.bb.', 'bbb.', '.d..'],
+      ['..b.', '..b.', '..be', '.bb.', 'bbb.', '.d..'],
+    ] as const,
+  },
+  'patagonia:lesser-rhea': {
+    pal: { b: '#8a7a62', d: '#5a4e3c', e: '#0c0a08', l: '#b0a088' },
+    frames: [
+      ['....b.', '....b.', '....be', '....b.', '.bbbb.', 'bbbbb.', 'bbbbb.', '..d.d.', '..d.d.'],
+      ['....b.', '....b.', '....be', '....b.', '.bbbb.', 'bbbbb.', 'bbbbb.', '.d.d..', '.d.d..'],
+    ] as const,
+    young: [
+      ['..b.', '..b.', '..be', '.bb.', 'bbb.', '.d..'],
+      ['..b.', '..b.', '..be', '.bb.', 'bbb.', '.d..'],
+    ] as const,
+  },
+
+  // Guanaco: long leaning camelid neck, slender body, long legs, no hump. The steppe biome
+  // entry is the literal same species in a second Patagonia biome, so it's the same shape and
+  // palette, not a variant.
+  'patagonia:guanaco': {
+    pal: { b: '#c4a878', d: '#8a7050', e: '#140f0a', l: '#e8dcc0' },
+    frames: [
+      ['......l.', '.....l..', '....le..', '...l....', 'bb.l....', 'bbbbbbb.', '.bbbbbb.', '.d.d.d.d', '.d.d.d.d'],
+      ['......l.', '.....l..', '....le..', '...l....', '.bb.l...', 'bbbbbbb.', '.bbbbbb.', 'd.d.d.d.', '.d.d.d.d'],
+    ] as const,
+    young: [
+      ['...l', '..le', '.l..', 'bbb.', 'bbb.', 'd.d.'],
+      ['...l', '..le', '.l..', '.bbb', 'bbb.', '.d.d'],
+    ] as const,
+  },
+  'patagonia:guanaco-steppe': {
+    pal: { b: '#c4a878', d: '#8a7050', e: '#140f0a', l: '#e8dcc0' },
+    frames: [
+      ['......l.', '.....l..', '....le..', '...l....', 'bb.l....', 'bbbbbbb.', '.bbbbbb.', '.d.d.d.d', '.d.d.d.d'],
+      ['......l.', '.....l..', '....le..', '...l....', '.bb.l...', 'bbbbbbb.', '.bbbbbb.', 'd.d.d.d.', '.d.d.d.d'],
+    ] as const,
+    young: [
+      ['...l', '..le', '.l..', 'bbb.', 'bbb.', 'd.d.'],
+      ['...l', '..le', '.l..', '.bbb', 'bbb.', '.d.d'],
+    ] as const,
+  },
 };
