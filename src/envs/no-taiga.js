@@ -20,7 +20,7 @@ const ROWAN_CROWN = H6(['#243222', '#33462c', '#455c3a', '#5b764c', '#c0302a']);
 const ROWAN_BARK = H6(['#7a7058', '#564e3c', '#342f24']);
 
 AF.env('no-taiga', {
-  theme: window.MGForms.groundTheme(["#2e3e28","#20301e","#3c523a"]),
+  theme: window.MGForms.groundTheme(["#2e3e28","#20301e","#3c523a"], ["#5a7088","#3a5060"]),
   pals: { pine: SPRUCE_CROWN, round: ROWAN_CROWN },
   tree: {
     width: widthForm(0.7, 0.85),

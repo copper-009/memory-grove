@@ -26,7 +26,7 @@ const UMBRELLA_CROWN = H6(['#2a3420', '#3a4a2c', '#4d643a', '#647e4e', '#869c6a'
 const UMBRELLA_BARK = H6(['#7a6a52', '#564a38', '#342c20']);
 
 AF.env('ea-savanna', {
-  theme: window.MGForms.groundTheme(["#b3a060","#9a8a4e","#c6b878"]),
+  theme: window.MGForms.groundTheme(["#b3a060","#9a8a4e","#c6b878"], ["#c0ac72","#9a8a4e"]),
   pals: { pine: THORN_CROWN, round: UMBRELLA_CROWN },
   tree: {
     width: widthForm(0.85, 1.2),

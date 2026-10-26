@@ -166,14 +166,23 @@ function hummockCrownForm(c, bladesScale) {
  * the ground plane's own colours, from `Biome.ground` (`[far, near, grass]` —
  * `src/regions/types.ts`'s own doc comment, written for the old renderer and never read
  * since the engine switch until now) mapped onto `g0`/`g1`/`grass` in that same order.
- * Hill silhouette colours (`th.far`/`th.near`) are deliberately left at the time-of-day
- * default — real hills read hazier/bluer than the ground in front of them (atmospheric
- * perspective), and `Biome` has no separate hill-colour data to pull from; reusing the
- * ground tones there would likely read too saturated for something meant to sit at a
- * distance, so this leaves them alone rather than guessing without a way to check it. */
-function groundTheme(ground) {
+ *
+ * `hills`, optional, is `[far, near]` for the hill silhouette (`th.far`/`th.near`) — *not*
+ * from `Biome` (it has no hill-colour data of its own) but from the region's own matching
+ * `Backdrop.far`/`.near` (`mfLandscape.ts`'s pairing logic documents which backdrop was
+ * picked for which biome, and why). Kept as a second, optional array rather than folded
+ * into `ground` because the two come from genuinely different source data, picked by
+ * different logic, even though they land on the same hook. The sky gradient itself
+ * (`th.sky`) is deliberately left alone — a `Backdrop`'s six stops weren't authored
+ * against this engine's specific "always golden hour" lighting, and swapping the whole sky
+ * risks clashing with it in a way a quick render can't rule out as easily as a hill colour
+ * can; a smaller, more deliberate piece than this round attempts. */
+function groundTheme(ground, hills) {
   const [g0, g1, grass] = ground;
-  return (th) => { th.g0 = g0; th.g1 = g1; th.grass = grass; };
+  return (th) => {
+    th.g0 = g0; th.g1 = g1; th.grass = grass;
+    if (hills) { th.far = hills[0]; th.near = hills[1]; }
+  };
 }
 
 window.MGForms = { widthForm, trunkForm, roundCrownForm, crownShadeForm, frondCrownForm, hummockCrownForm, groundTheme };

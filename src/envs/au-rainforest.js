@@ -21,7 +21,7 @@ const BEECH_CROWN = H6(['#16281a', '#214028', '#2f5834', '#437044', '#608c57']);
 const BEECH_BARK = H6(['#6a6a52', '#484a38', '#2c2e22']);
 
 AF.env('au-rainforest', {
-  theme: window.MGForms.groundTheme(["#3c4a33","#2d3b28","#49603a"]),
+  theme: window.MGForms.groundTheme(["#3c4a33","#2d3b28","#49603a"], ["#8fa2c0","#6e8a92"]),
   pals: { pine: FERN_CROWN, round: BEECH_CROWN },
   tree: {
     width: widthForm(1.15, 1.05),

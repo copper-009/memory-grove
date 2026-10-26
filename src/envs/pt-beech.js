@@ -31,7 +31,7 @@ const ROUNDS = [LENGA, NIRE, COIHUE];
 const BARKS = [LENGA_BARK, NIRE_BARK, COIHUE_BARK];
 
 AF.env('pt-beech', {
-  theme: window.MGForms.groundTheme(["#3a4a2e","#2c3c22","#4e6040"]),
+  theme: window.MGForms.groundTheme(["#3a4a2e","#2c3c22","#4e6040"], ["#8a8a92","#5a5a62"]),
   // pals.bark is a fallback for the engine's own default trunk-draw (the pine-kind trees
   // this env leaves untouched) — that default code reads bark.l/.m/.d, an object, not the
   // [light,mid,dark] array shape every other env's own custom `trunk` hook uses; caught

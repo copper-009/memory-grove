@@ -10,11 +10,13 @@
  *
  * Golden hour always (`presets.py`'s first preset's `weather: 'clear'`, `time:
  * 'golden_hour'` — porting the full preset-picker/live-weather system is further work, not
- * this); `landmark: 'none'` always too. The trees, ground colour and landscape (lake /
- * river / meadow, `mfLandscape.ts`) all follow the biome now. Every biome has an entry in
- * `mfEnvs.ts`'s registry (Phase 3), each one naming its own two species via `mfSpecies.ts`
- * (`speciesNameFor`, below) and colouring the ground from `Biome.ground`, rather than
- * drawing the vendored engine's generic trees on its generic grass by a generic lake.
+ * this); `landmark: 'none'` always too. The trees, ground colour, hill-silhouette colour
+ * and landscape (lake / river / meadow / mountains, `mfLandscape.ts`) all follow the biome
+ * now. Every biome has an entry in `mfEnvs.ts`'s registry (Phase 3), each one naming its
+ * own two species via `mfSpecies.ts` (`speciesNameFor`, below) and colouring the ground and
+ * hills from `Biome.ground` and the region's own matching `Backdrop` (`_forms.js`'s
+ * `groundTheme`), rather than drawing the vendored engine's generic trees on its generic
+ * grass under generic hills by a generic lake.
  * Milestone animals are Memory Forest's own stock roster (rabbit/deer/fox/owl/heron/stag/
  * cabin/bear/squirrel/eagle — ported from `milestones.py`'s `VISITORS`/`visitors()`
  * directly, not Memory Grove's own per-region creature roster, since the vendored
@@ -218,9 +220,11 @@ export interface MfAdapterOptions {
 }
 
 /** Build the payload `AF.mount` needs, from a Memory Grove `Grove` — golden hour always, a
- * region-specific tree environment and ground colour when `opts.biome` has one, and a
- * landscape (lake / river / meadow) that follows `opts.biome.hasWater` (see module comment
- * for what's deliberately not wired up yet: time of day, weather, hill-silhouette colour). */
+ * region-specific tree environment, ground colour and hill-silhouette colour when
+ * `opts.biome` has one (`_forms.js`'s `groundTheme`, set per env file), and a landscape
+ * (lake / river / meadow / mountains) that follows `opts.biome.hasWater` and, for a few
+ * genuinely high-alpine biomes, `mfLandscape.ts`'s own judgment call (see module comment
+ * for what's deliberately not wired up yet: time of day, weather, sky colour). */
 export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';

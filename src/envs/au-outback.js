@@ -20,7 +20,7 @@ const GHOST_CROWN = H6(['#36442a', '#475a33', '#5c723f', '#78904f', '#9cb268']);
 const GHOST_BARK = H6(['#f2efe6', '#d4cfc0', '#ada798']);
 
 AF.env('au-outback', {
-  theme: window.MGForms.groundTheme(["#b06a42","#9a5433","#c08a52"]),
+  theme: window.MGForms.groundTheme(["#b06a42","#9a5433","#c08a52"], ["#8fa2c0","#6e8a92"]),
   pals: { pine: OAK_CROWN, round: GHOST_CROWN },
   tree: {
     width: widthForm(0.8, 1),

@@ -22,7 +22,7 @@ const DWARF_BIRCH_CROWN = H6(['#2a3a24', '#3a4e30', '#4d663e', '#648050', '#c030
 const DWARF_BIRCH_BARK = H6(['#5a5244', '#403a30', '#28241c']);
 
 AF.env('no-fjordplateau', {
-  theme: window.MGForms.groundTheme(["#8a9078","#6a7258","#9ca488"]),
+  theme: window.MGForms.groundTheme(["#8a9078","#6a7258","#9ca488"], ["#5a7088","#3a5060"]),
   pals: { pine: HEATHER_CROWN, round: DWARF_BIRCH_CROWN },
   tree: {
     width: widthForm(0.55, 0.5),

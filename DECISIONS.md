@@ -555,3 +555,32 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
     `eucalypt`'s plain rolling hills for direct comparison. No errors across any of the six
     checked (five new `mountains` biomes plus `fjord-plateau`, confirming the lake tradeoff
     looks right).
+- **Hill-silhouette colour, filling the gap the ground-colour entry above stated plainly
+  (`th.far`/`th.near`, "`Biome` has no separate hill-colour data to pull from").** It
+  doesn't — but each region's own `Backdrop` does (`far`/`near`, `src/regions/types.ts`),
+  also written for the old renderer and unused since the engine switch, same as `Biome.ground`
+  and `Biome.hasWater` were. Matched algorithmically rather than hand-picked per biome, to
+  keep it auditable: for each biome, find the region's own non-night, non-seasonal backdrop
+  whose `form` equals the biome's `landform`; failing that, for the five `mountains`-
+  landscape biomes specifically, prefer any backdrop with a dramatic form (`peaks`/`fjord`/
+  `towers`) over the region's default; failing that, fall back to the region's first
+  backdrop. The exact-match and dramatic-preference tiers landed on good results without
+  any manual steering — `southern-alps`→`snowy-peaks` (pale icy blue), `himalaya`→
+  `peaks-sunrise`, `southern-beech`→`granite-towers` (cool stone grey, via the
+  dramatic-preference tier, since Patagonia's own backdrops have no exact `peaks` match) —
+  genuinely different mountain *characters* from each other, not just "the mountains
+  landscape with the usual grey."
+  - `_forms.js`'s `groundTheme` takes an optional second `[far, near]` argument now,
+    applied to all 26 env files via the same generate-then-patch-then-`node --check`
+    method as the ground colours. Sky colour (`th.sky`) is still deliberately untouched — a
+    `Backdrop`'s six stops weren't authored against this engine's specific "always golden
+    hour" lighting, and a full swap risks clashing with it in a way a quick render can't
+    rule out as easily as a hill colour can; a smaller, more deliberate piece for later.
+  - One honest, accepted limitation: a few regions' backdrop sets simply don't cover every
+    one of their biomes well (Australia has no `peaks`/`fjord`/`towers` backdrop at all, so
+    its five non-`eucalypt` biomes — including `alpine`, despite getting the `mountains`
+    landscape — all fall back to the same `ranges` hills; Madagascar's `eastern-rainforest`
+    falls back to the warm, dry-toned `baobab-avenue`, a visibly imperfect fit for a lush
+    rainforest, checked and accepted rather than hidden). Not fixed by writing more
+    backdrops tonight — that's new content, a different kind of work from reconnecting what
+    already exists, which is what this whole landscape pass has been.

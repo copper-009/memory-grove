@@ -22,7 +22,7 @@ const OAK_CROWN = H6(['#152a1a', '#204028', '#2d5836', '#3f7246', '#5a9058']);
 const OAK_BARK = H6(['#7a7258', '#564f3c', '#332f24']);
 
 AF.env('cr-cloudforest', {
-  theme: window.MGForms.groundTheme(["#2e4232","#223428","#3c5a3e"]),
+  theme: window.MGForms.groundTheme(["#2e4232","#223428","#3c5a3e"], ["#7a8a9a","#4e6052"]),
   pals: { pine: FERN_CROWN, round: OAK_CROWN },
   tree: {
     width: widthForm(1.1, 1.1),

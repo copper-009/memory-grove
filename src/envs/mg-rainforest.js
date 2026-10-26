@@ -23,7 +23,7 @@ const ROSEWOOD_CROWN = H6(['#162616', '#1f3a1f', '#2c502c', '#3e6a3c', '#588652'
 const ROSEWOOD_BARK = H6(['#4a3a2c', '#332820', '#201812']);
 
 AF.env('mg-rainforest', {
-  theme: window.MGForms.groundTheme(["#2e4228","#22331e","#3c5636"]),
+  theme: window.MGForms.groundTheme(["#2e4228","#22331e","#3c5636"], ["#7a5a52","#5a4038"]),
   pals: { pine: FERN_CROWN, round: ROSEWOOD_CROWN },
   tree: {
     width: widthForm(1.05, 1),
