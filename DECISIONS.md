@@ -642,3 +642,10 @@ Judgment calls made while building Memory Grove, and why. Append to this; don't 
   savanna and baobab country a little warmer toward the horizon, golden hour's own gold
   never lost underneath either direction. Checked across five more biomes at full density
   afterward — no errors, no biome where the shift reads as wrong rather than just distinct.
+- **One more `bulbous` swap: East Africa's own baobab.** Checked every region for a
+  `bulbous` species picked over tonight, before `bulbousBody` existed, specifically because
+  it wasn't achievable yet — found one: `ea-savanna.js`'s pine-slot was whistling thorn, a
+  stand-in for the baobab (`src/regions/eastafrica/index.ts`'s own `baobab-ea`), this
+  biome's most recognisable tree and arguably one of Africa's. Swapped it in, same pattern
+  as the four palm swaps earlier tonight. Verified isolated and at density — an immediately
+  recognisable baobab silhouette next to the umbrella thorn, no errors.
