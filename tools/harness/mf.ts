@@ -10,9 +10,9 @@
 import { fixture, FIXED_NOW } from '../../src/data/fixtures';
 import { scanCards } from '../../src/data/cards';
 import { buildGrove, mergeOld } from '../../src/data/forest';
-import { emptyRoster } from '../../src/data/milestones';
+import { emptyRoster, updateRoster } from '../../src/data/milestones';
 import { buildMfPayload } from '../../src/forest/mfAdapter';
-import { loadMfScenery } from '../../src/forest/mfLoader';
+import { loadMfScenery, registerCreatureSprites } from '../../src/forest/mfLoader';
 import type { AnkiForestApi } from '../../src/forest/mfLoader';
 import type { FixtureName } from '../../src/data/fixtures';
 import { REGIONS } from '../../src/regions';
@@ -20,7 +20,7 @@ import type { Biome } from '../../src/regions/types';
 
 declare global {
   interface Window {
-    __renderMf: (opts: { fixtureName: FixtureName; width: number; biomeKey?: string }) => void;
+    __renderMf: (opts: { fixtureName: FixtureName; width: number; biomeKey?: string; health?: number }) => void;
   }
 }
 
@@ -34,9 +34,16 @@ window.__renderMf = (opts) => {
   const cards = fixture(opts.fixtureName, FIXED_NOW);
   const scan = scanCards(cards, { now: FIXED_NOW, rolloverHour: 4 });
   const grove = mergeOld(buildGrove(scan));
-  const payload = buildMfPayload(grove, emptyRoster(), { maxWidth: opts.width, biomeKey: opts.biomeKey, biome: findBiome(opts.biomeKey) });
+  // A real roster (not emptyRoster()) — the fixture's own active-study-day count unlocks
+  // whichever creature slots it would for a real user, so the harness actually exercises
+  // creature placement instead of always showing none.
+  const roster = updateRoster(emptyRoster(), grove.stats.activeStudyDays, grove.stats, grove.today);
+  const payload = buildMfPayload(grove, roster, {
+    maxWidth: opts.width, biomeKey: opts.biomeKey, biome: findBiome(opts.biomeKey), health: opts.health,
+  });
   const root = document.getElementById('stage')!;
   loadMfScenery(payload.mood).then(() => {
+    registerCreatureSprites(payload.creatureSprites);
     (window.AnkiForest as AnkiForestApi).mount(root, payload, { now: true });
     requestAnimationFrame(() => requestAnimationFrame(() => { document.title = 'ready'; }));
   });

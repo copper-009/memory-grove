@@ -706,3 +706,54 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   (each file's own header says so). Verified with the render harness at both low density
   (two-tree clarity) and a dense 255-tree render per biome — all four read correctly, no
   errors, `tsc`/`vitest` clean throughout (153/153).
+- **Region creatures finally wired into the live grove, not just the review gallery.**
+  `buildMfPayload`'s `roster` parameter had sat unused since it was added — the live scene
+  always showed Memory Forest's own stock milestone roster (rabbit/deer/fox/owl/heron/stag/
+  bear/squirrel/eagle, unlocked by raw review-count thresholds), never a biome's own five
+  species, unlocked by `CreatureRoster`'s actual slot progress. New `mfCreatures.ts`
+  (`buildCreatureVisitors`) builds the current biome's unlocked creatures into visitor
+  entries once a real `Biome` is known, picking young-vs-adult art by `milestones.ts`'s own
+  `lifeStageFor` and dropping hidden/asleep creatures via `creatureMood` (ecosystem health +
+  each species' own `activity`/`sleepy`), replacing the stock roster entirely rather than
+  layering on top (`cabin` stays — a structural milestone, not a species). `night` is passed
+  `true` unconditionally: the scene always renders golden hour (a separately known gap —
+  time of day doesn't follow the real clock yet), and without that a nocturnal species would
+  be permanently `asleep` and never once appear; diurnal/crepuscular/cathemeral species
+  aren't gated by time in `creatureMood` at all, so this costs them nothing.
+  - **The user's explicit ask, mid-task: "make sure animals are ecosystem dependent as well
+    as region bound... with specific actions that match their biological roles."** Not just
+    "the right five species show up" — *where* and *how* they appear had to track real
+    ecology too. `visitors.js`'s own placement (`chooseHosts`) turned out to already be
+    exactly this idea, just hardcoded to five stock species names (owl → oldest tree,
+    heron → a pond, squirrel → a grown tree, deer/stag → grazing in a depth band) with
+    everything else falling through to generic front-of-scene roaming. Generalised it
+    (marked `// Memory Garden change:`, the one vendor edit this piece needed) to read any
+    visitor's own `zone` (`src/regions/types.ts`) the same way: `canopy`/`trunk` species
+    host in a tree exactly like the owl and squirrel already do, `water`/`waterEdge` species
+    host at a pond exactly like the heron does — purely additive, never touches the
+    hardcoded stock-species branches above it, never claims a tree or pond they already
+    took. `ground`/`slope`/`burrow` species are deliberately left unhosted: `Zone`'s own doc
+    comment already describes `ground` as "walks the open ground at the front", which is
+    already `placeVisitors`'s default for anything this function doesn't claim — nothing to
+    add there. A still species (crocodiles) or a sleepy one (koalas, sloths) now also roams
+    a visibly smaller stretch than a fully active animal (`roamScale`, a second small
+    addition to the same file), instead of every front visitor wandering the same distance
+    regardless of what it actually is.
+  - Full per-flourish action animations (`Creature.flourish`: display/bower/dig/dive/soar/
+    pair/dam/bathe/bloom) are a stated gap, not attempted here — each would need its own
+    draw routine, a materially bigger piece of work than placement, and the existing idle/
+    busy two-frame cycle every sprite already has (most hand-authored pairs already differ
+    by a small pose shift) gives some per-species variety in the meantime without it.
+  - Registration (`AF.VISITOR_SPRITES`, a live object reference `visitors.js` itself
+    exposes as `AF.VISITOR_SPRITES = VISITORS`) happens in `mfLoader.ts`'s
+    `registerCreatureSprites`, called from both `GroveCanvas.tsx` and the render harness
+    right after `loadMfScenery` resolves and before `AF.mount` — the one place both callers
+    already share, so no vendor file needs to know Memory Garden's region system exists.
+  - Verified with the render harness, instrumented directly rather than only by eye
+    (`root.afEnv` — `core.js` already exposes the live env object there, for the
+    asteroid-strike overlay to use, reused here) against Borneo's dipterocarp rainforest and
+    Hokkaido: all three canopy/trunk species correctly hosted in trees, water/waterEdge
+    species hosted at a pond when the fixture's study history produced one and correctly
+    falling back to front-roaming when it didn't, ground species front-roaming, sky species
+    (Steller's sea eagle) circling overhead — every zone branch exercised and confirmed, not
+    assumed. `tsc`/`vitest`/full production `webpack` build all clean throughout.

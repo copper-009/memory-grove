@@ -39,6 +39,8 @@ import { BIOME_SPECIES } from './mfSpecies';
 import { landscapeForBiome } from './mfLandscape';
 import type { LandscapeKey } from './mfLandscape';
 import { landmarkForBiome } from './mfLandmark';
+import { buildCreatureVisitors } from './mfCreatures';
+import type { MfCreatureSprite } from './mfCreatures';
 
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
@@ -182,6 +184,12 @@ export interface MfPayload {
   trees: MfTree[];
   stats: Record<string, unknown>;
   visitors: Array<{ key: string; label: string; why: string; new: boolean }>;
+  /** Region creatures' own sprite data (`mfCreatures.ts`), to merge into
+   * `AF.VISITOR_SPRITES` before `AF.mount` — see `mfLoader.ts`'s
+   * `registerCreatureSprites`. Empty when `opts.biome`/`opts.roster` weren't given (the
+   * synthetic-fixture harness without a real roster, say), same as `visitors` then falling
+   * back to the stock milestone set. */
+  creatureSprites: Record<string, MfCreatureSprite>;
   anniversaries: number[];
   mood: MfMood;
   journal: string;
@@ -221,6 +229,10 @@ export interface MfAdapterOptions {
    * without a real `Biome` to hand over — species names just don't resolve there, which is
    * fine, since nothing in the harness checks tooltips. */
   biome?: Biome;
+  /** `HealthResult.visual` (`src/data/health.ts`) — "what the scene actually draws, after
+   * the severity's visual gain". Drives `creatureMood()` for region creatures; without it
+   * (the harness, say) every unlocked creature is simply treated as fully healthy. */
+  health?: number;
 }
 
 /** Build the payload `AF.mount` needs, from a Memory Garden `Grove` — golden hour always, a
@@ -230,15 +242,26 @@ export interface MfAdapterOptions {
  * `opts.biome.hasWater` and, for a few genuinely high-alpine biomes, `mfLandscape.ts`'s own
  * judgment call (see module comment for what's deliberately not wired up yet: time of day,
  * weather). */
-export function buildMfPayload(grove: Grove, _roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
+export function buildMfPayload(grove: Grove, roster: CreatureRoster, opts: MfAdapterOptions = {}): MfPayload {
   const stats = toMfStats(grove);
   const animate = opts.animate ?? 'system';
   const { landscape, sceneSuffix } = landscapeForBiome(opts.biome);
   const landmark = landmarkForBiome(opts.biome?.key);
+  // The current biome's own five creatures (mfCreatures.ts), unlocked by the real
+  // CreatureRoster, replace the generic stock test-threshold roster once a biome is
+  // actually known — that stock set was always only a stand-in for exactly this. `cabin`
+  // stays: a structural milestone, not a species, so it's layered on separately rather
+  // than something a region's own creature list could ever replace.
+  const cabinVisitor = toMfVisitors(stats).filter((v) => v.key === 'cabin');
+  const { visitors: creatureVisitors, sprites: creatureSprites } = opts.biome
+    ? buildCreatureVisitors(opts.biome, roster, grove.stats.activeStudyDays, opts.health ?? 100)
+    : { visitors: [], sprites: {} };
+  const visitors = opts.biome ? [...cabinVisitor, ...creatureVisitors] : toMfVisitors(stats);
   return {
     trees: grove.plants.map((p) => toMfTree(p, opts.biome)),
     stats,
-    visitors: toMfVisitors(stats),
+    visitors,
+    creatureSprites,
     anniversaries: [],
     mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark),
     journal: '',

@@ -129,8 +129,9 @@ const hostId = it => it.pond ? 'pond' + it.group : 'tree' + it.index;
 
 /* Which tree (or pond) each animal living in the forest takes, of `trees` in sight: the
  * same all day. */
-function chooseHosts(env, keys, trees, open) {
+function chooseHosts(env, list, trees, open) {
   const inForest = {};
+  const keys = list.map(v => v.key);
   const R = rng(daySeed(env)), any = pool => pool[Math.floor(R() * pool.length)];
   // the owl perches on one of the oldest trees, the heron wades at one of the ponds
   const old = trees.filter(p => p.it.stage === ANCIENT), older = old.length ? old : trees.filter(p => p.it.stage === OLD);
@@ -145,16 +146,35 @@ function chooseHosts(env, keys, trees, open) {
     if (!keys.includes(key)) continue;
     // never on a tree another animal already took
     const taken = new Set(Object.values(inForest).map(s => s.host));
-    const free = list => list.filter(p => !taken.has(p));
+    const free = pool => pool.filter(p => !taken.has(p));
     const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, 2));
     if (pool.length) inForest[key] = { host: any(pool), graze: true };
+  }
+  // Memory Garden change: generic hosting for region creatures beyond the stock roster
+  // above, read from each visitor's own `zone` (src/regions/types.ts) instead of another
+  // hardcoded key list — purely additive, never claims a tree or pond the stock logic
+  // already took. `canopy`/`trunk` species perch in a tree the same way the owl and
+  // squirrel do; `water`/`waterEdge` species wade at a pond the same way the heron does.
+  // `ground`/`slope`/`burrow` species are deliberately left unhosted here — their own
+  // `Zone` doc comment already describes front-of-scene roaming, which is exactly
+  // `AF.placeVisitors`'s own default for anything not returned from this function.
+  for (const v of list) {
+    if (v.key in inForest) continue;
+    const taken = new Set(Object.values(inForest).map(s => s.host));
+    if (v.zone === 'canopy' || v.zone === 'trunk') {
+      const pool = trees.filter(p => p.it.stage >= MATURE && !taken.has(p));
+      if (pool.length) inForest[v.key] = { host: any(pool) };
+    } else if (v.zone === 'water' || v.zone === 'waterEdge') {
+      const wet = ponds.filter(p => !taken.has(p));
+      if (wet.length) inForest[v.key] = { host: any(wet) };
+    }
   }
   return inForest;
 }
 
 /* animals that live inside the forest are drawn into the land at the right depth */
 AF.placeVisitors = function (env) {
-  const list = env.data.visitors || [], keys = list.map(v => v.key);
+  const list = env.data.visitors || [];
   // no animal's tree (nor pond) stands in a stretch the environment keeps clear
   const open = p => !inClear(env, p.x - 6, p.x + 10);
   const trees = env.placed.filter(p => !p.it.pond && open(p));
@@ -167,7 +187,7 @@ AF.placeVisitors = function (env) {
       inForest[key] = host ? { host, graze: spot.graze } : null;
     }
   }
-  else inForest = chooseHosts(env, keys, trees, open);
+  else inForest = chooseHosts(env, list, trees, open);
   if (!env.layout.cam) hostsOf.set(env.data, Object.fromEntries(Object.entries(inForest).map(([k, s]) => [k, { id: hostId(s.host.it), graze: s.graze }])));
   // the rest stand at the front, but the cabin (which has its own corner) and those that fly
   for (const v of list) if (!(v.key in inForest) && v.key !== 'cabin' && !(VISITORS[v.key] || {}).flies) front.push(v);
@@ -248,7 +268,11 @@ AF.drawVisitors = function (g, env, t) {
   for (let i = slots.length - 1; i > 0; i--) { const j = Math.floor(SR() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
   list.forEach((v, i) => {
     const spr = VISITORS[v.key]; if (!spr || i >= slots.length) return;
-    const W = env.W, roam = W * ROAM_REACH, period = ROAM_EVERY + i * ROAM_STAGGER, k = Math.floor((t + i * ROAM_OFFSET) / period), ph = (t + i * ROAM_OFFSET) - k * period;
+    // Memory Garden change: a still species (crocodiles — barely moves at all) or a sleepy
+    // one (koalas, sloths — moves, just not far or often) roams a smaller stretch than a
+    // fully active animal, instead of every front visitor wandering the same distance.
+    const roamScale = v.still ? 0.08 : v.sleepy ? 0.35 : 1;
+    const W = env.W, roam = W * ROAM_REACH * roamScale, period = ROAM_EVERY + i * ROAM_STAGGER, k = Math.floor((t + i * ROAM_OFFSET) / period), ph = (t + i * ROAM_OFFSET) - k * period;
     // a landscape with water across the front keeps each animal to its own bank
     const home = W * slots[i], land = AF.landOf(env);
     // ...and off any pond at the front, and the cabin: stepped aside to its nearer edge

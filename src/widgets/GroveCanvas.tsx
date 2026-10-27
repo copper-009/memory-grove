@@ -21,7 +21,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { buildMfPayload } from '../forest/mfAdapter';
-import { loadMfScenery } from '../forest/mfLoader';
+import { loadMfScenery, registerCreatureSprites } from '../forest/mfLoader';
 import type { AnkiForestApi } from '../forest/mfLoader';
 import '../vendor/memory-forest/web/forest.css';
 import type { GroveBundle } from './useGrove';
@@ -48,10 +48,12 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       animate: bundle.settings?.animate,
       biomeKey: bundle.biome?.key,
       biome: bundle.biome,
+      health: bundle.health?.visual,
     });
     loadMfScenery(payload.mood)
       .then(() => {
         if (cancelled || !rootRef.current) return;
+        registerCreatureSprites(payload.creatureSprites);
         const AF = window.AnkiForest as AnkiForestApi;
         AF.mount(rootRef.current, payload, { now: true });
       })
@@ -70,7 +72,7 @@ export function GroveCanvas({ bundle, height = 220 }: GroveCanvasProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bundle.grove, bundle.roster, bundle.settings?.animate, bundle.biome?.key, height]);
+  }, [bundle.grove, bundle.roster, bundle.settings?.animate, bundle.biome?.key, bundle.health?.visual, height]);
 
   return (
     <div className="rn-clr-background-light-gray" style={{ width: '100%', minHeight: height }}>

@@ -27,9 +27,15 @@ const CORE_SCRIPTS = [
 ];
 
 /** `AF.mount`'s own signature — the one piece of the vendored engine's API every caller
- * (this file, `mf_preview_widget.tsx`, `tools/harness/mf.ts`) actually invokes directly. */
+ * (this file, `mf_preview_widget.tsx`, `tools/harness/mf.ts`) actually invokes directly.
+ * `VISITOR_SPRITES` is `visitors.js`'s own stock sprite table (`AF.VISITOR_SPRITES =
+ * VISITORS`, a live object reference, not a copy) — writing a new key into it here is how
+ * region creatures' sprite data reaches the exact same drawing code the stock rabbit/deer/
+ * fox/owl/... roster already uses, with no vendor file needing to know Memory Garden's own
+ * region system exists. */
 export interface AnkiForestApi {
   mount: (root: HTMLElement, data: unknown, opts: Record<string, unknown>) => void;
+  VISITOR_SPRITES: Record<string, unknown>;
 }
 
 declare global {
@@ -125,4 +131,19 @@ export async function loadMfScenery(mood: { special?: string; landscape?: string
     await loadScript(`${base}vendor/${rel}`);
     sceneryLoaded.add(rel);
   }
+}
+
+/**
+ * Merge the current biome's creature sprites (`mfAdapter.ts`'s `MfPayload.creatureSprites`,
+ * built by `mfCreatures.ts`) into `visitors.js`'s own stock sprite table, so `AF.mount` can
+ * draw them exactly like the stock rabbit/deer/fox/... roster. Call once `loadMfScenery` has
+ * resolved (so `window.AnkiForest` exists) and before `AF.mount`. Keys are
+ * `${biomeKey}:${creatureKey}`, already namespaced by `mfCreatures.ts`, so switching biomes
+ * only ever adds entries — nothing needs removing, and a stale key from a biome no longer
+ * showing is simply never read again.
+ */
+export function registerCreatureSprites(sprites: Record<string, unknown>): void {
+  const AF = window.AnkiForest;
+  if (!AF) return;
+  Object.assign(AF.VISITOR_SPRITES, sprites);
 }
