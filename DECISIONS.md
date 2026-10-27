@@ -828,3 +828,39 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     wave actually toggling across a sampled time range; pond reflections and the five
     reused shapes checked visually. `tsc`/`vitest` (153/153)/`lint`/full production
     `webpack` build all clean.
+- **Round 11 — real depth, partial scale, and an actual reflection.** More user feedback
+  after watching it run live: still only two visible depth bands despite round 10's fix,
+  animals read the same size as a tree next to them regardless of how far back they stood,
+  and the new pond reflections looked like noise rather than water.
+  - **The band formula was the real bug, not the band count.** `slot * 1.5` to `slot * 1.5 +
+    2` only ever reached `fromFront` 0–8 — but a real grove's `fromFront` commonly runs to
+    14 or more (checked directly via the harness, not assumed), so the two or three deepest
+    slots' bands found no trees at all and silently fell back to the same `band(0, 2)` every
+    time, collapsing five intended bands into one or two actually-distinct ones. Bands are
+    now computed from the grove's own actual depth (`trees.reduce` for the real max
+    `fromFront` this scene has) rather than a fixed range sized for the stock roster's two
+    bands, so five slots spread across however deep the grove genuinely goes.
+  - **Depth scale**: trees already shrink with `p.s` as they stand further back (confirmed:
+    0.82 at `fromFront` 14 vs 1.0 at the front) — hosted creatures never did, drawn at native
+    pixel size regardless of their tree's own depth. `AF.scaledAt` (web/visit.js) does
+    exactly the anchored-scale transform needed but bails below `k = 1` (it only ever scales
+    a visit's sprites *up*); added a local `scaleAnchored` with that guard dropped, rather
+    than changing the shared one other systems call, and applied it at 60% of the host
+    tree's own scale delta — partial, per the user's own "not fully but at least partially",
+    so a creature ten rows back stays readable instead of shrinking to match its tree
+    exactly.
+  - **Pond reflections, rebuilt around an actual reflection instead of a better dither.**
+    `engines/pixel/engine.js` draws `env.placed` back to front by depth, a pond included in
+    that same walk — so whatever belongs above a pond on screen (sky, the treeline) is
+    already drawn onto the land canvas by the time the pond's own step runs, and `layer()`
+    (`web/util.js`) already creates that canvas with `willReadFrequently: true`. `drawPond`
+    now reads that region back with `getImageData`, mirrors it across the waterline, and
+    tints it toward the water colour — a real reflection of the actual scene above it, not a
+    procedural stand-in — with the sparkle cut to a single soft glint line instead of three.
+    Skipped for ice (a frozen surface doesn't mirror the same way; unchanged flat colouring).
+    Verified visually: a tree trunk's own brown and its canopy's green are both legible,
+    mirrored, in the pond directly beneath it.
+  - Verified with the render harness throughout — `root.afEnv` instrumentation again for the
+    band spread and the per-creature depth scale (`p.s`/computed `depthK` read directly off
+    live hosted creatures, not inferred), screenshots for the reflection. `tsc`/`vitest`
+    (153/153) clean.

@@ -74,6 +74,18 @@ const FRONT_TALLEST = 11, FRONT_CLEAR = 1;
 const SKY_X = 0.66, SKY_Y = 0.16, SKY_RX = 0.09, SKY_RY = 0.04, SKY_TURN = 0.35, SKY_FLAP_FPS = 2.5, SKY_FLAP_EVERY = 5;
 const FACES_LEFT = { rabbit: true };  // which way each sprite is drawn looking
 
+/* Memory Garden change: `AF.scaledAt` (web/visit.js) already does exactly this transform —
+ * scale about a fixed anchor point, so a sprite standing at (ax, ay) still stands there
+ * afterward — but bails out below k=1 (it only ever scales a visit's sprites UP as the
+ * camera nears them). A hosted creature's partial depth-scale needs k BELOW 1 too (further
+ * back reads smaller, not just nearer reads bigger), so this is the same transform with
+ * that guard dropped rather than a change to the shared one other systems also call. */
+function scaleAnchored(g, k, ax, ay, draw) {
+  if (k === 1) return draw();
+  ax = Math.round(ax); ay = Math.round(ay);
+  g.save(); g.translate(ax - ax * k, ay - ay * k); g.scale(k, k);
+  try { return draw(); } finally { g.restore(); }
+}
 /* A sprite is painted pixel by pixel once, onto a canvas of its own, and copied from there:
  * painted straight onto the forest every frame, the animals were most of a frame's canvas
  * calls. Kept for each frame of a sprite (its rows), by which way it faces and the colours
@@ -168,6 +180,13 @@ function chooseHosts(env, list, trees, open) {
   // sharing the single front-roaming lane. Each only falls back to `AF.placeVisitors`'s own
   // front-of-scene default (true walking roam, not a fixed grazing spot) when it genuinely
   // has nowhere to be hosted this frame — a young grove with no pond yet, say.
+  // How far back the grove actually goes this scene — `[2,4]`/`[4,6]`, the two fixed bands
+  // the stock deer/stag above use, were sized for a forest a few rows deep; a real grove
+  // commonly runs ten or more rows back (`p.it.fromFront`, not capped at a small number),
+  // so five fixed bands in that same narrow 0-8 range left most of the depth of the scene
+  // empty and several slots landing in the same place. Spread proportionally across
+  // whatever depth this grove actually has instead.
+  const maxFront = trees.reduce((m, p) => Math.max(m, p.it.fromFront || 0), 2);
   for (const v of list) {
     if (v.key in inForest) continue;
     const taken = new Set(Object.values(inForest).map(s => s.host));
@@ -184,9 +203,9 @@ function chooseHosts(env, list, trees, open) {
       const wet = ponds.filter(p => !taken.has(p));
       if (wet.length) inForest[v.key] = { host: any(wet) };
     } else if (v.zone === 'ground' || v.zone === 'slope' || v.zone === 'burrow') {
-      const slot = v.slot || 0, lo = slot * 1.5, hi = lo + 2;
+      const slot = v.slot || 0, bandW = Math.max(1.5, maxFront / 5), lo = slot * bandW, hi = lo + bandW * 1.4;
       const free = pool => pool.filter(p => !taken.has(p));
-      const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, 2));
+      const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, maxFront));
       if (pool.length) inForest[v.key] = { host: any(pool), graze: true };
     }
   }
@@ -235,13 +254,19 @@ AF.placeVisitors = function (env) {
       else if (key === 'squirrel') { x0 = Math.round(p.x) + (AF.trunkRight ? AF.trunkRight(p, env) : 1); y0 = Math.round(p.y - frame.length + 1); }  // on the roots, just right of the trunk
       else if (key === 'heron') { const b = AF.pondBox(env, p); x0 = Math.round(b.cx + b.w * 0.2); y0 = Math.round(b.cy - frame.length + 1); }
       else { x0 = Math.round(p.x + 4); y0 = Math.round(p.y - frame.length + 1); }
-      // up close (a visit) it is as much bigger as its tree, standing where its feet are
-      const k = AF.visitK(p), fy = y0 + frame.length;
-      AF.scaledAt(lg, k, x0, fy, () => {
+      // up close (a visit) it is as much bigger as its tree, standing where its feet are.
+      // Memory Garden change: outside a visit, a hosted creature used to render at the same
+      // native pixel size no matter how far back its tree stood, while the tree itself
+      // genuinely shrinks with depth (`p.s`) — a frog hosted ten rows back read the same
+      // size as one at the very front, or as the tree right next to it. Partial, not full:
+      // only 60% of the tree's own scale reduction carries over, so a distant creature
+      // stays readable rather than shrinking to match exactly.
+      const visitK = AF.visitK(p), depthK = visitK > 1 ? visitK : 1 - (1 - p.s) * 0.6, fy = y0 + frame.length;
+      scaleAnchored(lg, depthK, x0, fy, () => {
         paintSprite(lg, frame, x0, y0, spr.pal, visitorColor(env, p.hz));
         if (key === 'owl' && env.mood.time === 'night') { lg.fillStyle = OWL_NIGHT_EYES; lg.fillRect(x0 + 1, y0 + 2, 1, 1); lg.fillRect(x0 + 3, y0 + 2, 1, 1); }
       });
-      env.staticBoxes.push({ v, x0, y0: fy - frame.length * k, x1: x0 + frame[0].length * k, y1: fy });
+      env.staticBoxes.push({ v, x0, y0: fy - frame.length * depthK, x1: x0 + frame[0].length * depthK, y1: fy });
     }
   };
 };
