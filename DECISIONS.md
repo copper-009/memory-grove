@@ -864,3 +864,45 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     band spread and the per-creature depth scale (`p.s`/computed `depthK` read directly off
     live hosted creatures, not inferred), screenshots for the reflection. `tsc`/`vitest`
     (153/153) clean.
+- **Round 12 — black swan redesign, the frog/bird/macropod/beaver-otter batch, and a new
+  dual-state capability.** The swan redo ("a bit munted"): a single consistent diagonal lean
+  for the neck instead of a zigzag staircase, and the wedge body replaced with a full rounded
+  dome plus a real two-pixel wing-crease patch instead of isolated flecks.
+  - **Six frog species**, none previously hand-authored, redesigned per "the frogs could also
+    be made like smaller versions of chameleons as well" — a tailless, squat, bulge-eyed
+    shape built from the chameleon template's own body proportions, in two sizes (a small
+    template for the smallest three species, reused verbatim as the "young" stage for the
+    three larger tree frogs).
+  - **Sixteen small perching/flitting birds**, none previously hand-authored, redesigned onto
+    the kookaburra's own 8x7 adult / 7x5 young perched-bird structure per "redesign ~16 small
+    birds onto a cockatoo/kookaburra base" — the cockatoo's two-row crest grafted on
+    unmodified for the two crested species (umbrellabird, hornbill), genuine tail extensions
+    (not just colour) for the four species whose tail is their actual signature mark
+    (quetzal's streamer, the roller's and bee-eater's trailing feathers, the capercaillie's
+    fan, the lyrebird's long tail).
+  - **Pademelon and Bennett's tree-kangaroo**, both baked, scaled down onto the confirmed
+    kangaroo posture (small head, tall torso, prop tail) at its own smaller `young` grid size
+    — an honest size match for genuinely smaller macropods, not a redesign.
+  - **Beaver and otter**, both baked, given a genuinely new low, horizontal, semi-aquatic
+    body — nothing else in the roster fit a creature that's mostly submerged with just its
+    head above water, and the sitting-up small-rodent base (hoary marmot) is upright on its
+    haunches, the wrong posture entirely.
+  - **New engine capability: `Creature.alt`** (`src/regions/types.ts`) — requested mid-round:
+    "for ones that roam around and then go in water, or those that fly and perch, or dig and
+    walk... could we design two different sprite states with their own mini animations and
+    wandering patterns?" A creature can now carry a second `{ zone, sprite }` state. Picked
+    once per creature per day — not per render — by a simple string hash of the creature's
+    key plus `grove.today` (`mfCreatures.ts`'s new `pickState`/`hashStr`), so it's stable
+    across re-renders of the same day and varies across days without any state to persist.
+    Deliberately NOT a new placement system: the chosen state's `zone` is just handed to
+    `visitors.js`'s existing generalised `chooseHosts` exactly like the primary state always
+    was, so a water-state creature gets hosted at a pond, a sky-state one flies, a
+    ground-state one gets a depth band — all for free. Wired up for Wallace's flying frog
+    (perched/canopy vs gliding/sky — its whole claim to fame), green tree frog and red-eyed
+    tree frog (perched/waterEdge vs swimming/water), and beaver and otter (swimming/water,
+    the primary state matching each species' own `behaviour` text, vs hauled-out/ground as
+    `alt`). Verified with a standalone script calling `buildCreatureVisitors` directly across
+    20 simulated `daySeed` values for each: all five alternate between both zones as
+    expected, not just type-checking green.
+  - `tsc`/`vitest` (153/153)/`lint` clean throughout. Gallery rebuilt (130 creatures),
+    committed to `vendor`, pushed, republished.
