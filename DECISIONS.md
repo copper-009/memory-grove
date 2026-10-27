@@ -963,3 +963,71 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     moving after.
   - `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to
     `vendor`, pushed, republished.
+- **Round 15 — worked the gallery's own review decisions, not guesses.** The user: "a few
+  errors noted and others that still haven't been addressed, make sure you get all of them
+  this time, plus any others that deserve a second state". Pulled the actual state via
+  `ArtifactData` (`query`, collection `decisions` on the gallery artifact, 132 documents) —
+  the right source, since re-deriving "what's still wrong" from memory across this many
+  rounds would have missed things and re-litigated settled ones.
+  - **Every `value: "redo"` entry, each with its own note.** `aotearoa:kea` ("should be bird
+    design" — still on an old pre-redesign quadruped-style layout, not the family's shape at
+    all), `australia:cockatoo`/`kookaburra` and `patagonia:magellanic-woodpecker` ("didn't get
+    touched by the bird redesign" — these predate round 13's slim template and were never
+    migrated to it, despite kookaburra/cockatoo being the literal template other birds were
+    built from), `patagonia:magellanic-penguin` (still baked, no hand sprite at all — given a
+    bespoke tuxedo body, since a penguin's proportions don't fit the perching-bird template).
+    `australia:black-swan` ("no legs and neck is at a weird angle" — a straight diagonal
+    doesn't read as a swan's neck; rebuilt with a real curve, legs added under the belly).
+    `eastafrica:plains-zebra` ("no animation, and stripes are too few" — stripe count roughly
+    tripled, leg-stride offset widened from a 1px nudge on one leg to both legs moving).
+    `eastafrica:hippo` ("no animation?" — `still: true` is correct and stayed, matching real
+    behaviour, but the baked frame0/frame1 were byte-IDENTICAL regardless; the honest fix was
+    a water/ground dual-state like beaver/otter, not fighting the stillness). `madagascar:fossa`
+    ("what's the thing out the front?" — the right ear sat one column past the head's own
+    right edge, reading as a floating stray pixel ahead of the snout; pulled in to align).
+    `patagonia:guanaco`/`guanaco-steppe` ("jaw coming down but not the rest of the head" —
+    traced to leftover pixels from the vendored deer sprite's own antler-hiding "grazing dip"
+    reshuffle, never cleaned out when these lost their antlers in an earlier round; body made
+    pixel-identical between frames, only the legs offset, the same fix zebra already had).
+    `australia:wombat` ("what's happened to the standard wandering form?" — see below, this
+    led to a real engine bug, not a wombat-specific fix). `australia:koala` was the one
+    non-`redo` item acted on too — kept, but with a note ("a bit blobby... chubbier and more
+    upright?"): bigger round ears, two extra rows for a taller seated posture, a rounder belly.
+  - **The wombat question surfaced a real bug.** Investigating "what's happened to the
+    standard wandering form" led to: the day-to-day `alt` pick was a flat, unweighted 50/50
+    (`hashStr(...) % 2`), so a wombat dug into its mound showed exactly as often as one out
+    grazing — wrong for a state its own `behaviour` text describes as the exception ("trundles
+    out... and grazes steadily"), not a coin flip. Added `Creature.alt.altChance` (0-1, default
+    0.5) to weight it, and set wombat/bilby to 0.25, echidna to 0.2. Checking the actual
+    distribution surfaced a second, deeper bug: `hashStr` is a plain multiply-add hash, which
+    barely changes for inputs differing only in their last character — exactly what `${key}:
+    ${daySeed}` does from one day to the next. Measured directly: `alpine:wombat` landed below
+    a 0.25 threshold on 0 of 400 simulated days, not the ~100 a real 25% chance implies (the
+    old 50/50 case had been masking this the whole time — parity alone happened to decide the
+    low bit well enough to look fine). Fixed with a proper avalanche finalizer (Murmur3's
+    `fmix32`); re-measured at 0.27/0.199/0.221 against targets of 0.25/0.2/0.25 across 1000
+    simulated days — close enough to call it fixed, not coincidental.
+  - **"Plus any others that deserve a second state."** Grepped every region's own `behaviour`/
+    `fact` text for words like swim, dive, bask, burrow, perch, cling — the same standard every
+    prior `Creature.alt` this project has added was held to (grounded in what the species' own
+    data literally says, never guessed) — and found eight more real candidates:
+    `australia:long-necked-turtle` and `platypus` (surfaced ↔ submerged, both already
+    `zone: 'water'`), `canada:common-loon` (gliding ↔ diving), `canada:moose` (wading ↔ "a
+    strong swimmer that will cross a lake without hesitation"), `canada:hoary-marmot` (alert on
+    its boulder ↔ "dives down its burrow at the least disturbance" — the same small-rodent base
+    template squirrel/flying-squirrel already share, so this is also the first time that
+    specific shape gets a burrow `alt`), `borneo:silvered-langur` (perched over the river ↔
+    "occasionally dropping to swim across"), `patagonia:burrowing-owl` (upright at the burrow
+    mouth ↔ pulled down, its own big yellow eyes the one thing still showing), `nepal:gharial`
+    (basking, `still: true` kept ↔ submerged, same stillness either way). Each `altChance`
+    set low (0.15-0.35) where the creature's own text names one state as the common case and
+    the other as occasional/brief, not an even split.
+  - Verified every new/changed alt end to end via `buildCreatureVisitors` across 40-200
+    simulated days per species (zone alternation where the states differ, or distinct-sprite-
+    shape count where the zone is intentionally the same), not just a type-check.
+  - Also fixed the gallery tool itself, which was asked directly: "how can I see their
+    alternate sprites for the second movement type?" — it had never rendered `Creature.alt` at
+    all. Each card with one now shows a second, labelled swatch ("Primary — canopy" / "Alt —
+    sky"), plus a toolbar filter to the 21 (now considerably more) creatures that have one.
+  - `tsc`/`vitest` (153/153)/`lint` clean throughout. Gallery rebuilt (130 creatures),
+    committed to `vendor`, pushed, republished.
