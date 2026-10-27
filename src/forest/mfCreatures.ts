@@ -39,6 +39,10 @@ export interface MfCreatureVisitor {
   new: boolean;
   /** Read by `visitors.js`'s generalised `chooseHosts`/front-roam logic. */
   zone: Creature['zone'];
+  /** The unlock slot (0-4) — `chooseHosts` spreads ground/slope/burrow species across
+   * different depth bands by it, the same way it already spreads deer/stag, so a biome's
+   * five creatures scatter through the grove instead of all crowding the front. */
+  slot: number;
   still?: boolean;
   sleepy?: boolean;
 }
@@ -100,6 +104,7 @@ export function buildCreatureVisitors(
       why: `your grove reached ${save.activeDaysAtArrival} active study days`,
       new: false,
       zone: creature.zone,
+      slot: creature.slot,
       still: creature.still,
       sleepy: creature.sleepy,
     });

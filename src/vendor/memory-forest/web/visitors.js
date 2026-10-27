@@ -2,8 +2,8 @@
 (function () {
 'use strict';
 const AF = window.AnkiForest;
-const { rng, hex, mix, rgb } = AF.u;
-const { MATURE, OLD, ANCIENT } = AF.STAGE;
+const { rng, hex, mix, rgb, hashStr } = AF.u;
+const { YOUNG, MATURE, OLD, ANCIENT } = AF.STAGE;
 const { GROUND_BOTTOM } = AF.GEOM;
 
 const VISITORS = {
@@ -41,7 +41,14 @@ const VISITORS = {
     ['......cc....', '......cc....', '...rrrrrrr..', '..rrrrrrrrR.', '.rrrrrrrrrRR', 'RRRRRRRRRRRR', '.wWwWwWwWwW.', '.woowWwnnwW.', '.woowWwnnwW.', '.woowWwWwWw.']] }
 };
 AF.VISITOR_SPRITES = VISITORS;  // (the study calendar draws each on the day it came: web/calendar.js)
-const FRONT_SLOTS = [0.9, 0.22, 0.75, 0.38, 0.6];
+// Memory Garden change: three more slots than the stock roster ever needed (it never put
+// more than five animals at the front at once) — a region biome can field up to five
+// creatures itself, and on a young grove with nowhere yet to host any of them (no mature
+// tree, no pond), all five plus the cabin could legitimately need a front spot the same
+// frame. Without the extra slots here, `AF.drawVisitors`'s own `i >= slots.length` check
+// would simply not draw the animals past the fifth at all — not a fallback anywhere else,
+// just silently missing.
+const FRONT_SLOTS = [0.9, 0.22, 0.75, 0.38, 0.6, 0.12, 0.52, 0.82];
 // seconds: each animal at the front moves on every ROAM_EVERY (plus a little more per
 // animal, and offset by ROAM_OFFSET each, so they never set off together), walking there at
 // WALK_SPEED pixels a second (of env.u, so the same pace at any size), its legs changing with
@@ -154,19 +161,33 @@ function chooseHosts(env, list, trees, open) {
   // above, read from each visitor's own `zone` (src/regions/types.ts) instead of another
   // hardcoded key list — purely additive, never claims a tree or pond the stock logic
   // already took. `canopy`/`trunk` species perch in a tree the same way the owl and
-  // squirrel do; `water`/`waterEdge` species wade at a pond the same way the heron does.
-  // `ground`/`slope`/`burrow` species are deliberately left unhosted here — their own
-  // `Zone` doc comment already describes front-of-scene roaming, which is exactly
-  // `AF.placeVisitors`'s own default for anything not returned from this function.
+  // squirrel do; `water`/`waterEdge` species wade at a pond the same way the heron does;
+  // `ground`/`slope`/`burrow` species graze at their own depth band through the grove the
+  // same way deer/stag do, spread by `v.slot` (0-4) rather than two fixed bands, so a
+  // biome's five creatures scatter through the whole scene instead of every one of them
+  // sharing the single front-roaming lane. Each only falls back to `AF.placeVisitors`'s own
+  // front-of-scene default (true walking roam, not a fixed grazing spot) when it genuinely
+  // has nowhere to be hosted this frame — a young grove with no pond yet, say.
   for (const v of list) {
     if (v.key in inForest) continue;
     const taken = new Set(Object.values(inForest).map(s => s.host));
     if (v.zone === 'canopy' || v.zone === 'trunk') {
-      const pool = trees.filter(p => p.it.stage >= MATURE && !taken.has(p));
+      // YOUNG, not MATURE like the owl/squirrel above: those two are long-time milestone
+      // rewards, earned well after a grove has mature trees to offer; a region creature can
+      // arrive after as little as a week (`SLOT_REQUIREMENTS[0]`, src/data/milestones.ts),
+      // when a grove may have no MATURE tree at all yet. Demanding one would leave a tree-
+      // dwelling species grounded — visibly wrong for a species that doesn't walk — for as
+      // long as it took the grove to grow one, not because it had nowhere to perch.
+      const pool = trees.filter(p => p.it.stage >= YOUNG && !taken.has(p));
       if (pool.length) inForest[v.key] = { host: any(pool) };
     } else if (v.zone === 'water' || v.zone === 'waterEdge') {
       const wet = ponds.filter(p => !taken.has(p));
       if (wet.length) inForest[v.key] = { host: any(wet) };
+    } else if (v.zone === 'ground' || v.zone === 'slope' || v.zone === 'burrow') {
+      const slot = v.slot || 0, lo = slot * 1.5, hi = lo + 2;
+      const free = pool => pool.filter(p => !taken.has(p));
+      const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, 2));
+      if (pool.length) inForest[v.key] = { host: any(pool), graze: true };
     }
   }
   return inForest;
@@ -198,7 +219,17 @@ AF.placeVisitors = function (env) {
   env.afterItem = (lg, p) => {
     const keysHere = byHost.get(p); if (!keysHere) return;
     for (const key of keysHere) {
-      const spr = VISITORS[key], v = list.find(x => x.key === key), frame = spr.frames[inForest[key].graze ? 1 : 0];
+      const spr = VISITORS[key], v = list.find(x => x.key === key), base = inForest[key].graze ? 1 : 0;
+      // Memory Garden change: a hosted creature (owl/heron/squirrel/deer/stag, and now any
+      // region creature host above) used to show one fixed frame all day — entirely frozen,
+      // not even the idle "glance" front-roaming visitors already get. Still species
+      // (crocodiles) stay motionless on purpose; everything else now flicks briefly to its
+      // other frame now and then, the same sine-wave idle check front visitors use, offset
+      // per creature (`hashStr(key)`) so a scene with several hosted animals doesn't have
+      // them all glance in lockstep.
+      const glancing = !env.still && !(v && v.still) && spr.frames.length > 1
+        && Math.sin((env.t || 0) * AF.u.cyc(0.7) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) > IDLE_GLANCE;
+      const frame = spr.frames[glancing ? (spr.frames.length - 1 - base) : base];
       let x0, y0;
       if (key === 'owl') { const h = AF.STAGE_H[p.it.stage] * env.u * p.s; x0 = Math.round(p.x - 2); y0 = Math.round(p.y - h - frame.length + 3); }
       else if (key === 'squirrel') { x0 = Math.round(p.x) + (AF.trunkRight ? AF.trunkRight(p, env) : 1); y0 = Math.round(p.y - frame.length + 1); }  // on the roots, just right of the trunk

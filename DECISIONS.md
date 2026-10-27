@@ -757,3 +757,74 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     falling back to front-roaming when it didn't, ground species front-roaming, sky species
     (Steller's sea eagle) circling overhead — every zone branch exercised and confirmed, not
     assumed. `tsc`/`vitest`/full production `webpack` build all clean throughout.
+- **Round 10, live-garden placement follow-up — real bugs the first wiring pass left.** The
+  user's own report after seeing it running: the ezo red fox didn't look like a fox, small
+  birds sat on the ground instead of perching or flying, nothing was moving and everything
+  stood at one single front line instead of through the whole scene, and the ponds could
+  sell "water" harder. Four real, separate issues, not one:
+  - **`japan:ezo-red-fox`** was still on `baked.generated.ts`'s generic small-quadruped
+    template, never promoted to the proven fox shape `norway:fjellrev` (Arctic fox) and the
+    stock `VISITORS.fox` already share. Recoloured onto that same shape.
+  - **The "grounded bird" report traced to the tree-hosting threshold, not a zone bug** —
+    `crimson-rosella` already carried `zone: 'canopy'`, correctly. `chooseHosts`'s generic
+    branch (the previous entry) required a `MATURE` tree, the same bar the owl/squirrel use
+    — but those are long-time milestone rewards, earned well after a grove has mature trees;
+    a region creature can arrive after seven active days, when a grove may have none yet.
+    Lowered to `YOUNG` for the generic branch only, so a tree-dwelling species isn't
+    grounded for as long as it takes the grove to grow a mature tree.
+  - **"Only at the front, and nothing moves"** was two things at once. First,
+    `ground`/`slope`/`burrow` species had been left on `AF.placeVisitors`'s single shared
+    front-roaming lane entirely — correct per `Zone`'s own doc comment, but it meant every
+    ground species in a biome crowded the same strip. Generalised `chooseHosts` further:
+    these now graze at their own depth band through the grove, spread by `v.slot` (0-4) the
+    same way deer/stag already use two fixed bands — not a new mechanism, the existing one
+    extended to read any slot rather than two hardcoded keys. `FRONT_SLOTS` (5, sized for
+    the stock roster, which never put more than five animals at the front at once) widened
+    to 8 as a safety margin for whatever still falls back to it. Second — and this part
+    wasn't new today, every hosted stock creature (owl, heron, squirrel, deer, stag) had
+    always been fully frozen, one fixed frame for the whole day, not even the idle "glance"
+    front-roaming visitors already get. Gave hosted creatures that same sine-wave idle
+    check, offset per creature (`hashStr(key)`) so several in one scene don't glance in
+    lockstep; a `still` species (crocodiles) is explicitly exempted and stays motionless on
+    purpose.
+  - **Pond reflections**: the sparse dither and single glint line read as water once there
+    was a dry alternative to contrast against, but didn't sell a reflective surface well on
+    their own. Sparkle density now varies by depth within the shallow band (denser near the
+    "sky reflection" zone just past the deep water, sparser toward the shore) and three
+    short glint strokes stand in for broken ripples instead of one, both seeded by the
+    pond's own `p.it.seed` so the pattern stays stable across a render rather than swimming
+    every frame.
+  - **"Flag any other animals that would better match a confirmed-good design"** — audited
+    every creature still on `baked.generated.ts`'s fallback against its own real-world body
+    type. Most of that list turned out to already be fine: `vervet-monkey`/`spider-monkey`/
+    `ring-tailed-lemur`/`silvered-langur` (and, it turns out, `sifaka`/`aye-aye`/
+    `red-fronted-lemur` too) all share the same seated-primate template `japan:macaque` and
+    `madagascar:indri` were explicitly swapped onto because the gallery review kept it —
+    already a confirmed shape, just never promoted to its own `HAND_SPRITES` entry. Five
+    genuine mismatches found and fixed the same way: `canada:snowshoe-hare` and
+    `australia:bilby` (literally a hare, and "enormous rabbit-like ears" its own named
+    trait) onto the stock rabbit shape; `madagascar:fossa` ("long slim cat-like body with a
+    very long tail") onto the confirmed cat/predator template every big cat in the roster
+    already shares, tail lengthened well past the template's default; `norway:ekorn` (red
+    squirrel) and `japan:ezo-momonga` (Siberian flying squirrel) onto the hoary marmot's own
+    confirmed base — the user's explicit note on that entry, "use this for the base for
+    other small rodents".
+    - **Left flagged, not fixed, given the size of the remaining work**: roughly sixteen
+      small perching/flitting birds (crimson rosella, tūī, kererū, lilac-breasted roller,
+      rhinoceros hornbill, scarlet macaw, and others) are still on the generic small-
+      quadruped template with no bird silhouette at all — `australia:cockatoo` and
+      `australia:kookaburra` (both hand-authored, both kept) are the obvious perching-bird
+      base to redesign them onto, but sixteen species is a real second project, not a
+      same-pass addition. `australia:pademelon` and `australia:bennetts-tree-kangaroo` are
+      macropods in their own right (`pademelon` already carries `hop: true`) and a strong
+      case for the kangaroo shape scaled down, not attempted here since a straight 1:1 reuse
+      would be the wrong size. `canada:beaver` and `borneo:smooth-coated-otter` are both
+      semi-aquatic with a signature flat tail the generic template doesn't represent at all
+      — no existing confirmed shape fits either one, so this would be a new design, not a
+      reuse, and is flagged rather than attempted under an "audit" task.
+  - Verified with the render harness throughout: `root.afEnv` instrumentation (not just
+    screenshots) confirmed the lowered tree threshold, the depth-band spread (ground/slope
+    species landing in `inForest` instead of all crowding `front`), and the idle-glance sine
+    wave actually toggling across a sampled time range; pond reflections and the five
+    reused shapes checked visually. `tsc`/`vitest` (153/153)/`lint`/full production
+    `webpack` build all clean.

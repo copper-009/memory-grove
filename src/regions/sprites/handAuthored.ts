@@ -363,6 +363,21 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['......o.o', '......ooo', 'w..ooeow.', '.wooooo..', '..d..d...'],
     ] as const,
   },
+  // Round 10: "the ezo red fox doesn't match the usual fox design" — still on the generic
+  // baked quadruped template. Rebuilt on the exact same proven fox shape this file's own
+  // Arctic fox (above) and the stock VISITORS.fox already use, recoloured to this species'
+  // own orange coat with black stockings and a white tail-tip/chest, per its own traits.
+  'japan:ezo-red-fox': {
+    pal: { b: '#c8702a', d: '#8a4718', l: '#e8a05a', e: '#120a04', n: '#f4f0e8', k: '#2a2018' },
+    frames: [
+      ['........b.b.', '........bbb.', '........bebn', 'nn.bbbbbbbb.', '.nbbbbbbb...', '..k.k..k.k..'],
+      ['........b.b.', '........bbb.', '........bebn', '.n.bbbbbbbb.', 'n.bbbbbbb...', '..k.k..k.k..'],
+    ] as const,
+    young: [
+      ['......b.b', '......bbb', 'n..bbebn.', '.nbbbbb..', '..k..k...'],
+      ['......b.b', '......bbb', 'n..bbebn.', '.nbbbbb..', '..k..k...'],
+    ] as const,
+  },
 
   // -- Shared from the vendored engine's own `bear` sprite, recoloured — walking, nose down.
   'canada:grizzly-bear': {
@@ -1433,6 +1448,82 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     young: [
       ['....l..', '.bblll.', 'bbbdle.', 'ddbbb.t', '.dd.d.t'],
       ['....l..', '.bblll.', 'bbbdle.', 'ddbbb..', '.dd.dtt'],
+    ] as const,
+  },
+
+  // -- Batch 3: whole-roster scale/placement audit (round 10) — shape-reuse fixes. Each of
+  // these five was still on `baked.generated.ts`'s generic small-quadruped template despite
+  // its own real-world body type being a much closer match for a shape this project has
+  // already drawn and had confirmed ("keep") for an unrelated species. Recoloured onto that
+  // shape, same as every other reuse this session (the sloth onto the orangutan, the loon
+  // onto the takahē, and so on) — not a redesign from scratch.
+  // Snowshoe hare: literally a hare — the stock VISITORS.rabbit shape, not the generic
+  // template, is the honest match. A hint of white at the hind foot nods to "pure white in
+  // winter" without a second, season-swapped palette.
+  'canada:snowshoe-hare': {
+    pal: { b: '#8a7458', d: '#5a4a36', l: '#bca888', e: '#120e08', w: '#f0ece4' },
+    frames: [
+      ['..d.d...', '..d.d...', '..b.b...', '.bbbb...', 'bebbbbb.', '.blllbbw', '..d..d..'],
+      ['...d.d..', '..d.d...', '..b.b...', '.bbbb...', 'bebbbbb.', '.blllbbw', '..d..d..'],
+    ] as const,
+    young: [
+      ['.b.b...', 'bebbb..', '.lllbw.', '.d..d..'],
+      ['.b.b...', 'bebbb..', '.lllbw.', 'd..d...'],
+    ] as const,
+  },
+  // Greater bilby: "enormous rabbit-like ears" is the species' own named trait — the stock
+  // rabbit shape again, with the black tail and white brush tip this species actually has.
+  'australia:bilby': {
+    pal: { b: '#b0a496', d: '#7a6f62', l: '#dcd4c6', e: '#14100c', n: '#1a1a1a', w: '#f0ece2' },
+    frames: [
+      ['..d.d...', '..d.d...', '..b.b...', '.bbbb...', 'bebbbbb.', '.blllbbn', '..d..d.w'],
+      ['...d.d..', '..d.d...', '..b.b...', '.bbbb...', 'bebbbbb.', '.blllbbn', '..d..d.w'],
+    ] as const,
+    young: [
+      ['.b.b...', 'bebbb..', '.lllbn.', '.d..d.w'],
+      ['.b.b...', 'bebbb..', '.lllbn.', 'd..d..w'],
+    ] as const,
+  },
+  // Fossa: "long slim cat-like body with a very long tail" — the confirmed cat/predator
+  // template (tiger, both leopard variants, puma, both lynxes all already share it, every
+  // one of them kept) recoloured to this species' own reddish-brown, with the tail
+  // lengthened well past the template's default — that length is fossa's whole silhouette.
+  'madagascar:fossa': {
+    pal: { o: '#8a5438', e: '#100a06', w: '#b07a54', d: '#5c3722', n: '#1a1410' },
+    frames: [
+      ['.......n...n.....', '.......oooo......', '........oeow.....', 'ww.oooooooo......', '.wooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
+      ['.......n...n.....', '.......oooo......', '........oeow.....', '.w.oooooooo......', 'w.ooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
+    ] as const,
+    young: [
+      ['......oeow.....', 'w.oooooo.......', 'w.oooooo..nnn..', '.d.d..d.d..nnn.'],
+      ['......oeow.....', '.woooooo.......', '.woooooo...nnn.', '.d.d..d.d...nnn'],
+    ] as const,
+  },
+  // Red squirrel: the hoary marmot's own confirmed base ("yes yes, use this for the base
+  // for other small rodents" — the user's explicit note on that entry), recoloured rust-red.
+  'norway:ekorn': {
+    pal: { r: '#a8502a', R: '#6a3018', t: '#d08050', T: '#a8703e', l: '#f0e8dc', e: '#120c06', d: '#3a2010', a: '#a8502a', c: '#6a3018' },
+    frames: [
+      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+    ] as const,
+    young: [
+      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+    ] as const,
+  },
+  // Siberian flying squirrel: the same hoary-marmot base, recoloured to this species' own
+  // soft grey — it spends most of its time clinging in the canopy (`zone: 'trunk'`) rather
+  // than actually gliding, which this sitting pose represents honestly.
+  'japan:ezo-momonga': {
+    pal: { r: '#a8a69c', R: '#6e6c64', t: '#d8d6cc', T: '#b4b2a8', l: '#f2f0e8', e: '#0c0a08', d: '#4a4842', a: '#a8a69c', c: '#6e6c64' },
+    frames: [
+      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+    ] as const,
+    young: [
+      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
     ] as const,
   },
 };

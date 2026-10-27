@@ -90,13 +90,30 @@ AF.drawPond = function (g, env, p) {
   if (AF.envOf(env).arid) { drawDryPond(g, env, p, cx, cy, w, h); return; }
   const water = hex((th.frozen ? '#dfe8f0' : th.water) || DEFAULT_WATER);
   const hz = p.hz * (th.hzStep || 0.1) * 3, c0 = mix(water, hex(th.haze), hz), c1 = mix(c0, [255, 255, 255], 0.45), deep = mix(c0, [0, 0, 0], th.frozen ? 0.06 : 0.18), edge = mix(hex(th.g1), [0, 0, 0], 0.2);
-  ellipseFill(g, cx, cy, w, h, (q, x, y) => q > 0.8 ? edge : y < cy - h * 0.2 ? deep : ((x * 3 + y * 7) % 11 === 0 ? c1 : c0));
+  // Memory Garden change: a real pond's own dither sparkle read as water once the arid
+  // biomes next to it gave it something dry to contrast against, but a single thin glint
+  // line wasn't doing much to actually sell a reflective surface on its own. The sparkle is
+  // now denser in the shallow band just past the deep water (where a sky reflection reads
+  // strongest) than near the shore, and several short glint strokes stand in for broken
+  // ripples instead of one — both seeded by the pond's own `p.it.seed`, so a pond keeps the
+  // same ripple pattern across a render rather than it swimming every frame.
+  const shallowTop = cy - h * 0.2;
+  ellipseFill(g, cx, cy, w, h, (q, x, y) => {
+    if (q > 0.8) return edge;
+    if (y < shallowTop) return deep;
+    const band = (y - shallowTop) / Math.max(1, h * 0.7);
+    return (x * 3 + y * 7) % (band < 0.45 ? 7 : 11) === 0 ? c1 : c0;
+  });
   const R = rng(p.it.seed), reed = th.snow ? '#8a9a8a' : '#2f4a2a', tip = '#8a6a3a';
   for (let k = 0; k < POND_REEDS; k++) { const side = k % 2 ? 1 : -1, x = Math.round(cx + side * (w / 2 - 1 - R() * w * 0.15)), y = Math.round(cy + R() * h * 0.2), hh = 2 + (R() * 3 | 0);
     g.fillStyle = reed; g.fillRect(x, y - hh, 1, hh); g.fillStyle = tip; g.fillRect(x, y - hh - 1, 1, 1); }
   g.fillStyle = rgb(c1);
-  if (th.frozen) pxLine(g, cx - w * 0.25, cy + h * 0.15, cx + w * 0.2, cy - h * 0.05);
-  else g.fillRect(Math.round(cx - w * 0.2), Math.round(cy - h * 0.05), Math.max(2, Math.round(w * 0.18)), 1);
+  const Rg = rng(p.it.seed ^ 0x9e3779), glints = 3;
+  for (let k = 0; k < glints; k++) {
+    const gx = cx + (Rg() - 0.5) * w * 0.55, gy = cy - h * 0.1 + Rg() * h * 0.3, glen = Math.max(1, Math.round(w * (0.07 + Rg() * 0.1)));
+    if (th.frozen) pxLine(g, gx - glen, gy + 1, gx + glen, gy - 1);
+    else g.fillRect(Math.round(gx - glen / 2), Math.round(gy), glen, 1);
+  }
   if (env.afterItem) env.afterItem(g, p);
 };
 AF.findPuddles = function (env) {
