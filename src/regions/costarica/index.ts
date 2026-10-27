@@ -151,7 +151,13 @@ export const costaRica: Region = {
           iucn: 'LC', fact: 'Flashes its red eyes open to startle a predator for the split second it needs to leap away.',
           source: iucn('Agalychnis callidryas'), activity: 'nocturnal', zone: 'waterEdge', stages: ['tadpole', 'froglet', 'adult', 'old'],
           behaviour: 'Sits with its eyes closed by day, tucked tight against a leaf.',
-          body: { kind: 'frog', size: [5, 3], legs: 1 }, palette: { b: '#4ec850', d: '#2a8a30', l: '#80e880', e: '#c0302a', w: '#2a4ac0' } },
+          body: { kind: 'frog', size: [5, 3], legs: 1 }, palette: { b: '#4ec850', d: '#2a8a30', l: '#80e880', e: '#c0302a', w: '#2a4ac0' },
+          // A second state for the days it's found in the water rather than perched at the
+          // leaf's edge — flattened and trailing, its red eyes still its own giveaway.
+          alt: { zone: 'water', sprite: { pal: { b: '#4ec850', d: '#2a8a30', e: '#c0302a', l: '#80e880' }, frames: [
+            ['..ee.....', '.bbbbb...', 'bbbbbbbdd', '.ll...dd.'],
+            ['..ee.....', '.bbbbb...', 'bbbbbbd.d', '.ll..d.d.'],
+          ] as const } } },
         { key: 'blue-morpho', slot: 1, common: 'Blue morpho', scientific: 'Morpho peleides',
           traits: ['Enormous iridescent blue upperwings', 'Dull brown underwings with eyespots'],
           iucn: 'NE', fact: 'The blue flashes only in flight — at rest, folded wings show only camouflaged brown.',

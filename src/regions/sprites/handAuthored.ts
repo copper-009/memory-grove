@@ -1353,49 +1353,59 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // rest, a genuine identifying feature, not an invented one — bold enough to actually read
   // as a wing shape instead of a body-coloured notch.
   'australia:black-swan': {
+    // Round 11 redesign — "a bit munted": the old neck read as a jagged staircase and the wing
+    // only showed as two isolated dots. This gives the neck a single consistent diagonal lean
+    // (reads as a smooth curve at this scale) and swaps the wedge body for a full rounded dome
+    // with a real wing-crease patch, not isolated flecks.
     pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc' },
     frames: [
       [
-        '.......led.......',
-        '......llld.......',
-        '.....llld........',
-        '....llld.........',
-        '...dllld.........',
-        '..bbbbbbbbb......',
-        '.bbbbwwbbbbb.....',
-        'bbbbbbwwbbbbbbb..',
-        '.wwwwwwwwwwwww...',
+        '.......led......',
+        '.......lld......',
+        '......lld.......',
+        '......lld.......',
+        '.....lld........',
+        '.....dld........',
+        '....lld.........',
+        '...bbbbbbbbb....',
+        '..bbbbbbbbbbb...',
+        '.bbbbbbllbbbbb..',
+        '.bbbbbbllbbbbb..',
+        '..wwwwwwwwwww...',
       ],
       [
-        '.......led.......',
-        '......llld.......',
-        '.....llld........',
-        '....llld.........',
-        '...dllld.........',
-        '..bbbbbbbbb......',
-        '.bbbbwwbbbbb.....',
-        'bbbbbbwwbbbbbbb..',
-        '.wwwwwwwwwwwww...',
+        '.......led......',
+        '.......lld......',
+        '......lld.......',
+        '......lld.......',
+        '.....lld........',
+        '.....dld........',
+        '....lld.........',
+        '...bbbbbbbbb....',
+        '..bbbbbbbbbbb...',
+        '.bbbbbbllbbbbb..',
+        '.bbbbbbllbbbbb..',
+        '..wwwwwwwwwww...',
       ],
     ] as const,
     young: [
       [
-        '....led....',
-        '...lld.....',
-        '..lld......',
-        '.dlld......',
-        'bbbbbbb....',
-        'bbbwwbbbb..',
-        '.wwwwwww...',
+        '....led.....',
+        '....lld.....',
+        '...lld......',
+        '..dld.......',
+        '.bbbbbb.....',
+        'bbbbbllbbb..',
+        '.wwwwwwww...',
       ],
       [
-        '....led....',
-        '...lld.....',
-        '..lld......',
-        '.dlld......',
-        'bbbbbbb....',
-        'bbbwwbbbb..',
-        '.wwwwwww...',
+        '....led.....',
+        '....lld.....',
+        '...lld......',
+        '..dld.......',
+        '.bbbbbb.....',
+        'bbbbbllbbb..',
+        '.wwwwwwww...',
       ],
     ] as const,
   },
@@ -1448,6 +1458,361 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     young: [
       ['....l..', '.bblll.', 'bbbdle.', 'ddbbb.t', '.dd.d.t'],
       ['....l..', '.bblll.', 'bbbdle.', 'ddbbb..', '.dd.dtt'],
+    ] as const,
+  },
+
+  // -- Batch 4 (round 12): "the frogs could also be made like smaller versions of chameleons
+  // as well" — none of the six frog species had a hand-authored sprite (all still baked).
+  // Two shared templates, both built from the chameleon shape's squat rounded body and
+  // bulging twin eye-dots but tailless and legs splayed instead of curled: a small one (for
+  // the smallest species, and reused verbatim as the "young" stage for the bigger species
+  // below), and a slightly wider one for the three larger tree frogs. Frame 2 of each is a
+  // legs-out hop/kick pose rather than a walk cycle — a real frog's two states.
+  'australia:corroboree-frog': {
+    // "Vivid yellow and black longitudinal stripes" — a dark centre stripe down the back on
+    // the small template stands in for the pattern at this scale.
+    pal: { b: '#e8c81e', d: '#141410', e: '#0a0a06' },
+    frames: [
+      ['..e.e..', '.bbdbb.', 'bbbdbbb', 'dbbdbbd', '.d...d.'],
+      ['..e.e..', '.bbdbb.', 'bbbdbbb', 'd.bdb.d', 'dd...dd'],
+    ] as const,
+    young: [
+      ['.e.e.', 'bbdbb', 'dbdbd', '.d.d.'],
+      ['.e.e.', 'bbdbb', 'd.d.d', 'dd.dd'],
+    ] as const,
+  },
+  'costarica:glass-frog': {
+    // Pale translucent lime — a genuine see-through render isn't possible at this palette
+    // size, so the palest green in the roster stands in for "translucent". `still: true` is
+    // already set on the species (barely moves), unchanged here.
+    pal: { b: '#9ad87a', d: '#5a9048', e: '#141a0c' },
+    frames: [
+      ['..e.e..', '.bbbbb.', 'bbbbbbb', 'dbbbbbd', '.d...d.'],
+      ['..e.e..', '.bbbbb.', 'bbbbbbb', 'd.bbb.d', 'dd...dd'],
+    ] as const,
+    young: [
+      ['.e.e.', 'bbbbb', 'dbbbd', '.d.d.'],
+      ['.e.e.', 'bbbbb', 'd.b.d', 'dd.dd'],
+    ] as const,
+  },
+  'costarica:poison-dart-frog': {
+    // "Bright red body with blue-black legs" — the small template's separate leg colour was
+    // already the honest match for this.
+    pal: { b: '#d8302a', d: '#1c1e3a', e: '#0a0a06' },
+    frames: [
+      ['..e.e..', '.bbbbb.', 'bbbbbbb', 'dbbbbbd', '.d...d.'],
+      ['..e.e..', '.bbbbb.', 'bbbbbbb', 'd.bbb.d', 'dd...dd'],
+    ] as const,
+    young: [
+      ['.e.e.', 'bbbbb', 'dbbbd', '.d.d.'],
+      ['.e.e.', 'bbbbb', 'd.b.d', 'dd.dd'],
+    ] as const,
+  },
+  'australia:green-tree-frog': {
+    pal: { b: '#6fae4e', d: '#43752f', e: '#141a0c' },
+    frames: [
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'dbbbbbbbd', '.d.....d.'],
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'd.bbbbb.d', 'dd.....dd'],
+    ] as const,
+    // The small template, recoloured to this species — its own froglet stage.
+    young: [
+      ['.e.e.', 'bbbbb', 'dbbbd', '.d.d.'],
+      ['.e.e.', 'bbbbb', 'd.b.d', 'dd.dd'],
+    ] as const,
+  },
+  'costarica:red-eyed-tree-frog': {
+    // "Bright red eyes" is the species' single most-cited trait — given its own colour
+    // rather than the generic dark eye-dot every other frog here uses.
+    pal: { b: '#4ec850', d: '#2a8a30', e: '#c0302a' },
+    frames: [
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'dbbbbbbbd', '.d.....d.'],
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'd.bbbbb.d', 'dd.....dd'],
+    ] as const,
+    young: [
+      ['.e.e.', 'bbbbb', 'dbbbd', '.d.d.'],
+      ['.e.e.', 'bbbbb', 'd.b.d', 'dd.dd'],
+    ] as const,
+  },
+  'borneo:wallaces-flying-frog': {
+    // Perched pose — this species' other, gliding state lives as `alt` directly on its
+    // creature definition in `src/regions/borneo/index.ts` (own sprite, `zone: 'sky'`), not
+    // here, since `HAND_SPRITES` only ever covers the primary `CreatureSprite`.
+    pal: { b: '#3ea050', d: '#1e6830', e: '#141a0c' },
+    frames: [
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'dbbbbbbbd', '.d.....d.'],
+      ['...e.e...', '..bbbbb..', '.bbbbbbb.', 'd.bbbbb.d', 'dd.....dd'],
+    ] as const,
+    young: [
+      ['.e.e.', 'bbbbb', 'dbbbd', '.d.d.'],
+      ['.e.e.', 'bbbbb', 'd.b.d', 'dd.dd'],
+    ] as const,
+  },
+
+  // -- Batch 5 (round 12): "the rosella and other small birds... redesign to follow eagles
+  // shape instead" / "redesign ~16 small perching/flitting birds onto a cockatoo/kookaburra
+  // base" — all sixteen were still baked. Two confirmed-good shapes already in this file do
+  // the job: the kookaburra's own 8x7 adult / 7x5 young perched-bird structure (head, eye,
+  // dark eye-stripe/wing mark, belly band, barred tail, legs) for most of them, and that same
+  // 7x5 shape reused directly as the ADULT size for the smallest species (no separate young —
+  // the accepted fallback for species too small for a second, smaller grid to read as
+  // anything but noise). The cockatoo's two-row crest is grafted on, unmodified in structure,
+  // for the two species whose signature mark is a literal crest/casque. A handful get a
+  // genuinely extended tail (streamers, a lyre, a fan) — the one feature this base shape
+  // can't fake with palette alone.
+  'aotearoa:pihoihoi': {
+    // "Streaked brown... constantly bobs its tail" — ground zone, correctly, already; this
+    // is a shape fix only. A new, smaller template (below the kookaburra young size) for the
+    // two genuinely tiny species in this batch.
+    pal: { b: '#8a7452', d: '#5c4a32', e: '#140e08', r: '#5c4a32', k: '#3a2e1c' },
+    frames: [
+      ['.bbb..', 'beebd.', 'bbbbd.', '.bbrr.', '..kk..'],
+      ['.bbb..', 'beebd.', 'bbbbd.', '.bbrrr', '..kk..'],
+    ] as const,
+  },
+  'aotearoa:piwauwau': {
+    // "Tiny and almost tailless" — tail colour matches the body so it reads as barely there;
+    // "yellow flanks" becomes the one accent pixel the tiny template has room for.
+    pal: { b: '#6a7a3a', d: '#3e4a20', e: '#0a0a06', r: '#6a7a3a', k: '#2a2e14', y: '#e8c860' },
+    frames: [
+      ['.bbb..', 'beebd.', 'bbbyd.', '.bbrr.', '..kk..'],
+      ['.bbb..', 'beebd.', 'bbbyd.', '.bbrrr', '..kk..'],
+    ] as const,
+  },
+  'australia:crimson-rosella': {
+    pal: { b: '#c0302a', d: '#1a1418', e: '#0a0a06', r: '#3a5ac0', k: '#2a2018' },
+    frames: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'aotearoa:tui': {
+    // "Two white throat tufts against glossy blue-black" — its single most-cited trait, so
+    // it gets its own two-pixel mark rather than being lost in a one-colour silhouette.
+    pal: { b: '#141418', d: '#0a0a0c', e: '#2a2a30', r: '#141418', k: '#1a1410', w: '#f4f0e8' },
+    frames: [
+      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'australia:satin-bowerbird': {
+    // "Glossy blue-black with violet eyes" — the eye itself, given its real colour instead
+    // of the usual dark pupil, is this species' whole identity at this scale.
+    pal: { b: '#16151c', d: '#0a0a0c', e: '#8a6ac0', r: '#16151c', k: '#1a1410' },
+    frames: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'norway:lunde': {
+    // Puffin — chunky and short, so the small template is the honest size despite the big
+    // bill; white face and bright orange feet carry the identity instead.
+    pal: { b: '#1a1a1c', d: '#0a0a0c', e: '#e8a030', r: '#1a1a1c', k: '#e8a030', w: '#f0ece0' },
+    frames: [
+      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'aotearoa:kereru': {
+    pal: { b: '#4a7a46', d: '#2a4a28', e: '#140e08', w: '#f4f0e8', r: '#4a7a46', k: '#8a4a2a' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'costarica:scarlet-macaw': {
+    pal: { b: '#d8302a', d: '#3a5ac0', e: '#140e08', w: '#e8c030', r: '#d8302a', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'borneo:storks-billed-kingfisher': {
+    // `still: true` is already set on the species (sits dead still watching the water),
+    // unchanged here. The heavy red bill becomes a cheek-mark the same red as the baked
+    // palette's own bill colour, since this template has no separate protruding beak.
+    pal: { b: '#2a7a8a', d: '#c0392b', e: '#120e08', w: '#e8d8a0', r: '#2a7a8a', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'norway:storfugl': {
+    // "Fanned black tail" — the one change this species' tail rows get is width, spread to
+    // the full body width rather than the usual narrow bar.
+    pal: { b: '#1a1a1c', d: '#0a0a0c', e: '#c0302a', w: '#8a8470', r: '#3a3a3e', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '.rrrrrr.', '.rrrrrr.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '.rrrrr..', '..rrrrr.', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'costarica:bare-necked-umbrellabird': {
+    // The cockatoo's own two-row crest, recoloured black for "shaggy black crest overhanging
+    // the bill" instead of erect and yellow. The inflatable throat wattle takes the belly-band
+    // colour slot, its own bright red rather than the usual pale underside.
+    pal: { y: '#141418', b: '#1a1a1c', d: '#0a0a0c', e: '#140e08', w: '#c0302a', r: '#1a1a1c', k: '#2a2018' },
+    frames: [
+      ['.yy.....', '.yyy....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
+      ['.yy.....', '.yyy....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'borneo:rhinoceros-hornbill': {
+    // Same crest graft as the umbrellabird, recoloured to the casque's own orange-red, plus
+    // a white tail standing in for "white tail, black band" (the band itself doesn't fit
+    // this template's tail without a third tail colour, so the single white reads as the
+    // species' second most obvious mark instead).
+    pal: { y: '#e8783a', b: '#1a1a1c', d: '#9a4a20', e: '#0a0a06', w: '#1a1a1c', r: '#f0ece0', k: '#2a2018' },
+    frames: [
+      ['.yy.....', 'yyy.....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
+      ['.yy.....', 'yyy.....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'australia:alberts-lyrebird': {
+    // "Long filamentary tail" — one extra tail row, tapering, rather than the usual two-row
+    // bar.
+    pal: { b: '#8a5a3a', d: '#5c3a22', e: '#140e08', w: '#c8a070', r: '#8a5a3a', k: '#2a1810' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '..brrrr.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrrr.', '..brrrr.', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'costarica:quetzal': {
+    // "Tail streamers can be longer than the rest of its body" — tapers to a thin one-pixel
+    // trailing line, the most dramatic tail in this batch.
+    pal: { b: '#1a6a46', d: '#0e3e2a', e: '#120e08', w: '#f0ece2', r: '#2a9a66', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....rr..', '....rr..', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....rr..', '...rr...', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'eastafrica:lilac-breasted-roller': {
+    // "Lilac throat, turquoise belly, green back" packed into the three colour slots this
+    // template already separates by position, plus a moderately extended trailing tail.
+    pal: { b: '#2a7a50', d: '#c088d0', e: '#120e08', w: '#2a7ac0', r: '#1a2a4a', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...brr..', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '...brrr.', '....rr..', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+  'australia:rainbow-bee-eater': {
+    // "Two long thin tail streamers" — two separate one-pixel tips rather than the roller's
+    // single broader trail, the clearest way this shape has to tell the two species apart.
+    pal: { b: '#3a9a5c', d: '#1a1a18', e: '#0a0a06', w: '#b06a2a', r: '#2a5a3a', k: '#2a2018' },
+    frames: [
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....r.r.', '...kk...'],
+      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '...brr..', '....r..r', '...kk...'],
+    ] as const,
+    young: [
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
+      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+    ] as const,
+  },
+
+  // -- Batch 6 (round 12): "scale down kangaroo shape for pademelon and Bennett's
+  // tree-kangaroo" — both still baked. The confirmed kangaroo posture (small head, tall
+  // torso, tucked forearms, bent hind leg, thick prop tail — `australia:red-kangaroo` and
+  // `australia:eastern-grey-kangaroo` above) at its own smaller `young` grid size, which is
+  // an honest size match for these genuinely smaller macropods rather than a redesign.
+  'australia:pademelon': {
+    // "Small and stocky with a rufous wash on the neck and shoulders" — its own baked
+    // palette already had this rufous as a separate colour (`n`); carried over as the cheek
+    // mark the kangaroo template already sets aside for a highlight.
+    pal: { l: '#b89878', e: '#15100a', w: '#9a4e32', d: '#5c4634', t: '#b89878' },
+    frames: [
+      ['.l.l.....', '.lelw....', '.lll.....', '.lll.....', 'llllltt..', '.dlldttt.', '.dd...tt.'],
+      ['.l.l.....', '.lelw....', '.lll.....', '.lll.....', 'llllltt..', '.dlldttt.', '.dd...tt.'],
+    ] as const,
+    young: [
+      ['.l.l...', '.lelw..', '.lll...', 'llltt..', '.dlttt.'],
+      ['.l.l...', '.lelw..', '.lll...', 'llltt..', '.dlttt.'],
+    ] as const,
+  },
+  'australia:bennetts-tree-kangaroo': {
+    // Same template, one extra tail row for "a long pendulous tail" (a real tree-kangaroo's
+    // own distinguishing feature from its ground-dwelling relatives) — apt however it's
+    // hosted, since `zone: 'canopy'` means it's drawn clinging in a tree, where a tail
+    // hanging further down reads naturally.
+    pal: { l: '#8a6a4e', e: '#120c08', w: '#5a4030', d: '#3a2a1e', t: '#8a6a4e' },
+    frames: [
+      ['.l.l.....', '.lelw....', '.lll.....', '.lll.....', 'llllltt..', '.dlldttt.', '.dd...tt.', '.......tt'],
+      ['.l.l.....', '.lelw....', '.lll.....', '.lll.....', 'llllltt..', '.dlldttt.', '.dd...tt.', '......tt.'],
+    ] as const,
+    young: [
+      ['.l.l...', '.lelw..', '.lll...', 'llltt..', '.dlttt.', '....tt.'],
+      ['.l.l...', '.lelw..', '.lll...', 'llltt..', '.dlttt.', '....tt.'],
+    ] as const,
+  },
+
+  // -- Batch 7 (round 12): "design a new semi-aquatic shape for beaver and otter" — neither
+  // had a hand-authored sprite, and no existing shape in this file was an honest fit: the
+  // ground quadrupeds all stand tall, and the sitting-up rodent/marmot template is upright on
+  // its haunches, not the low, long, horizontal profile either animal actually has in the
+  // water or hauled out on a bank. A genuinely new low-slung shape, built in two real states
+  // (see `Creature.alt` in `types.ts`) rather than one pose doing double duty: a WATER state
+  // — head just above the surface, body low and mostly submerged, a ripple/wake beneath it —
+  // for the days it's actually swimming, and a LAND state — a proper low quadruped with legs
+  // visible — for the days it's hauled out. Both species share the same body; only the tail
+  // (and the state each spends more of its day in — a beaver's water state shows twice as
+  // often as its land one below, since `zone: 'water'` is this species' real primary habit)
+  // tells them apart: a beaver's broad dark paddle versus an otter's longer, lighter,
+  // tapering rudder.
+  'canada:beaver': {
+    // Primary = WATER — matches the species' own `zone: 'water'` and its `behaviour` text
+    // ("Swims with just the head above water, hauling a branch toward the dam"). Head just
+    // breaking the surface, body low and mostly submerged, a ripple beneath it. The LAND
+    // state (hauled out at the bank) lives as `alt` directly on the creature definition in
+    // `src/regions/canada/index.ts`, not here — `HAND_SPRITES` only ever covers the primary
+    // `CreatureSprite`. Broad dark paddle tail distinguishes it from the otter's.
+    pal: { b: '#6a4e30', d: '#3e2c1a', e: '#0c0806', T: '#4e3a22', w: '#8ab0c8' },
+    frames: [
+      ['..ee......', '.bbbbbb...', 'bbbbbbbbTT', '..wwww....'],
+      ['..ee......', '.bbbbbb...', 'bbbbbbbbTT', '.wwww.w...'],
+    ] as const,
+  },
+  'borneo:smooth-coated-otter': {
+    // Same construction, primary = WATER (its own `behaviour` is "surfaces, dives, and
+    // resurfaces" — the species' real default state; `zone: 'water'` already matches). Land
+    // state is this species' own `alt`, in `src/regions/borneo/index.ts`. Lighter, longer,
+    // tapering tail distinguishes it from the beaver's dark paddle.
+    pal: { b: '#5a4a38', d: '#342a1e', e: '#0c0a06', T: '#8a7458', w: '#8ab0c8' },
+    frames: [
+      ['..ee......', '.bbbbbb...', 'bbbbbbbbT.', '..wwww..T.'],
+      ['..ee......', '.bbbbbb...', 'bbbbbbbb.T', '.wwww..T..'],
     ] as const,
   },
 

@@ -108,7 +108,13 @@ export const canada: Region = {
           source: iucn('Castor canadensis'), activity: 'nocturnal', zone: 'water', stages: ['kit', 'juvenile', 'adult', 'elder'],
           flourish: 'dam', behaviour: 'Swims with just the head above water, hauling a branch toward the dam.',
           body: { kind: 'swimmer', size: [9, 4], tail: { len: 3, style: 'down' } },
-          palette: { b: '#6a4e30', d: '#3e2c1a', l: '#8a6a44', e: '#0c0806', y: '#e8a030' } },
+          palette: { b: '#6a4e30', d: '#3e2c1a', l: '#8a6a44', e: '#0c0806', y: '#e8a030' },
+          // Hauled out on the bank, on the days it's not swimming — a proper low quadruped
+          // rather than the water pose's near-submerged body.
+          alt: { zone: 'ground', sprite: { pal: { b: '#6a4e30', d: '#3e2c1a', e: '#0c0806', T: '#4e3a22' }, frames: [
+            ['..ee......', '.bbbbbbb..', 'dbbbbbbbTT', '.d.....dTT'],
+            ['..ee......', '.bbbbbbb..', 'dbbbbbbbTT', 'd.....d.TT'],
+          ] as const } } },
         { key: 'moose', slot: 4, common: 'Moose', scientific: 'Alces alces',
           traits: ['Huge broad palmate antlers on males', 'A heavy dewlap under the chin'],
           iucn: 'LC', fact: 'The largest living deer species, and a strong swimmer that will cross a lake without hesitation.',

@@ -93,7 +93,21 @@ export const borneo: Region = {
           iucn: 'LC', fact: 'Spreads its webbed feet wide and glides between trees, sometimes well over ten metres.',
           source: iucn('Rhacophorus nigropalmatus'), activity: 'nocturnal', zone: 'canopy', stages: ['tadpole', 'froglet', 'adult', 'old'],
           behaviour: 'Clings to a high leaf by day, nearly invisible against the green.',
-          body: { kind: 'frog', size: [6, 4], legs: 2 }, palette: { b: '#3ea050', d: '#1e6830', l: '#7ad880', e: '#141a0c', y: '#e8d030' } },
+          body: { kind: 'frog', size: [6, 4], legs: 2 }, palette: { b: '#3ea050', d: '#1e6830', l: '#7ad880', e: '#141a0c', y: '#e8d030' },
+          // Its whole claim to fame is the glide, not the perch — a second drawn state for
+          // the moment its webbed feet are spread wide between trees, picked on about half
+          // of days (see `mfCreatures.ts`'s `pickState`/`daySeed`) rather than drawn at rest
+          // every single time.
+          alt: {
+            zone: 'sky',
+            sprite: {
+              pal: { b: '#3ea050', d: '#1e6830', e: '#141a0c', l: '#7ad880' },
+              frames: [
+                ['...e.e...', '.lbbbbbl.', 'l.bbbbb.l', 'l.......l'],
+                ['...e.e...', 'lbbbbbbbl', '.l.....l.', 'l.......l'],
+              ] as const,
+            },
+          } },
         { key: 'rhinoceros-hornbill', slot: 1, common: 'Rhinoceros hornbill', scientific: 'Buceros rhinoceros',
           traits: ['Huge curved orange-and-red casque above the bill', 'Mostly black body, white tail with a black band'],
           iucn: 'VU', fact: 'Mated pairs often fly together, and the whoosh of its wingbeats can be heard from a long way off.',
@@ -177,7 +191,12 @@ export const borneo: Region = {
           source: iucn('Lutrogale perspicillata'), activity: 'diurnal', zone: 'water', stages: ['pup', 'juvenile', 'adult', 'elder'],
           flourish: 'dive', behaviour: 'Surfaces with the family, dives, and resurfaces further along the bank.',
           body: { kind: 'swimmer', size: [9, 4], tail: { len: 5, style: 'down' } },
-          palette: { b: '#5a4a38', d: '#342a1e', l: '#8a7458', e: '#0c0a06', w: '#b4a488' } },
+          palette: { b: '#5a4a38', d: '#342a1e', l: '#8a7458', e: '#0c0a06', w: '#b4a488' },
+          // Hauled out on the bank, on the days it's not in the water.
+          alt: { zone: 'ground', sprite: { pal: { b: '#5a4a38', d: '#342a1e', e: '#0c0a06', T: '#8a7458' }, frames: [
+            ['..ee......', '.bbbbbbb..', 'dbbbbbbbT.', '.d.....d.T'],
+            ['..ee......', '.bbbbbbb..', 'dbbbbbbbT.', 'd.....d..T'],
+          ] as const } } },
         { key: 'sunda-clouded-leopard', slot: 4, common: 'Sunda clouded leopard', scientific: 'Neofelis diardi',
           traits: ['Large irregular cloud-shaped markings', 'Very long tail, almost as long as the body'],
           iucn: 'VU', fact: "Found only on Borneo and Sumatra, and rarely seen — it hunts almost entirely at night, high in the trees.",

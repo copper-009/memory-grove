@@ -171,6 +171,23 @@ export interface Creature extends SpeciesFact {
   behaviour: string;
   /** A rare flourish the renderer may show: a lyrebird's display, a bower gaining an item. */
   flourish?: 'display' | 'bower' | 'dig' | 'dive' | 'soar' | 'pair' | 'dam' | 'bathe' | 'bloom';
+  /**
+   * A second behavioural state for a species that genuinely does two different things in two
+   * different places — an otter that swims, then hauls out and walks; a bird that perches,
+   * then takes to the air; a wombat that digs at its burrow, then forages in the open. Each
+   * state gets its own `zone` (so it's hosted/placed the vendored engine's own way for that
+   * zone — a pond, a tree, the sky, a depth band) and its own sprite pose, not just a recolour
+   * of the primary one. `mfCreatures.ts` picks one state per creature per day, deterministically
+   * from the day number, so it's stable for the whole day and varies across days rather than
+   * flickering mid-render. Leave unset for the (large majority of) species that only do one
+   * thing worth drawing.
+   */
+  alt?: {
+    zone: Zone;
+    sprite: CreatureSprite;
+    sleepy?: boolean;
+    still?: boolean;
+  };
 }
 
 export interface PlantSpecies extends SpeciesFact {

@@ -107,6 +107,18 @@ export const subtropicalRainforest: Biome = {
       behaviour: 'Sits very still near water, then shifts a little and settles again.',
       body: { kind: 'frog', size: [6, 4], legs: 2 },
       palette: { b: '#6fae4e', d: '#43752f', l: '#a8d474', e: '#141a0c', w: '#e8f0d8' },
+      // A second state for the days it's found actually in the water rather than perched at
+      // the edge of it — same body, flattened and trailing, legs kicking behind.
+      alt: {
+        zone: 'water',
+        sprite: {
+          pal: { b: '#6fae4e', d: '#43752f', e: '#141a0c', l: '#a8d474' },
+          frames: [
+            ['..ee.....', '.bbbbb...', 'bbbbbbbdd', '.ll...dd.'],
+            ['..ee.....', '.bbbbb...', 'bbbbbbd.d', '.ll..d.d.'],
+          ] as const,
+        },
+      },
     },
     {
       key: 'pademelon',

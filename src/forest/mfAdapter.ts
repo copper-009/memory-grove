@@ -254,7 +254,7 @@ export function buildMfPayload(grove: Grove, roster: CreatureRoster, opts: MfAda
   // than something a region's own creature list could ever replace.
   const cabinVisitor = toMfVisitors(stats).filter((v) => v.key === 'cabin');
   const { visitors: creatureVisitors, sprites: creatureSprites } = opts.biome
-    ? buildCreatureVisitors(opts.biome, roster, grove.stats.activeStudyDays, opts.health ?? 100)
+    ? buildCreatureVisitors(opts.biome, roster, grove.stats.activeStudyDays, opts.health ?? 100, grove.today)
     : { visitors: [], sprites: {} };
   const visitors = opts.biome ? [...cabinVisitor, ...creatureVisitors] : toMfVisitors(stats);
   return {

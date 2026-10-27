@@ -25,12 +25,26 @@
  * species actually appear instead of being permanently asleep under a clock that never
  * advances. Diurnal/crepuscular/cathemeral species are never gated by time at all in
  * `creatureMood`, so this costs them nothing.
+ *
+ * A handful of species carry a second `alt` state (`Creature.alt` in `types.ts`) — an otter
+ * that swims one day and hauls out to walk the next, a bird that perches in a tree one day and
+ * is drawn mid-flight the next, a wombat that digs at its burrow one day and forages in the
+ * open the next. `pickState` below chooses between the primary and `alt` state once per
+ * creature per day, from a simple string hash of the creature's key plus `daySeed` (the
+ * grove's own `today` day number) — stable across re-renders of the same day, varies across
+ * days, no extra state to persist.
  */
 
 import type { Biome, Creature } from '../regions/types';
 import type { CreatureRoster } from '../data/milestones';
 import { creatureAge, creatureMood, lifeStageFor } from '../data/milestones';
 import type { SpriteFrame, Palette } from '../regions/types';
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
 
 export interface MfCreatureVisitor {
   key: string;
@@ -65,13 +79,15 @@ export interface MfCreatureResult {
 /**
  * The current biome's unlocked creatures, as visitors + the sprite data they need
  * registered. `activeStudyDays` and `healthVisual` are the same numbers already computed by
- * `useGrove.ts` (`grove.stats.activeStudyDays`, `health.visual`) — not recomputed here.
+ * `useGrove.ts` (`grove.stats.activeStudyDays`, `health.visual`). `daySeed` is `grove.today` —
+ * used only to pick a stable-for-the-day `alt` state for the few species that have one.
  */
 export function buildCreatureVisitors(
   biome: Biome,
   roster: CreatureRoster,
   activeStudyDays: number,
   healthVisual: number,
+  daySeed: number = 0,
 ): MfCreatureResult {
   const visitors: MfCreatureVisitor[] = [];
   const sprites: Record<string, MfCreatureSprite> = {};
@@ -82,10 +98,19 @@ export function buildCreatureVisitors(
 
     const age = creatureAge(save, activeStudyDays);
     const stage = lifeStageFor(age);
+    const key = `${biome.key}:${creature.key}`;
+
+    // Two-state species: pick today's state before checking mood/sleep, since the alt state
+    // can carry its own `sleepy` (an otter hauled out to walk isn't "asleep" just because its
+    // swimming state is marked sleepy, and vice versa).
+    const useAlt = !!creature.alt && hashStr(`${key}:${daySeed}`) % 2 === 1;
+    const state = useAlt ? creature.alt! : creature;
+    const stateSprite = useAlt ? creature.alt!.sprite : creature.sprite;
+
     const mood = creatureMood(healthVisual, {
       nocturnal: creature.activity === 'nocturnal',
       night: true,
-      sleepy: creature.sleepy,
+      sleepy: state.sleepy,
     });
     if (mood === 'hidden' || mood === 'asleep') continue;
 
@@ -94,26 +119,25 @@ export function buildCreatureVisitors(
     // most do, a few (flat/low creatures where a smaller grid reads as noise rather than a
     // baby version) don't, and the adult art standing in for a young one is the accepted
     // fallback the gallery review already settled on for those.
-    const useYoung = stage === 0 && !!creature.sprite.young;
-    const frames = useYoung ? creature.sprite.young! : creature.sprite.frames;
+    const useYoung = stage === 0 && !!stateSprite.young;
+    const frames = useYoung ? stateSprite.young! : stateSprite.frames;
 
-    const key = `${biome.key}:${creature.key}`;
     visitors.push({
       key,
       label: creature.common,
       why: `your grove reached ${save.activeDaysAtArrival} active study days`,
       new: false,
-      zone: creature.zone,
+      zone: state.zone,
       slot: creature.slot,
-      still: creature.still,
-      sleepy: creature.sleepy,
+      still: state.still,
+      sleepy: state.sleepy,
     });
     sprites[key] = {
-      pal: creature.sprite.pal,
+      pal: stateSprite.pal,
       frames,
-      flies: creature.zone === 'sky',
-      facesLeft: creature.sprite.facesLeft,
-      hop: creature.sprite.hop,
+      flies: state.zone === 'sky',
+      facesLeft: stateSprite.facesLeft,
+      hop: stateSprite.hop,
     };
   }
 
