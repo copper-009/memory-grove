@@ -24,29 +24,34 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Heavy dagger bill, dark eye-stripe through a pale head, barred rufous tail. Perched
   // still, head cocked — the kookaburra's whole character is stillness, not motion, so the
   // second frame is only the tail flicking.
+  // Round 14: "didn't get touched by the bird redesign" — the original source of the
+  // kookaburra/cockatoo-base template other birds were later built from, never itself moved
+  // onto the slimmer version that redesign ended up at. Brought in line: same narrower,
+  // tapered silhouette and head-cap/body/belly/tail regions as the rest of the family.
   'australia:kookaburra': {
-    pal: { b: '#e8e0cf', d: '#6b5a44', e: '#20180f', r: '#9a6a3a', w: '#4a7fa8', k: '#2e2416' },
+    pal: { d: '#6b5a44', b: '#e8e0cf', e: '#20180f', w: '#4a7fa8', r: '#9a6a3a', k: '#2e2416' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   // Round 2: "too much of a blob" — the crest was almost an afterthought. A sulphur-crested
   // cockatoo's whole identity is that erectile yellow crest, so it now gets real room: two
   // full rows instead of a corner pixel.
+  // Round 14: same slimming pass as the kookaburra above — narrower body under the same crest.
   'australia:cockatoo': {
-    pal: { b: '#f6f4ee', d: '#c9c3b4', e: '#1a1510', y: '#f0d060', k: '#5a5248' },
+    pal: { y: '#f0d060', d: '#c9c3b4', b: '#f6f4ee', e: '#1a1510', w: '#dcd6c4', r: '#f6f4ee', k: '#5a5248' },
     frames: [
-      ['.yy......', '.yy......', '..bbbk...', '.bbbbbk..', '.bbebbd..', '.bbbbbd..', '..dkdk...'],
-      ['yyy......', '.yy......', '..bbbk...', '.bbbbbk..', '.bbebbd..', '.bbbbbd..', '..dkdk...'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.y.....', '.bbbk..', 'bbebbd.', 'bbbbbd.', '.dkdk..'],
-      ['yy.....', '.bbbk..', 'bbebbd.', 'bbbbbd.', '.dkdk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   // Round 3: a second redesign (see the red kangaroo for the same fix) still read as "still
@@ -98,11 +103,15 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // — the round-2 redesign (meant to pull the eyes/nose apart) read worse. Back to the
   // original face, with hand and foot nubs added along the body's sides and bottom corners,
   // the one thing actually missing from it.
+  // Round 14 (bonus, kept but noted): "a bit blobby, maybe get it retouched... chubbier and
+  // more upright?" — bigger, genuinely round ears instead of single corner pixels, two extra
+  // rows for a taller, upright-seated posture (how koalas actually sit in a fork), and a
+  // rounder, chubbier lower belly instead of the flat bottom edge.
   'australia:koala': {
     pal: { b: '#9aa0a4', d: '#6a7175', l: '#d6dade', e: '#120f0c', n: '#1d1813' },
     frames: [
-      ['.d....d.', 'ddllllld', '.lllllld', 'l.le.el.', '.l.nn.l.', '.lllllb.', 'dbbbbbbd', '.d.bb.d.'],
-      ['.d....d.', 'ddllllld', '.lllllld', 'l.l..el.', '.l.nn.l.', '.lllllb.', 'dbbbbbbd', 'd.bb.d..'],
+      ['.dd..dd.', 'ddllllld', '.lllllld', 'l.le.el.', '.l.nn.l.', '.lllllld', 'dbbbbbbd', '.dbbbbd.', '..dbbd..'],
+      ['.dd..dd.', 'ddllllld', '.lllllld', 'l.l..el.', '.l.nn.l.', '.lllllld', 'dbbbbbbd', 'd.bbbbd.', '..dbbd..'],
     ] as const,
     young: [
       ['d....d', 'dlllld', 'l.ee.l', '.lnnl.', 'lllllb', 'dbbbbd', '.d.d..'],
@@ -250,6 +259,19 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 9: "wingspan over three metres... can soar for hours" — was sharing the plain
   // eagle template's 14x5 grid, identical in size to every ordinary eagle in the roster,
   // despite condors having a noticeably bigger wingspan than any eagle. Widened to match.
+  // Round 14: "didn't get redesigned with the other birds" — a bespoke body rather than the
+  // family's perched-bird template, since a penguin's whole shape is different: upright, no
+  // visible neck taper, flipper marks at the sides, the "two black bands across the white
+  // chest" trait as the stripe across the belly. Primary = standing/waddling (`zone:
+  // 'waterEdge'`, unchanged); its swim `alt` lives on the creature definition in
+  // `src/regions/patagonia/index.ts`.
+  'patagonia:magellanic-penguin': {
+    pal: { b: '#1a1a1c', l: '#f0ece0', e: '#120e08', y: '#d8c060' },
+    frames: [
+      ['.bbb..', 'blllb.', '.bbbb.', '.llll.', 'bl..lb', 'bl..lb', '.byyb.'],
+      ['.bbb..', 'blllb.', '.bbbb.', '.llll.', 'bl..lb', '.bl.lb', '.byb..'],
+    ] as const,
+  },
   'patagonia:condor': {
     // Andean condor: the `h` patch becomes the bare pinkish-red head skin (not feathers),
     // the real identifying mark at a glance, over a black body.
@@ -735,6 +757,22 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // subspecies) — the one real difference between these three, so the ear flap is trimmed for
   // the smaller-eared two rather than drawing a second body shape. Round 2: "legs also not long
   // enough" — a proper second leg row instead of a scalloped single row.
+  // Round 14: "no animation?" — still baked, and the baked frame0/frame1 were byte-identical,
+  // so there was genuinely nothing to animate regardless. `still: true` is already set on the
+  // species and stays — real hippos barely move while submerged, so suppressing the idle
+  // glance there is correct, not the bug. The actual fix is the same one otter/beaver got: a
+  // real second state, not a frame flicker. Primary = WATER, "almost entirely submerged, just
+  // the eyes and ears showing" (matches `zone: 'water'`); the visible, walking GROUND state
+  // (`behaviour`: "grazes on land almost entirely at night") is its own `alt` with `still:
+  // false`, on the creature definition in `src/regions/eastafrica/index.ts` — water stays the
+  // majority state (`altChance: 0.3`), since that's genuinely where it spends most of the day.
+  'eastafrica:hippo': {
+    pal: { b: '#6a5c50', d: '#3e342c', l: '#8a7c6e', e: '#0c0a06', n: '#d89080', w: '#8ab0c8' },
+    frames: [
+      ['..d.....d.', '..e.....e.', '.wwww.wwww'],
+      ['..d.....d.', '..e.....e.', '.wwww.wwww'],
+    ] as const,
+  },
   'eastafrica:african-elephant': {
     pal: { b: '#8a8a88', d: '#5a5a58', e: '#0c0c0a', l: '#b4b4b0' },
     frames: [
@@ -866,26 +904,33 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // native deer body directly (ears instead of antlers), unmodified otherwise. The steppe
   // biome entry is the literal same species in a second Patagonia biome, so it's the same
   // shape and palette, not a variant.
+  // Round 14: "weird glitch with the jaw coming down but not the rest of the head" — these
+  // two still carried the vendored deer sprite's own "head dip to graze" reshuffle (frame2
+  // reorganises which rows hold the head/body/legs entirely, hiding the antlers as it does)
+  // even though guanacos never got the antler-hiding fix zebra did — leftover deer-frame
+  // pixels (an 'l' highlight relocating from the neck down into the leg row) read as a
+  // floating, disconnected mark. Body and head now stay pixel-identical between frames, like
+  // the zebra fix; only the legs get a plain walk-cycle offset.
   'patagonia:guanaco': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
       ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bbbl', '.bbbbbbbbd.', 'wbbbbbbbb..', '.d.d..d.bbl', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...', '.d.d..d.d..'],
     ] as const,
     young: [
       ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['.......bbb.', 'wbbbbbbbbd.', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...'],
     ] as const,
   },
   'patagonia:guanaco-steppe': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
       ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bbbl', '.bbbbbbbbd.', 'wbbbbbbbb..', '.d.d..d.bbl', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...', '.d.d..d.d..'],
     ] as const,
     young: [
       ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['.......bbb.', 'wbbbbbbbbd.', '.bbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...'],
     ] as const,
   },
 
@@ -1044,15 +1089,20 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // mark with no counterpart in the other frame, even though a zebra has no antlers to hide
   // in the first place. Body and stripes now stay pixel-identical between frames (the zigzag
   // always reads the same), only the legs do a plain walk-cycle offset.
+  // Round 14: "no animation, and stripes are too few" — the body/stripe rows were only ever
+  // 2 stripe marks across a 9-wide span (the rest plain body colour), and the leg frame
+  // change was a single 1-pixel nudge on one leg only. Many more stripes across the whole
+  // body (real zebras have no large plain patches), and a genuinely bigger leg-stride offset
+  // across both leg rows instead of one pixel on one leg.
   'eastafrica:plains-zebra': {
     pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', w: '#ffffff' },
     frames: [
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbdbbdbb..', '.bbdbbdbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbdbbdbb..', '.bbdbbdbb..', 'd.d..d.d...', '.d.d..d.d..'],
+      ['.......e.e.', '......ldbd.', '.....ldbdbl', 'ldbdbdbdbd.', '.dbdbdbdbd.', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '......ldbd.', '.....ldbdbl', 'ldbdbdbdbd.', '.dbdbdbdbd.', 'd..d.d..d..', '..d.d..d.d.'],
     ] as const,
     young: [
-      ['.......bbb.', 'lbbdbbdbb..', '.bbdbbdbb..', '.d.d..d.d..'],
-      ['.......bbb.', 'lbbdbbdbb..', '.bbdbbdbb..', 'd.d..d.d...'],
+      ['.....ldbd.', 'ldbdbdbdb.', '.dbdbdbdb.', '.d.d..d.d.'],
+      ['.....ldbd.', 'ldbdbdbdb.', '.dbdbdbdb.', 'd..d.d..d.'],
     ] as const,
   },
   // Round 2: still read as a blob at the first fixed-up size — rounder, taller body mass this
@@ -1090,15 +1140,18 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 3: "the beak is on the top of head for some reason" — the red crest dots floated
   // above the head with nothing else to read as a beak. Crest moved onto the head itself, and
   // a pale beak now extends from the front of the face.
+  // Round 14: "didn't get changed to the bird redesign" — brought onto the same family shape
+  // as the rest. The shaggy red crest ("bigger and redder on the male") keeps the crest graft
+  // used for the umbrellabird and hornbill, recoloured to the species' own scarlet.
   'patagonia:magellanic-woodpecker': {
-    pal: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#120e08', r: '#c0392b', w: '#e8e4d0' },
+    pal: { y: '#c0392b', d: '#0a0a0c', b: '#1a1a1c', e: '#120e08', w: '#3a3a3e', r: '#1a1a1c', k: '#2a2018' },
     frames: [
-      ['...rr..', '..rlll.', 'bbdlllw', 'dbb....', '.d.d...', '.d.d...'],
-      ['...rr..', '..rlll.', 'bbdlllw', 'dbb....', '...d...', '.d.d...'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['..rr.', 'rlll.', 'dlew.', 'bb...', 'dd...'],
-      ['..rr.', 'rlll.', 'dlew.', 'bb...', 'dd...'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   // Round 4: still the exact pass-1 note after two lighter touches — the wide multi-row block
@@ -1135,17 +1188,18 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', 'd...d..', '.d...d.'],
     ] as const,
   },
+  // Round 14: "should be bird design" — this was still the old pre-redesign quadruped-style
+  // layout (legs drawn as separate dangling marks under a horizontal wedge body), not the
+  // kookaburra-based perched-bird shape the rest of the roster now uses. Moved onto it.
   'aotearoa:kea': {
-    // Same mountain-parrot body, beak lengthened by one pixel for more of its real hooked
-    // profile.
-    pal: { b: '#5a6a34', d: '#3a4620', l: '#7f8e4e', e: '#120e08', y: '#e07a28', w: '#4a4438' },
+    pal: { d: '#3a4620', b: '#5a6a34', e: '#120e08', w: '#e07a28', r: '#5a6a34', k: '#3a4620' },
     frames: [
-      ['........l...', '.......lll..', '...bbbbdlyyy', '...bwwb.....', '.dddwwd.....', 'd...d..d....', '....d..d....'],
-      ['........l...', '.......lll..', '...bbbbdlyyy', '...bwwb.....', '.dddwwd.....', 'd......d....', '....d..d....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['....l..', '...lll.', '...dlyy', '.ww....', 'dww....', '.dd....'],
-      ['....l..', '...lll.', '...dlyy', '.ww....', 'dww....', '.dd....'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
 
@@ -1373,55 +1427,63 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // only showed as two isolated dots. This gives the neck a single consistent diagonal lean
     // (reads as a smooth curve at this scale) and swaps the wedge body for a full rounded dome
     // with a real wing-crease patch, not isolated flecks.
-    pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc' },
+    // Round 14: "there is no legs and neck is at a weird angle" — a single straight diagonal
+    // doesn't read as a swan's neck at all (no real swan's neck is a straight line); genuinely
+    // curved instead, leaning out then bending back in to meet the body, closer to the real
+    // S-curve. Two short dark legs added under the belly line — there were none before.
+    pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc', k: '#3a3a3a' },
     frames: [
       [
-        '.......led......',
+        '..........led...',
+        '.........lld....',
+        '........lld.....',
         '.......lld......',
         '......lld.......',
-        '......lld.......',
-        '.....lld........',
-        '.....dld........',
-        '....lld.........',
+        '.......dll......',
+        '........lld.....',
         '...bbbbbbbbb....',
         '..bbbbbbbbbbb...',
         '.bbbbbbllbbbbb..',
         '.bbbbbbllbbbbb..',
         '..wwwwwwwwwww...',
+        '.....kk..kk.....',
       ],
       [
-        '.......led......',
+        '..........led...',
+        '.........lld....',
+        '........lld.....',
         '.......lld......',
         '......lld.......',
-        '......lld.......',
-        '.....lld........',
-        '.....dld........',
-        '....lld.........',
+        '.......dll......',
+        '........lld.....',
         '...bbbbbbbbb....',
         '..bbbbbbbbbbb...',
         '.bbbbbbllbbbbb..',
         '.bbbbbbllbbbbb..',
         '..wwwwwwwwwww...',
+        '.....kk..kk.....',
       ],
     ] as const,
     young: [
       [
-        '....led.....',
-        '....lld.....',
-        '...lld......',
-        '..dld.......',
+        '.......led..',
+        '......lld...',
+        '.....lld....',
+        '......dld...',
         '.bbbbbb.....',
         'bbbbbllbbb..',
         '.wwwwwwww...',
+        '..kk..kk....',
       ],
       [
-        '....led.....',
-        '....lld.....',
-        '...lld......',
-        '..dld.......',
+        '.......led..',
+        '......lld...',
+        '.....lld....',
+        '......dld...',
         '.bbbbbb.....',
         'bbbbbllbbb..',
         '.wwwwwwww...',
+        '..kk..kk....',
       ],
     ] as const,
   },
@@ -1863,11 +1925,16 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // template (tiger, both leopard variants, puma, both lynxes all already share it, every
   // one of them kept) recoloured to this species' own reddish-brown, with the tail
   // lengthened well past the template's default — that length is fossa's whole silhouette.
+  // Round 14: "what's the thing out the front?" — the right ear mark sat at column 11, one
+  // column past the head's own right edge (the head's `oooo` only reaches column 10), so it
+  // read as a stray pixel floating just ahead of the snout rather than an ear on the head.
+  // Pulled in to column 10, aligned with the head's own edge the same way the left ear
+  // already matches the head's left edge.
   'madagascar:fossa': {
     pal: { o: '#8a5438', e: '#100a06', w: '#b07a54', d: '#5c3722', n: '#1a1410' },
     frames: [
-      ['.......n...n.....', '.......oooo......', '........oeow.....', 'ww.oooooooo......', '.wooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
-      ['.......n...n.....', '.......oooo......', '........oeow.....', '.w.oooooooo......', 'w.ooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
+      ['.......n..n......', '.......oooo......', '........oeow.....', 'ww.oooooooo......', '.wooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
+      ['.......n..n......', '.......oooo......', '........oeow.....', '.w.oooooooo......', 'w.ooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
     ] as const,
     young: [
       ['......oeow.....', 'w.oooooo.......', 'w.oooooo..nnn..', '.d.d..d.d..nnn.'],

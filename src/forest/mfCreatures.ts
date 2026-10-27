@@ -43,6 +43,20 @@ import type { SpriteFrame, Palette } from '../regions/types';
 function hashStr(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0;
+  // Finalizer (Murmur3's fmix32): a plain multiply-add hash barely changes between inputs
+  // that differ only in their last character's code point — exactly the shape `${key}:
+  // ${daySeed}` takes from one day to the next, so consecutive days produced nearly
+  // identical hashes. That happened to still split close to 50/50 (parity alone decided the
+  // low bit), which is how it shipped looking fine, but any weighted `altChance` threshold
+  // exposed it: checked directly, alpine:wombat spent 0 of 400 simulated days below 0.25
+  // instead of the ~100 a real 25% chance implies, because consecutive days' hashes clustered
+  // in one narrow band instead of spreading across the full range. This avalanches small
+  // input changes into large output ones, so consecutive days actually scatter.
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
   return h >>> 0;
 }
 
@@ -102,8 +116,11 @@ export function buildCreatureVisitors(
 
     // Two-state species: pick today's state before checking mood/sleep, since the alt state
     // can carry its own `sleepy` (an otter hauled out to walk isn't "asleep" just because its
-    // swimming state is marked sleepy, and vice versa).
-    const useAlt = !!creature.alt && hashStr(`${key}:${daySeed}`) % 2 === 1;
+    // swimming state is marked sleepy, and vice versa). Weighted by the alt's own
+    // `altChance` (0.5 — an even split — when unset): `hashStr` already returns a uint32, so
+    // dividing by 2^32 gives a stable, uniformly distributed fraction per creature per day to
+    // compare against it.
+    const useAlt = !!creature.alt && (hashStr(`${key}:${daySeed}`) / 0x100000000) < (creature.alt.altChance ?? 0.5);
     const state = useAlt ? creature.alt! : creature;
     const stateSprite = useAlt ? creature.alt!.sprite : creature.sprite;
 

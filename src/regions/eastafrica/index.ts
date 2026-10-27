@@ -152,7 +152,11 @@ export const eastAfrica: Region = {
           source: iucn('Hippopotamus amphibius'), activity: 'nocturnal', zone: 'water', stages: ['calf', 'juvenile', 'adult', 'elder'],
           still: true, behaviour: 'Lies almost entirely submerged, just the eyes and ears showing.',
           body: { kind: 'swimmer', size: [15, 6], legs: 0, ears: 1 },
-          palette: { b: '#6a5c50', d: '#3e342c', l: '#8a7c6e', e: '#0c0a06', n: '#d89080' } },
+          palette: { b: '#6a5c50', d: '#3e342c', l: '#8a7c6e', e: '#0c0a06', n: '#d89080' },
+          alt: { zone: 'ground', altChance: 0.3, sprite: { pal: { b: '#6a5c50', d: '#3e342c', l: '#8a7c6e', e: '#0c0a06', n: '#d89080' }, frames: [
+            ['........d.d', '........lll', '.bbbbbbllle', 'bbbbbbbdlld', 'bbbbbbbbnn.', 'bbbbbbbb...', '.ddbbdd.....'],
+            ['........d.d', '........lll', '.bbbbbbllle', 'bbbbbbbdlld', 'bbbbbbbbnn.', 'bbbbbbbb...', '..ddbbdd....'],
+          ] as const } } },
         { key: 'african-elephant', slot: 1, common: 'African bush elephant', scientific: 'Loxodonta africana',
           traits: ['Huge fan-shaped ears', 'Long curved tusks and a trunk used for almost everything'],
           iucn: 'EN', fact: 'The largest land animal alive. A family group is led by the oldest, most experienced female.',

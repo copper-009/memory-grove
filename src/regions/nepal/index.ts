@@ -104,7 +104,12 @@ export const nepal: Region = {
           source: iucn('Gavialis gangeticus'), activity: 'diurnal', zone: 'waterEdge', stages: ['hatchling', 'juvenile', 'adult', 'old'],
           still: true, behaviour: 'Basks motionless on a sandbank, narrow jaws slightly agape.',
           body: { kind: 'reptile', size: [18, 3], legs: 1, tail: { len: 10, style: 'down' }, neck: 1, beak: 6 },
-          palette: { b: '#5a6048', d: '#343a28', l: '#7e8468', e: '#0a0c06' } },
+          palette: { b: '#5a6048', d: '#343a28', l: '#7e8468', e: '#0a0c06' },
+          // Submerged — just the eye and the tip of that long snout above the surface.
+          alt: { zone: 'water', altChance: 0.25, still: true, sprite: { pal: { b: '#4a6a4a', e: '#0c0c08', w: '#8ab0c8' }, frames: [
+            ['.........e...............', 'bbbbbbbbbb................', '.wwww.wwww................'],
+            ['.........e...............', 'bbbbbbbbbb................', '..wwww.wwww...............'],
+          ] as const } } },
         { key: 'bengal-tiger', slot: 3, common: 'Bengal tiger', scientific: 'Panthera tigris tigris',
           traits: ['Orange coat with bold black stripes, unique to each tiger', 'White underside and cheeks'],
           iucn: 'EN', fact: 'Rare and mostly hidden in the tall grass — most sightings are brief, and that is by design, not bad luck.',

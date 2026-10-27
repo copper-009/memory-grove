@@ -104,6 +104,10 @@ export const eucalyptWoodland: Biome = {
       behaviour: 'Sits very still on a branch, then drops onto something in the grass.',
       body: { kind: 'bird', size: [9, 7], beak: 3, tail: { len: 3, style: 'down' }, legs: 1 },
       palette: { b: '#e8e0cf', d: '#6b5a44', e: '#20180f', r: '#9a6a3a', w: '#4a7fa8', y: '#2e2416' },
+      alt: { zone: 'sky', sprite: { pal: { d: '#6b5a44', b: '#e8e0cf', h: '#4a7fa8', y: '#9a6a3a' }, frames: [
+        ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+        ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ] as const } },
     },
     {
       key: 'cockatoo',
@@ -121,6 +125,10 @@ export const eucalyptWoodland: Biome = {
       flourish: 'display',
       body: { kind: 'bird', size: [9, 8], beak: 2, crest: 3, tail: { len: 4, style: 'down' }, legs: 1 },
       palette: { b: '#f6f4ee', d: '#c9c3b4', e: '#1a1510', y: '#f0d060', k: '#5a5248' },
+      alt: { zone: 'sky', sprite: { pal: { d: '#c9c3b4', b: '#f6f4ee', h: '#f0d060', y: '#5a5248' }, frames: [
+        ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+        ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ] as const } },
     },
     {
       key: 'eastern-grey-kangaroo',

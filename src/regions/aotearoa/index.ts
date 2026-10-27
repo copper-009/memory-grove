@@ -214,6 +214,12 @@ export const aotearoa: Region = {
           behaviour: 'Hops about the rocks pulling at things, and flashes orange whenever it opens its wings.',
           body: { kind: 'bird', size: [10, 8], beak: 4, tail: { len: 5, style: 'down' }, legs: 2 },
           palette: { b: '#5a6a34', d: '#3a4620', l: '#7f8e4e', e: '#120e08', y: '#e07a28', w: '#4a4438' },
+          // "Flashes orange whenever it opens its wings" — its own behaviour text names this
+          // exact moment as the thing to draw.
+          alt: { zone: 'sky', sprite: { pal: { d: '#3a4620', b: '#5a6a34', h: '#e07a28', y: '#4a4438' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } },
         },
         {
           key: 'pihoihoi', slot: 1, common: 'New Zealand pipit', scientific: 'Anthus novaeseelandiae', localName: 'pīhoihoi', localLanguage: 'te reo Māori',

@@ -110,8 +110,11 @@ export const alpine: Biome = {
       palette: { b: '#7a6a52', d: '#50452f', l: '#a2927a', e: '#120e08', n: '#241c14' },
       // Dug in, days it isn't out grazing — same `zone: 'burrow'` (still near its hole
       // either way), just a different pose: a dirt mound with its small ears and nose the
-      // only thing showing.
-      alt: { zone: 'burrow', sprite: { pal: { d: '#50452f', l: '#a2927a', e: '#120e08', b: '#7a6a52', n: '#4a3a26' }, frames: [
+      // only thing showing. `altChance: 0.25` — "what's happened to the standard wandering
+      // form?" after it shipped at an even day-to-day split: its own `behaviour` text
+      // ("trundles out of its burrow after dark and grazes steadily") makes the visible,
+      // out-grazing form the normal case, dug in the occasional exception, not a coin flip.
+      alt: { zone: 'burrow', altChance: 0.25, sprite: { pal: { d: '#50452f', l: '#a2927a', e: '#120e08', b: '#7a6a52', n: '#4a3a26' }, frames: [
         ['.dd....', 'lebnnn.', 'nnnnnnn'],
         ['.dd....', 'lebnnn.', 'nnnnnnn'],
       ] as const } },
@@ -133,8 +136,9 @@ export const alpine: Biome = {
       body: { kind: 'bulky', size: [8, 5], legs: 1, beak: 3, spines: true, tail: { len: 0, style: 'none' } },
       palette: { b: '#4a3a28', d: '#2a2018', l: '#c8a860', e: '#0e0a06', n: '#1a1410' },
       // "Digs straight down and disappears" — a real zone change, not just a pose swap: a
-      // row of spine tips is all that still shows above the dirt.
-      alt: { zone: 'burrow', sprite: { pal: { l: '#e8dcb8', d: '#141210', n: '#4a3a26' }, frames: [
+      // row of spine tips is all that still shows above the dirt. `altChance: 0.2` — this is
+      // the exceptional moment, not an even split with "waddles along nosing at the ground".
+      alt: { zone: 'burrow', altChance: 0.2, sprite: { pal: { l: '#e8dcb8', d: '#141210', n: '#4a3a26' }, frames: [
         ['l.l.l.l.', 'ldldldld', 'nnnnnnnn'],
         ['l.l.l.l.', 'ldldldld', 'nnnnnnnn'],
       ] as const } },

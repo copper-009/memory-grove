@@ -174,7 +174,12 @@ export const borneo: Region = {
           source: iucn('Trachypithecus cristatus'), activity: 'diurnal', zone: 'canopy', stages: ['infant', 'juvenile', 'adult', 'elder'],
           behaviour: 'Sits along a branch over the river, grooming, occasionally dropping to swim across.',
           body: { kind: 'quadruped', size: [8, 6], legs: 2, tail: { len: 9, style: 'down' }, ears: 1 },
-          palette: { b: '#8a8a82', d: '#5e5e56', l: '#b4b4ac', e: '#120e08', n: '#1a1a16' } },
+          palette: { b: '#8a8a82', d: '#5e5e56', l: '#b4b4ac', e: '#120e08', n: '#1a1a16' },
+          // "Occasionally dropping to swim across" — low in the water, head up.
+          alt: { zone: 'water', altChance: 0.15, sprite: { pal: { b: '#8a8a82', d: '#5e5e56', e: '#120e08', w: '#8ab0c8' }, frames: [
+            ['..e.....', '.bbbb...', 'bbbbbbdd', '.wwww.dd'],
+            ['..e.....', '.bbbb...', 'bbbbbbd.', '.wwww.d.'],
+          ] as const } } },
         { key: 'estuarine-crocodile', slot: 1, common: 'Saltwater crocodile', scientific: 'Crocodylus porosus',
           traits: ['Broad heavy snout and armoured ridged back', 'Lies almost entirely submerged'],
           iucn: 'LC', fact: 'The largest living reptile, ranging from mangrove rivers right out into coastal seas.',

@@ -187,6 +187,13 @@ export interface Creature extends SpeciesFact {
     sprite: CreatureSprite;
     sleepy?: boolean;
     still?: boolean;
+    /** How often this state shows instead of the primary one, 0-1. Defaults to 0.5 (an even
+     * day-to-day split) when unset — right for two states a species genuinely spends
+     * comparable time in (a bird perching vs flying, an otter swimming vs hauled out). Set
+     * lower for a state that's rightly the minority — a wombat or bilby dug in out of sight
+     * is the exception, not the norm, next to the grazing-near-its-hole state most days
+     * actually show. */
+    altChance?: number;
   };
 }
 

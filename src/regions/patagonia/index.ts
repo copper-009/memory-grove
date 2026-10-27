@@ -96,7 +96,11 @@ export const patagonia: Region = {
           source: iucn('Campephilus magellanicus'), activity: 'diurnal', zone: 'trunk', stages: ['chick', 'juvenile', 'adult', 'elder'],
           behaviour: 'Works steadily up a dead trunk, pausing to hammer at the bark.',
           body: { kind: 'bird', size: [9, 7], beak: 3, crest: 3, legs: 2, tail: { len: 3, style: 'down' } },
-          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#120e08', r: '#c0392b' } },
+          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#120e08', r: '#c0392b' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#1a1a1c', h: '#c0392b', y: '#3a3a3e' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
         { key: 'guanaco', slot: 1, common: 'Guanaco', scientific: 'Lama guanicoe',
           traits: ['Light brown back, white underside and face', 'Long legs and neck, alert upright ears'],
           iucn: 'LC', fact: 'A wild relative of the llama, and it can run at speed across rough ground almost indefinitely.',
@@ -172,14 +176,27 @@ export const patagonia: Region = {
           source: iucn('Athene cunicularia'), activity: 'diurnal', zone: 'burrow', stages: ['chick', 'juvenile', 'adult', 'elder'],
           behaviour: 'Stands bolt upright at a burrow mouth, bobbing its head at any movement.',
           body: { kind: 'bird', size: [6, 6], beak: 2, legs: 3, tail: { len: 1, style: 'none' } },
-          palette: { b: '#8a7458', d: '#5a4a36', l: '#bca888', e: '#e8c030', w: '#1a1410' } },
+          palette: { b: '#8a7458', d: '#5a4a36', l: '#bca888', e: '#e8c030', w: '#1a1410' },
+          // Pulled down into the burrow — its own big yellow eyes are the one thing still
+          // showing above the mound.
+          alt: { zone: 'burrow', altChance: 0.25, sprite: { pal: { b: '#8a7050', y: '#e8c030', d: '#5a4830', m: '#4a3a26' }, frames: [
+            ['bybyb..', 'mmmmmmm'],
+            ['bybyb..', 'mmmmmmm'],
+          ] as const } } },
         { key: 'magellanic-penguin', slot: 3, common: 'Magellanic penguin', scientific: 'Spheniscus magellanicus',
           traits: ['Two black bands across the white chest', 'Black-and-white banded head'],
           iucn: 'NT', fact: 'Nests in burrows along the Patagonian coast, sometimes a very long walk inland from the surf.',
           source: iucn('Spheniscus magellanicus'), activity: 'diurnal', zone: 'waterEdge', stages: ['chick', 'juvenile', 'adult', 'elder'],
           behaviour: 'Waddles between burrow and shoreline in a fixed, unhurried line.',
           body: { kind: 'wader', size: [6, 7], legs: 2, beak: 2, tail: { len: 1, style: 'none' } },
-          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#f0ece0', e: '#120e08', y: '#d8c060' } },
+          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#f0ece0', e: '#120e08', y: '#d8c060' },
+          // Flightless — no flying `alt` — but a penguin's other famous state is swimming,
+          // and "waddles between burrow and shoreline" means it genuinely does both. A
+          // streamlined horizontal swim pose for the days it's actually in the water.
+          alt: { zone: 'water', sprite: { pal: { b: '#1a1a1c', l: '#f0ece0', e: '#120e08' }, frames: [
+            ['.e.......', 'bbbbbbb..', 'lllllbb..', '.b...bb..'],
+            ['.e.......', 'bbbbbbb..', 'lllllb.b.', '.b...b.b.'],
+          ] as const } } },
         { key: 'andean-condor-steppe', slot: 4, common: 'Andean condor', scientific: 'Vultur gryphus',
           traits: ['Enormous black wings with a white band on top', 'Bare pink-grey head'],
           iucn: 'VU', fact: 'Ranges huge distances from its mountain roosts out over the open steppe to feed.',

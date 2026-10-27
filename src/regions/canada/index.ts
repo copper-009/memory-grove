@@ -87,7 +87,12 @@ export const canada: Region = {
           source: iucn('Gavia immer'), activity: 'diurnal', zone: 'water', stages: ['chick', 'juvenile', 'adult', 'elder'],
           behaviour: 'Glides low on the water, then dives smoothly without a splash.',
           body: { kind: 'swimmer', size: [10, 5], neck: 3, beak: 3 },
-          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#140e08', w: '#f0ece0' } },
+          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#140e08', w: '#f0ece0' },
+          // Underwater — head and neck still above the surface, body and legs gone.
+          alt: { zone: 'water', altChance: 0.3, sprite: { pal: { l: '#3a3a3e', e: '#0a0a0a', b: '#1a1a1c', w: '#f0ece0' }, frames: [
+            ['...l...', '..lee..', '...b...', '.wwwww.'],
+            ['...l...', '..lee..', '...b...', '..wwww.'],
+          ] as const } } },
         { key: 'snowshoe-hare', slot: 1, common: 'Snowshoe hare', scientific: 'Lepus americanus',
           traits: ['Huge hind feet for the snow', 'Brown in summer, pure white in winter'],
           iucn: 'LC', fact: 'Changes coat colour with the seasons, timed by day length rather than temperature.',
@@ -121,7 +126,13 @@ export const canada: Region = {
           source: iucn('Alces alces'), activity: 'crepuscular', zone: 'waterEdge', stages: ['calf', 'juvenile', 'adult', 'elder'],
           behaviour: 'Wades into the shallows and dips its whole head under for pond weed.',
           body: { kind: 'quadruped', size: [14, 11], legs: 5, neck: 3, crest: 5, tail: { len: 1, style: 'none' } },
-          palette: { b: '#3a2e22', d: '#201812', l: '#5c4a38', e: '#0a0806', n: '#8a7a60' } },
+          palette: { b: '#3a2e22', d: '#201812', l: '#5c4a38', e: '#0a0806', n: '#8a7a60' },
+          // "A strong swimmer that will cross a lake without hesitation" — antlers and head
+          // above the surface, the rest submerged.
+          alt: { zone: 'water', altChance: 0.25, sprite: { pal: { b: '#3a2e22', d: '#201812', l: '#5c4a38', w: '#8ab0c8' }, frames: [
+            ['......bd...', '......ld...', '....bblb...', '..bbbblbbb.', '.wwww.wwww.'],
+            ['......bd...', '......ld...', '....bblb...', '..bbbblbbb.', '.wwww.wwww.'],
+          ] as const } } },
       ],
       understory: [
         { key: 'lichen', label: 'Lichen', what: 'Pale lichen on the spruce', colour: '#9aa088' },
@@ -162,7 +173,12 @@ export const canada: Region = {
           source: iucn('Marmota caligata'), activity: 'diurnal', zone: 'burrow', stages: ['pup', 'juvenile', 'adult', 'elder'],
           behaviour: 'Sits up on a boulder, surveying, then dives down its burrow at the least disturbance.',
           body: { kind: 'bulky', size: [8, 4], legs: 2, ears: 1, tail: { len: 3, style: 'down' } },
-          palette: { b: '#8a8070', d: '#5a5244', l: '#b0a690', e: '#120e08', n: '#1e1a14' } },
+          palette: { b: '#8a8070', d: '#5a5244', l: '#b0a690', e: '#120e08', n: '#1e1a14' },
+          // Dived down its burrow — the rare moment, not the norm, per its own behaviour.
+          alt: { zone: 'burrow', altChance: 0.2, sprite: { pal: { d: '#5a5244', l: '#b0a690', e: '#120e08', b: '#8a8070', m: '#4a3a26' }, frames: [
+            ['.dd....', 'lebmmm.', 'mmmmmmm'],
+            ['.dd....', 'lebmmm.', 'mmmmmmm'],
+          ] as const } } },
         { key: 'mountain-goat', slot: 2, common: 'Mountain goat', scientific: 'Oreamnos americanus',
           traits: ['Shaggy pure white coat', 'Short black dagger-like horns'],
           iucn: 'LC', fact: 'Moves confidently across ledges most other animals could not cross, and generally wins any dispute with bighorn sheep over them.',

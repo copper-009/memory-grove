@@ -138,6 +138,11 @@ export const coastalHeath: Biome = {
       behaviour: 'Basks on a half-sunk log, then slides into the water without a sound.',
       body: { kind: 'reptile', size: [8, 4], neck: 6, legs: 1, tail: { len: 2, style: 'down' } },
       palette: { b: '#4a4232', d: '#2a251c', l: '#6e6448', e: '#0c0a06', y: '#c8c0a0' },
+      // Submerged, neck tucked away — shell only, just under the surface.
+      alt: { zone: 'water', altChance: 0.35, sprite: { pal: { b: '#4a4232', w: '#8ab0c8' }, frames: [
+        ['.bbbbbb..', '.bbbbbb..', '.wwwwww..'],
+        ['.bbbbbb..', '.bbbbbb..', '.wwwwww..'],
+      ] as const } },
     },
     {
       key: 'brolga',
@@ -172,6 +177,11 @@ export const coastalHeath: Biome = {
       flourish: 'dive',
       body: { kind: 'swimmer', size: [9, 4], beak: 3, tail: { len: 4, style: 'down' } },
       palette: { b: '#4a3a2a', d: '#2a2018', l: '#6e5a42', e: '#0c0806', w: '#8a7258' },
+      // The brief dive itself — gone under, just the ripple where it was.
+      alt: { zone: 'water', altChance: 0.2, sprite: { pal: { w: '#8ab0c8' }, frames: [
+        ['.wwww.wwww...'],
+        ['..wwww.wwww..'],
+      ] as const } },
     },
   ],
 
