@@ -60,6 +60,11 @@ interface Entry {
   pal: Record<string, string>;
   frames: readonly [readonly string[], readonly string[]];
   young?: readonly [readonly string[], readonly string[]];
+  zone: string;
+  /** A second behavioural state (`Creature.alt`) — a different zone and a genuinely
+   * different pose, not shown anywhere in this gallery until now: the "how do I see the
+   * alternate sprite" gap. */
+  alt?: { zone: string; pal: Record<string, string>; frames: readonly [readonly string[], readonly string[]] };
 }
 
 // Read straight from HAND_SPRITES's own keys rather than a hand-maintained list — that list
@@ -84,6 +89,8 @@ for (const region of REGIONS) {
         pal: creature.sprite.pal,
         frames: creature.sprite.frames,
         young: creature.sprite.young,
+        zone: creature.zone,
+        alt: creature.alt ? { zone: creature.alt.zone, pal: creature.alt.sprite.pal, frames: creature.alt.sprite.frames } : undefined,
       });
     }
   }
@@ -113,6 +120,8 @@ const html = `<!doctype html>
   .card.ref { background: #1a2024; border-color: #38434a; }
   .swatch { background-image: url(data:image/png;base64,${groundB64}); background-size: 128px 63px; background-repeat: repeat; border-radius: 4px; display: flex; align-items: flex-end; justify-content: space-around; padding: 6px 4px; min-height: 70px; }
   canvas { image-rendering: pixelated; display: block; }
+  .stateLabel { font-size: 10px; color: #9c9; text-align: center; margin-top: 2px; }
+  .stateLabel.alt { color: #cc9; }
   .meta { margin-top: 8px; font-size: 12px; line-height: 1.5; }
   .meta .name { font-weight: 600; font-size: 13px; }
   .meta .sub { color: #999; }
@@ -141,6 +150,7 @@ const html = `<!doctype html>
 <img class="preview" src="data:image/png;base64,${previewB64}" alt="Golden Lake reference scene">
 <div class="toolbar">
   <button id="animBtn">Pause animation</button>
+  <button id="altBtn">Show only alt-state creatures</button>
   <span class="count" id="count"></span>
   <span class="dbStatus" id="dbStatus">Connecting…</span>
 </div>
@@ -290,6 +300,29 @@ function card(entry, isRef) {
   swatch.appendChild(c1);
   swatch.appendChild(c4);
   div.appendChild(swatch);
+  if (!isRef && entry.zone) {
+    const lab = document.createElement('div');
+    lab.className = 'stateLabel';
+    lab.textContent = entry.alt ? 'Primary — ' + entry.zone : entry.zone;
+    div.appendChild(lab);
+  }
+  // A second behavioural state (Creature.alt) — its own swatch, right under the primary
+  // one, clearly labelled with the zone it's drawn in, so both poses are visible on the
+  // same card rather than needing a separate lookup.
+  if (!isRef && entry.alt) {
+    const altSwatch = document.createElement('div');
+    altSwatch.className = 'swatch';
+    const a1 = makeCanvas(entry.alt.frames, entry.alt.pal, 1);
+    const a4 = makeCanvas(entry.alt.frames, entry.alt.pal, 4);
+    tickers.push(a1._tick, a4._tick);
+    altSwatch.appendChild(a1);
+    altSwatch.appendChild(a4);
+    div.appendChild(altSwatch);
+    const altLab = document.createElement('div');
+    altLab.className = 'stateLabel alt';
+    altLab.textContent = 'Alt — ' + entry.alt.zone;
+    div.appendChild(altLab);
+  }
   const meta = document.createElement('div');
   meta.className = 'meta';
   const badge = isRef ? '' : '<span class="badge ' + entry.source + '">' + entry.source + '</span>';
@@ -357,7 +390,20 @@ const refGrid = document.getElementById('refGrid');
 for (const [key, data] of Object.entries(REFERENCE)) refGrid.appendChild(card({ id: key, common: key, frames: data.frames, pal: data.pal }, true));
 
 const mainGrid = document.getElementById('mainGrid');
-for (const entry of ENTRIES) mainGrid.appendChild(card(entry, false));
+const cardEls = [];
+for (const entry of ENTRIES) {
+  const el = card(entry, false);
+  el.dataset.hasAlt = entry.alt ? '1' : '0';
+  cardEls.push(el);
+  mainGrid.appendChild(el);
+}
+
+let altOnly = false;
+document.getElementById('altBtn').addEventListener('click', (e) => {
+  altOnly = !altOnly;
+  e.target.textContent = altOnly ? 'Show all creatures' : 'Show only alt-state creatures';
+  for (const el of cardEls) el.style.display = (!altOnly || el.dataset.hasAlt === '1') ? '' : 'none';
+});
 
 function updateCount() {
   const vals = Object.values(decisions);

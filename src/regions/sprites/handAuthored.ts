@@ -1564,50 +1564,42 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     ] as const,
   },
 
-  // -- Batch 5, redone (round 12, pass 2): the first pass's templates read as a near-flat
-  // silhouette once actually seen in the gallery at size — the accent colours (eye-stripe,
-  // belly band) were only ever 1-2 pixels, not real colour-blocked regions, so most of these
-  // sixteen read as a single dominant body colour. Rebuilt around the same "bold, simple,
-  // colour-blocked shape" the user pointed to directly (two reference images of plain pixel-
-  // art birds: a duck with a real beak wedge, a solid eye block and a proper wing-patch
-  // block, not flecks) — a genuine head-cap, body, belly-band and tail as four real regions,
-  // each sized to actually read, in three sizes (tiny/small/large) plus the cockatoo's crest
-  // graft for the two crested species and the same tail extensions as before where a
-  // species' tail is its own signature (streamers, a lyre, a fan).
-  //
-  // Also new this pass: a second, "flying" state for every species here that actually flies
-  // between perches (`Creature.alt`, `zone: 'sky'`) — built from the confirmed
-  // `australia:wedge-tailed-eagle` glide/flap shape above, scaled to two sizes and
-  // recoloured, per "all the flying birds should have a second flying animation similar to
-  // eagles but scaled to size". Ground/alpine specialists that rarely take wing (the pipit,
-  // the rock wren, the lyrebird) keep a single state, unchanged from before.
+  // -- Batch 5, redone twice (round 12, pass 3): pass 2 fixed the colour contrast (real
+  // regions instead of 1-pixel flecks) but kept the same wide, squared-off silhouette — "the
+  // birds are still too blobby, I think they need to be slimmer". Narrowed every template
+  // (the body column is 4-5 pixels wide now, not 7) and given each a genuine taper instead of
+  // a flat rectangle: a distinct narrow neck between head and body, and a tail that narrows
+  // toward its tip rather than reading as another body-width block. Palettes are unchanged
+  // from pass 2 — same colour meaning per letter (d = head-cap, b = body, w = belly-band, r =
+  // tail, e = eye, k = legs), same quick-tag extensions (crest, fan, streamer) — only the
+  // silhouette itself got slimmer.
   'aotearoa:pihoihoi': {
     pal: { b: '#8a7452', d: '#5c4a32', e: '#140e08', r: '#8a7452', k: '#3a2e1c', w: '#e8d8b0' },
     frames: [
-      ['.wdd..', 'deebb.', '.bbbb.', '.brr..', '.kk...'],
-      ['.wdd..', 'deebb.', '.bbbb.', '.brrr.', '.kk...'],
+      ['.wdd..', '.deeb.', '..bb..', '..br..', '..kk..'],
+      ['.wdd..', '.deeb.', '..bb..', '...br.', '..kk..'],
     ] as const,
   },
   'aotearoa:piwauwau': {
     pal: { b: '#6a7a3a', d: '#3e4a20', e: '#0a0a06', r: '#6a7a3a', k: '#2a2e14', y: '#e8c860' },
     frames: [
-      ['.ddd..', 'deebb.', '.bbyb.', '.brr..', '.kk...'],
-      ['.ddd..', 'deebb.', '.bbyb.', '.brrr.', '.kk...'],
+      ['.dd...', '.deeb.', '..by..', '..br..', '..kk..'],
+      ['.dd...', '.deeb.', '..by..', '...br.', '..kk..'],
     ] as const,
   },
   'australia:crimson-rosella': {
     pal: { d: '#1a1418', b: '#c0302a', e: '#0a0a06', w: '#6a5ac0', r: '#3a5ac0', k: '#2a2018' },
     frames: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'aotearoa:tui': {
-    // "Two white throat tufts against glossy blue-black" — now a proper 4-pixel block.
+    // "Two white throat tufts against glossy blue-black" — now a proper belly-band block.
     pal: { d: '#0a0a0c', b: '#141418', e: '#2a2a30', w: '#f4f0e8', r: '#141418', k: '#1a1410' },
     frames: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'australia:satin-bowerbird': {
@@ -1615,40 +1607,40 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // iridescence a real one shows in good light, so the body isn't flat black top to bottom.
     pal: { d: '#0a0a0c', b: '#16151c', e: '#8a6ac0', w: '#3a3a5c', r: '#16151c', k: '#1a1410' },
     frames: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'norway:lunde': {
     // Puffin — chunky and short, so the small template is the honest size despite the big
-    // bill. The bill's own orange-and-grey stripe takes the head-cap slot, much bigger than
-    // the single fleck it was before; white face and orange feet carry the rest.
+    // bill. The bill's own orange-and-grey stripe takes the head-cap slot; white face and
+    // orange feet carry the rest.
     pal: { d: '#e8a030', b: '#1a1a1c', e: '#0c0a06', w: '#f0ece0', r: '#1a1a1c', k: '#e8a030' },
     frames: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'aotearoa:kereru': {
     pal: { d: '#2a4a28', b: '#4a7a46', e: '#140e08', w: '#f4f0e8', r: '#4a7a46', k: '#8a4a2a' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'costarica:scarlet-macaw': {
     pal: { d: '#3a5ac0', b: '#d8302a', e: '#140e08', w: '#e8c030', r: '#d8302a', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'borneo:storks-billed-kingfisher': {
@@ -1656,39 +1648,38 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // unchanged here. "Massive heavy red bill" now takes the full head-cap block.
     pal: { d: '#c0392b', b: '#2a7a8a', e: '#120e08', w: '#e8d8a0', r: '#2a7a8a', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'norway:storfugl': {
-    // "A red wattle over the eye" takes the head-cap block, now genuinely large rather than
-    // a single pixel; "fanned black tail" keeps its full-width spread from before.
+    // "A red wattle over the eye" takes the head-cap block. "Fanned black tail" keeps its
+    // full-width spread (wider than the now-narrow body, matching a real displaying male).
     pal: { d: '#c0302a', b: '#1a1a1c', e: '#0a0a06', w: '#8a8470', r: '#3a3a3e', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.rrrrrrr.', '.rrrrrrr.', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.rrrrrr..', '..rrrrrr.', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '.rrrrrrr.', '.rrrrrrr.', '....kk...'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '.rrrrrr..', '..rrrrrr.', '....kk...'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'costarica:bare-necked-umbrellabird': {
     // The cockatoo's own two-row crest, recoloured black for "shaggy black crest overhanging
-    // the bill". The inflatable throat wattle takes the belly-band block, now a full-width
-    // band instead of two cells, its own bright red.
+    // the bill". The inflatable throat wattle takes the belly-band block, its own bright red.
     pal: { y: '#141418', d: '#0a0a0c', b: '#1a1a1c', e: '#140e08', w: '#c0302a', r: '#1a1a1c', k: '#2a2018' },
     frames: [
-      ['.yy......', '.yyy.....', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
-      ['.yy......', '.yyy.....', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['.yy......', '.yyy.....', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'borneo:rhinoceros-hornbill': {
@@ -1697,27 +1688,27 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // the single clearest second mark this shape has room for.
     pal: { y: '#e8783a', d: '#9a4a20', b: '#1a1a1c', e: '#0a0a06', w: '#c8a070', r: '#f0ece0', k: '#2a2018' },
     frames: [
-      ['.yy......', 'yyy......', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
-      ['.yy......', 'yyy......', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
+      ['.yy......', 'yyy......', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '.....kk..'],
+      ['.yy......', 'yyy......', '...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'australia:alberts-lyrebird': {
-    // "Rich rufous-brown body with a pale throat" — the throat now a real belly-band block;
-    // the tail gets its own, genuinely darker rufous rather than repeating the body colour,
-    // so the extended rows read as a tail and not just more body. Ground-display specialist,
-    // rarely airborne — kept single-state, no flying `alt`.
+    // "Rich rufous-brown body with a pale throat" — a real belly-band block; the tail gets
+    // its own, genuinely darker rufous rather than repeating the body colour, tapering to a
+    // point over two extra rows. Ground-display specialist, rarely airborne — kept
+    // single-state, no flying `alt`.
     pal: { d: '#5c3a22', b: '#8a5a3a', e: '#140e08', w: '#c8a070', r: '#6a4228', k: '#2a1810' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '..brrrr..', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrrr.', '..brrrr..', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brrr', '......brr', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......brr', '.......br', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'costarica:quetzal': {
@@ -1726,12 +1717,12 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // near-white fleck — takes the belly-band block.
     pal: { d: '#0e3e2a', b: '#1a6a46', e: '#120e08', w: '#c0302a', r: '#2a9a66', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....rr...', '....rr...', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....rr...', '...rr....', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '......rr.', '......rr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '......rr.', '.......rr', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'eastafrica:lilac-breasted-roller': {
@@ -1740,12 +1731,12 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // dominant body colour with two flecks.
     pal: { d: '#c088d0', b: '#2a7a50', e: '#120e08', w: '#2a7ac0', r: '#1a2a4a', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...brr...', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '...bbrrr.', '....rr...', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....brr.', '......rr.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '......brr', '.......r.', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
   'australia:rainbow-bee-eater': {
@@ -1753,12 +1744,12 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // separate one-pixel tips — the clearest way this shape tells it apart from the roller.
     pal: { d: '#b06a2a', b: '#3a9a5c', e: '#0a0a06', w: '#c8d888', r: '#2a5a3a', k: '#2a2018' },
     frames: [
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....r.r..', '...kk....'],
-      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '...bbrr..', '....r..r.', '...kk....'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....r.r.', '.....kk..'],
+      ['...dd....', '..ddeeb..', '...bbbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....r..r', '.....kk..'],
     ] as const,
     young: [
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
-      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '...br..', '...kk..'],
+      ['.dd....', '.deeb..', '..bbb..', '..www..', '..wbr..', '....br.', '...kk..'],
     ] as const,
   },
 
