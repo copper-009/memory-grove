@@ -79,7 +79,10 @@ AF.engines.pixel = {
         if (env.flipLight) { lg.save(); lg.translate(x0 + sw, y0); lg.scale(-1, 1); lg.drawImage(spr, 0, 0, sw, sh); lg.restore(); } else lg.drawImage(spr, x0, y0, sw, sh);
         if (k !== 1) lg.imageSmoothingEnabled = true;
         if (fade) lg.globalAlpha = 1;
-        if (env.afterItem) env.afterItem(lg, p);
+        // Memory Garden change: a hosted creature standing on this tree used to be painted
+        // right here, once, as part of this land layer's own one-time build. It's drawn
+        // live every frame instead now (`AF.drawHosted`, `web/visitors.js`), so its idle
+        // glance and sway actually play out instead of being fixed at build time.
       });
     }
     return steps;

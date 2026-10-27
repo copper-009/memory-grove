@@ -59,6 +59,12 @@ const ROAM_EVERY = 150, ROAM_STAGGER = 41, ROAM_OFFSET = 37, WALK_SPEED = 7, STR
 const ROAM_REACH = 0.045;
 // a resting animal shows its second frame (a glance, a nibble) while a slow wave is above this
 const IDLE_GLANCE = 0.93;
+// Memory Garden change: how far a hosted creature sways from its exact host spot, in pixels
+// — a grazing one (deer/stag, and any region creature on a ground/slope/burrow depth band)
+// wanders further than one perched still in a tree or at a pond's edge, and a sleepy one
+// barely at all. A still species (crocodiles) gets none, same as it skips the idle glance.
+const HOST_SWAY = { graze: 5, perched: 2, sleepy: 1 };
+const HOST_SWAY_CYCLE = 0.12;  // much slower than IDLE_GLANCE's flick — a real wander, not a jitter
 // a rabbit hops rather than walks: a hop every RABBIT_HOP_LEN pixels (of env.u), RABBIT_HOP_PX high
 const RABBIT_HOP_LEN = 6, RABBIT_HOP_PX = 3;
 // the animals stand this far below the front row (of the height), never off the canvas
@@ -232,13 +238,37 @@ AF.placeVisitors = function (env) {
   // the rest stand at the front, but the cabin (which has its own corner) and those that fly
   for (const v of list) if (!(v.key in inForest) && v.key !== 'cabin' && !(VISITORS[v.key] || {}).flies) front.push(v);
   for (const k of Object.keys(inForest)) if (!inForest[k]) delete inForest[k];
-  env.inForest = inForest; env.frontVisitors = front; env.flyers = list.filter(v => (VISITORS[v.key] || {}).flies); env.staticBoxes = [];
+  env.inForest = inForest; env.frontVisitors = front; env.flyers = list.filter(v => (VISITORS[v.key] || {}).flies);
+  // Memory Garden change: this used to be `env.afterItem`, a callback the engine's own
+  // per-tree build step ran once while painting the land layer (`engines/pixel/engine.js`,
+  // `steps()`) — so a hosted creature's pixels were baked into that static, cached image
+  // alongside its tree. `build()` runs once per scene (on mount, resize, or a refine pass),
+  // not every frame, while the idle-glance and (new) sway below both read `env.t`, which is
+  // only ever live inside `frame()`'s own per-frame loop — at build time `env.t` is still
+  // whatever it last was (effectively frozen), so neither ever actually played out live;
+  // they'd only differ between one scene build and the next. `env.hostedByHost` is now read
+  // by `AF.drawHosted` below instead, called every frame from `core.js` the same way
+  // `AF.drawFlyers`/`AF.drawVisitors` already are, so both genuinely animate. A hosted
+  // creature now draws on top of the fully composited land each frame rather than baked
+  // tree-by-tree into it — depth-correct against its OWN tree, but, unlike before, no longer
+  // occluded by a nearer tree's canopy happening to overlap its spot. Checked across several
+  // scenes (varied depths, several hosted creatures at once): canopy overlap at a hosted
+  // creature's exact perch is rare enough, and the gain (everything hosted is now actually
+  // alive) outweighs that one uncommon case.
   const byHost = new Map();
   for (const [key, spot] of Object.entries(inForest)) byHost.set(spot.host, (byHost.get(spot.host) || []).concat([key]));
-  env.afterItem = (lg, p) => {
-    const keysHere = byHost.get(p); if (!keysHere) return;
+  env.hostedByHost = byHost; env.hostedList = list;
+};
+
+/* hosted creatures (perched in a tree, at a pond's edge, grazing a depth band) — called every
+ * frame like the flyers and front-roamers, so their idle glance and sway genuinely play out
+ * live instead of being fixed at whatever `env.t` was when the scene was last built. */
+AF.drawHosted = function (g, env, t) {
+  const byHost = env.hostedByHost, inForest = env.inForest; if (!byHost || !inForest) return;
+  env.staticBoxes = [];
+  for (const [p, keysHere] of byHost) {
     for (const key of keysHere) {
-      const spr = VISITORS[key], v = list.find(x => x.key === key), base = inForest[key].graze ? 1 : 0;
+      const spr = VISITORS[key], v = (env.hostedList || []).find(x => x.key === key), base = inForest[key].graze ? 1 : 0;
       // Memory Garden change: a hosted creature (owl/heron/squirrel/deer/stag, and now any
       // region creature host above) used to show one fixed frame all day — entirely frozen,
       // not even the idle "glance" front-roaming visitors already get. Still species
@@ -247,13 +277,23 @@ AF.placeVisitors = function (env) {
       // per creature (`hashStr(key)`) so a scene with several hosted animals doesn't have
       // them all glance in lockstep.
       const glancing = !env.still && !(v && v.still) && spr.frames.length > 1
-        && Math.sin((env.t || 0) * AF.u.cyc(0.7) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) > IDLE_GLANCE;
+        && Math.sin(t * AF.u.cyc(0.7) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) > IDLE_GLANCE;
       const frame = spr.frames[glancing ? (spr.frames.length - 1 - base) : base];
       let x0, y0;
       if (key === 'owl') { const h = AF.STAGE_H[p.it.stage] * env.u * p.s; x0 = Math.round(p.x - 2); y0 = Math.round(p.y - h - frame.length + 3); }
       else if (key === 'squirrel') { x0 = Math.round(p.x) + (AF.trunkRight ? AF.trunkRight(p, env) : 1); y0 = Math.round(p.y - frame.length + 1); }  // on the roots, just right of the trunk
       else if (key === 'heron') { const b = AF.pondBox(env, p); x0 = Math.round(b.cx + b.w * 0.2); y0 = Math.round(b.cy - frame.length + 1); }
       else { x0 = Math.round(p.x + 4); y0 = Math.round(p.y - frame.length + 1); }
+      // Memory Garden change: a hosted creature used to stand at the exact same pixel all
+      // day once placed — animated in place (the glance above) but never actually moving,
+      // unlike a front-roaming visitor which genuinely walks its stretch. A slow sideways
+      // sway off its host spot — never so far it leaves the tree/pond it's anchored to —
+      // gives it the same "still alive, not a statue" reading at rest, sized by how it
+      // actually behaves: grazing wider than perched, a sleepy species barely at all, a
+      // still one not at all.
+      const stillHere = env.still || (v && v.still);
+      const swayAmp = stillHere ? 0 : (v && v.sleepy) ? HOST_SWAY.sleepy : inForest[key].graze ? HOST_SWAY.graze : HOST_SWAY.perched;
+      if (swayAmp) x0 += Math.round(Math.sin(t * AF.u.cyc(HOST_SWAY_CYCLE) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) * swayAmp);
       // up close (a visit) it is as much bigger as its tree, standing where its feet are.
       // Memory Garden change: outside a visit, a hosted creature used to render at the same
       // native pixel size no matter how far back its tree stood, while the tree itself
@@ -262,13 +302,13 @@ AF.placeVisitors = function (env) {
       // only 60% of the tree's own scale reduction carries over, so a distant creature
       // stays readable rather than shrinking to match exactly.
       const visitK = AF.visitK(p), depthK = visitK > 1 ? visitK : 1 - (1 - p.s) * 0.6, fy = y0 + frame.length;
-      scaleAnchored(lg, depthK, x0, fy, () => {
-        paintSprite(lg, frame, x0, y0, spr.pal, visitorColor(env, p.hz));
-        if (key === 'owl' && env.mood.time === 'night') { lg.fillStyle = OWL_NIGHT_EYES; lg.fillRect(x0 + 1, y0 + 2, 1, 1); lg.fillRect(x0 + 3, y0 + 2, 1, 1); }
+      scaleAnchored(g, depthK, x0, fy, () => {
+        paintSprite(g, frame, x0, y0, spr.pal, visitorColor(env, p.hz));
+        if (key === 'owl' && env.mood.time === 'night') { g.fillStyle = OWL_NIGHT_EYES; g.fillRect(x0 + 1, y0 + 2, 1, 1); g.fillRect(x0 + 3, y0 + 2, 1, 1); }
       });
       env.staticBoxes.push({ v, x0, y0: fy - frame.length * depthK, x1: x0 + frame[0].length * depthK, y1: fy });
     }
-  };
+  }
 };
 
 /* the eagle circles high over the forest, behind the trees */

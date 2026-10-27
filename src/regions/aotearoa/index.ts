@@ -115,6 +115,10 @@ export const aotearoa: Region = {
           behaviour: 'Hangs upside down at flax flowers, then clatters off noisily between trees.',
           body: { kind: 'bird', size: [8, 6], beak: 3, tail: { len: 4, style: 'down' }, legs: 1 },
           palette: { b: '#16202a', d: '#0a1016', l: '#2c4a40', e: '#f4f2ec', w: '#1c5a4a', y: '#2a2a2a' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#141418', h: '#f4f0e8', y: '#1a1410' }, frames: [
+            ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
+            ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+          ] as const } },
         },
         {
           key: 'kereru', slot: 1, common: 'New Zealand pigeon', scientific: 'Hemiphaga novaeseelandiae', localName: 'kererū', localLanguage: 'te reo Māori',
@@ -125,6 +129,10 @@ export const aotearoa: Region = {
           behaviour: 'Sits heavily on a branch eating leaves, and takes off with a loud whoomp of wings.',
           body: { kind: 'bird', size: [9, 7], beak: 2, tail: { len: 4, style: 'down' }, legs: 1 },
           palette: { b: '#2e4a44', d: '#1a2e2a', l: '#4a6e5e', e: '#f2f0ea', w: '#8a2a3a', y: '#c03030' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#2a4a28', b: '#4a7a46', h: '#f4f0e8', y: '#8a4a2a' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } },
         },
         {
           key: 'wetapunga', slot: 2, common: 'Giant wētā', scientific: 'Deinacrida heteracantha', localName: 'wētāpunga', localLanguage: 'te reo Māori',

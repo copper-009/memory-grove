@@ -1296,6 +1296,22 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 6: "the darker back colour is necessary" — the round-5 sandy recolor was the wrong
   // direction; reverted to a dark charcoal body, and spines now run as a dense alternating
   // light/dark checker across the whole crown instead of a few scattered dots.
+  // Round 12: "yes, implement the round-10 [burrow/dig] one" — wombat had no hand-authored
+  // sprite at all (still baked); bilby and echidna already did (below), but neither had a
+  // second, dug-in state. A low barrel body for wombat's own trait list ("barrel-shaped body
+  // low to the ground, broad flat nose, tiny ears, no visible tail"), plus a `Creature.alt`
+  // dug-in pose for all three — a dirt mound with just the one feature that gives each
+  // species away poking above it (small ears for wombat, the huge ears for bilby, a row of
+  // spine tips for echidna) — on `src/regions/australia/alpine.ts` (wombat, echidna) and
+  // `src/regions/australia/outback.ts` (bilby), not here; `HAND_SPRITES` only ever covers
+  // the primary sprite.
+  'australia:wombat': {
+    pal: { b: '#7a6a52', d: '#50452f', l: '#a2927a', e: '#120e08' },
+    frames: [
+      ['..dd.....', '.lebbbb..', 'bbbbbbbbb', 'bbbbbbbbb', '.d.....d.'],
+      ['..dd.....', '.lebbbb..', 'bbbbbbbbb', 'bbbbbbbbb', 'd.....d..'],
+    ] as const,
+  },
   'australia:echidna': {
     pal: { b: '#3a3528', d: '#141210', l: '#e8dcb8', e: '#0a0806' },
     frames: [
@@ -1548,198 +1564,201 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     ] as const,
   },
 
-  // -- Batch 5 (round 12): "the rosella and other small birds... redesign to follow eagles
-  // shape instead" / "redesign ~16 small perching/flitting birds onto a cockatoo/kookaburra
-  // base" — all sixteen were still baked. Two confirmed-good shapes already in this file do
-  // the job: the kookaburra's own 8x7 adult / 7x5 young perched-bird structure (head, eye,
-  // dark eye-stripe/wing mark, belly band, barred tail, legs) for most of them, and that same
-  // 7x5 shape reused directly as the ADULT size for the smallest species (no separate young —
-  // the accepted fallback for species too small for a second, smaller grid to read as
-  // anything but noise). The cockatoo's two-row crest is grafted on, unmodified in structure,
-  // for the two species whose signature mark is a literal crest/casque. A handful get a
-  // genuinely extended tail (streamers, a lyre, a fan) — the one feature this base shape
-  // can't fake with palette alone.
+  // -- Batch 5, redone (round 12, pass 2): the first pass's templates read as a near-flat
+  // silhouette once actually seen in the gallery at size — the accent colours (eye-stripe,
+  // belly band) were only ever 1-2 pixels, not real colour-blocked regions, so most of these
+  // sixteen read as a single dominant body colour. Rebuilt around the same "bold, simple,
+  // colour-blocked shape" the user pointed to directly (two reference images of plain pixel-
+  // art birds: a duck with a real beak wedge, a solid eye block and a proper wing-patch
+  // block, not flecks) — a genuine head-cap, body, belly-band and tail as four real regions,
+  // each sized to actually read, in three sizes (tiny/small/large) plus the cockatoo's crest
+  // graft for the two crested species and the same tail extensions as before where a
+  // species' tail is its own signature (streamers, a lyre, a fan).
+  //
+  // Also new this pass: a second, "flying" state for every species here that actually flies
+  // between perches (`Creature.alt`, `zone: 'sky'`) — built from the confirmed
+  // `australia:wedge-tailed-eagle` glide/flap shape above, scaled to two sizes and
+  // recoloured, per "all the flying birds should have a second flying animation similar to
+  // eagles but scaled to size". Ground/alpine specialists that rarely take wing (the pipit,
+  // the rock wren, the lyrebird) keep a single state, unchanged from before.
   'aotearoa:pihoihoi': {
-    // "Streaked brown... constantly bobs its tail" — ground zone, correctly, already; this
-    // is a shape fix only. A new, smaller template (below the kookaburra young size) for the
-    // two genuinely tiny species in this batch.
-    pal: { b: '#8a7452', d: '#5c4a32', e: '#140e08', r: '#5c4a32', k: '#3a2e1c' },
+    pal: { b: '#8a7452', d: '#5c4a32', e: '#140e08', r: '#8a7452', k: '#3a2e1c', w: '#e8d8b0' },
     frames: [
-      ['.bbb..', 'beebd.', 'bbbbd.', '.bbrr.', '..kk..'],
-      ['.bbb..', 'beebd.', 'bbbbd.', '.bbrrr', '..kk..'],
+      ['.wdd..', 'deebb.', '.bbbb.', '.brr..', '.kk...'],
+      ['.wdd..', 'deebb.', '.bbbb.', '.brrr.', '.kk...'],
     ] as const,
   },
   'aotearoa:piwauwau': {
-    // "Tiny and almost tailless" — tail colour matches the body so it reads as barely there;
-    // "yellow flanks" becomes the one accent pixel the tiny template has room for.
     pal: { b: '#6a7a3a', d: '#3e4a20', e: '#0a0a06', r: '#6a7a3a', k: '#2a2e14', y: '#e8c860' },
     frames: [
-      ['.bbb..', 'beebd.', 'bbbyd.', '.bbrr.', '..kk..'],
-      ['.bbb..', 'beebd.', 'bbbyd.', '.bbrrr', '..kk..'],
+      ['.ddd..', 'deebb.', '.bbyb.', '.brr..', '.kk...'],
+      ['.ddd..', 'deebb.', '.bbyb.', '.brrr.', '.kk...'],
     ] as const,
   },
   'australia:crimson-rosella': {
-    pal: { b: '#c0302a', d: '#1a1418', e: '#0a0a06', r: '#3a5ac0', k: '#2a2018' },
+    pal: { d: '#1a1418', b: '#c0302a', e: '#0a0a06', w: '#6a5ac0', r: '#3a5ac0', k: '#2a2018' },
     frames: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'aotearoa:tui': {
-    // "Two white throat tufts against glossy blue-black" — its single most-cited trait, so
-    // it gets its own two-pixel mark rather than being lost in a one-colour silhouette.
-    pal: { b: '#141418', d: '#0a0a0c', e: '#2a2a30', r: '#141418', k: '#1a1410', w: '#f4f0e8' },
+    // "Two white throat tufts against glossy blue-black" — now a proper 4-pixel block.
+    pal: { d: '#0a0a0c', b: '#141418', e: '#2a2a30', w: '#f4f0e8', r: '#141418', k: '#1a1410' },
     frames: [
-      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'australia:satin-bowerbird': {
-    // "Glossy blue-black with violet eyes" — the eye itself, given its real colour instead
-    // of the usual dark pupil, is this species' whole identity at this scale.
-    pal: { b: '#16151c', d: '#0a0a0c', e: '#8a6ac0', r: '#16151c', k: '#1a1410' },
+    // "Glossy blue-black with violet eyes" — a blue-tinted sheen block stands in for the
+    // iridescence a real one shows in good light, so the body isn't flat black top to bottom.
+    pal: { d: '#0a0a0c', b: '#16151c', e: '#8a6ac0', w: '#3a3a5c', r: '#16151c', k: '#1a1410' },
     frames: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'norway:lunde': {
     // Puffin — chunky and short, so the small template is the honest size despite the big
-    // bill; white face and bright orange feet carry the identity instead.
-    pal: { b: '#1a1a1c', d: '#0a0a0c', e: '#e8a030', r: '#1a1a1c', k: '#e8a030', w: '#f0ece0' },
+    // bill. The bill's own orange-and-grey stripe takes the head-cap slot, much bigger than
+    // the single fleck it was before; white face and orange feet carry the rest.
+    pal: { d: '#e8a030', b: '#1a1a1c', e: '#0c0a06', w: '#f0ece0', r: '#1a1a1c', k: '#e8a030' },
     frames: [
-      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bwwbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'aotearoa:kereru': {
-    pal: { b: '#4a7a46', d: '#2a4a28', e: '#140e08', w: '#f4f0e8', r: '#4a7a46', k: '#8a4a2a' },
+    pal: { d: '#2a4a28', b: '#4a7a46', e: '#140e08', w: '#f4f0e8', r: '#4a7a46', k: '#8a4a2a' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'costarica:scarlet-macaw': {
-    pal: { b: '#d8302a', d: '#3a5ac0', e: '#140e08', w: '#e8c030', r: '#d8302a', k: '#2a2018' },
+    pal: { d: '#3a5ac0', b: '#d8302a', e: '#140e08', w: '#e8c030', r: '#d8302a', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'borneo:storks-billed-kingfisher': {
     // `still: true` is already set on the species (sits dead still watching the water),
-    // unchanged here. The heavy red bill becomes a cheek-mark the same red as the baked
-    // palette's own bill colour, since this template has no separate protruding beak.
-    pal: { b: '#2a7a8a', d: '#c0392b', e: '#120e08', w: '#e8d8a0', r: '#2a7a8a', k: '#2a2018' },
+    // unchanged here. "Massive heavy red bill" now takes the full head-cap block.
+    pal: { d: '#c0392b', b: '#2a7a8a', e: '#120e08', w: '#e8d8a0', r: '#2a7a8a', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'norway:storfugl': {
-    // "Fanned black tail" — the one change this species' tail rows get is width, spread to
-    // the full body width rather than the usual narrow bar.
-    pal: { b: '#1a1a1c', d: '#0a0a0c', e: '#c0302a', w: '#8a8470', r: '#3a3a3e', k: '#2a2018' },
+    // "A red wattle over the eye" takes the head-cap block, now genuinely large rather than
+    // a single pixel; "fanned black tail" keeps its full-width spread from before.
+    pal: { d: '#c0302a', b: '#1a1a1c', e: '#0a0a06', w: '#8a8470', r: '#3a3a3e', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '.rrrrrr.', '.rrrrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '.rrrrr..', '..rrrrr.', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.rrrrrrr.', '.rrrrrrr.', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.rrrrrr..', '..rrrrrr.', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'costarica:bare-necked-umbrellabird': {
     // The cockatoo's own two-row crest, recoloured black for "shaggy black crest overhanging
-    // the bill" instead of erect and yellow. The inflatable throat wattle takes the belly-band
-    // colour slot, its own bright red rather than the usual pale underside.
-    pal: { y: '#141418', b: '#1a1a1c', d: '#0a0a0c', e: '#140e08', w: '#c0302a', r: '#1a1a1c', k: '#2a2018' },
+    // the bill". The inflatable throat wattle takes the belly-band block, now a full-width
+    // band instead of two cells, its own bright red.
+    pal: { y: '#141418', d: '#0a0a0c', b: '#1a1a1c', e: '#140e08', w: '#c0302a', r: '#1a1a1c', k: '#2a2018' },
     frames: [
-      ['.yy.....', '.yyy....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['.yy.....', '.yyy....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['.yy......', '.yyy.....', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
+      ['.yy......', '.yyy.....', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'borneo:rhinoceros-hornbill': {
-    // Same crest graft as the umbrellabird, recoloured to the casque's own orange-red, plus
-    // a white tail standing in for "white tail, black band" (the band itself doesn't fit
-    // this template's tail without a third tail colour, so the single white reads as the
-    // species' second most obvious mark instead).
-    pal: { y: '#e8783a', b: '#1a1a1c', d: '#9a4a20', e: '#0a0a06', w: '#1a1a1c', r: '#f0ece0', k: '#2a2018' },
+    // Same crest graft as the umbrellabird, recoloured to the casque's own orange-red. "White
+    // tail, black band" becomes a solid white tail — both tail rows now, not a single fleck —
+    // the single clearest second mark this shape has room for.
+    pal: { y: '#e8783a', d: '#9a4a20', b: '#1a1a1c', e: '#0a0a06', w: '#c8a070', r: '#f0ece0', k: '#2a2018' },
     frames: [
-      ['.yy.....', 'yyy.....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...kk...'],
-      ['.yy.....', 'yyy.....', '...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrr..', '...kk...'],
+      ['.yy......', 'yyy......', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...kk....'],
+      ['.yy......', 'yyy......', '..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'australia:alberts-lyrebird': {
-    // "Long filamentary tail" — one extra tail row, tapering, rather than the usual two-row
-    // bar.
-    pal: { b: '#8a5a3a', d: '#5c3a22', e: '#140e08', w: '#c8a070', r: '#8a5a3a', k: '#2a1810' },
+    // "Rich rufous-brown body with a pale throat" — the throat now a real belly-band block;
+    // the tail gets its own, genuinely darker rufous rather than repeating the body colour,
+    // so the extended rows read as a tail and not just more body. Ground-display specialist,
+    // rarely airborne — kept single-state, no flying `alt`.
+    pal: { d: '#5c3a22', b: '#8a5a3a', e: '#140e08', w: '#c8a070', r: '#6a4228', k: '#2a1810' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '..brrrr.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '..brrrr.', '..brrrr.', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '..brrrr..', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '..bbrrrr.', '..brrrr..', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'costarica:quetzal': {
-    // "Tail streamers can be longer than the rest of its body" — tapers to a thin one-pixel
-    // trailing line, the most dramatic tail in this batch.
-    pal: { b: '#1a6a46', d: '#0e3e2a', e: '#120e08', w: '#f0ece2', r: '#2a9a66', k: '#2a2018' },
+    // "Tail streamers can be longer than the rest of its body" keeps its thin tapering line.
+    // The resplendent quetzal's real crimson belly — a better, bolder second mark than a
+    // near-white fleck — takes the belly-band block.
+    pal: { d: '#0e3e2a', b: '#1a6a46', e: '#120e08', w: '#c0302a', r: '#2a9a66', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....rr..', '....rr..', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....rr..', '...rr...', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....rr...', '....rr...', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....rr...', '...rr....', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'eastafrica:lilac-breasted-roller': {
-    // "Lilac throat, turquoise belly, green back" packed into the three colour slots this
-    // template already separates by position, plus a moderately extended trailing tail.
-    pal: { b: '#2a7a50', d: '#c088d0', e: '#120e08', w: '#2a7ac0', r: '#1a2a4a', k: '#2a2018' },
+    // "Lilac throat" is now the head-cap block (bigger and the first thing read), "turquoise
+    // belly" the belly-band block, "green back" the body — three real regions instead of one
+    // dominant body colour with two flecks.
+    pal: { d: '#c088d0', b: '#2a7a50', e: '#120e08', w: '#2a7ac0', r: '#1a2a4a', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '..bbrrr.', '...brr..', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '...brrr.', '....rr..', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '..bbbrr..', '...brr...', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '...bbrrr.', '....rr...', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
   'australia:rainbow-bee-eater': {
-    // "Two long thin tail streamers" — two separate one-pixel tips rather than the roller's
-    // single broader trail, the clearest way this shape has to tell the two species apart.
-    pal: { b: '#3a9a5c', d: '#1a1a18', e: '#0a0a06', w: '#b06a2a', r: '#2a5a3a', k: '#2a2018' },
+    // "Copper crown" is now the head-cap block. "Two long thin tail streamers" keeps its two
+    // separate one-pixel tips — the clearest way this shape tells it apart from the roller.
+    pal: { d: '#b06a2a', b: '#3a9a5c', e: '#0a0a06', w: '#c8d888', r: '#2a5a3a', k: '#2a2018' },
     frames: [
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbbrr.', '...brr..', '....r.r.', '...kk...'],
-      ['...bbb..', '..beebd.', '.bbbbbd.', '.wwbbdd.', '..bbrrr.', '...brr..', '....r..r', '...kk...'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbbrr.', '...bbrr..', '....r.r..', '...kk....'],
+      ['..ddd....', '.ddeebb..', '.bbbbbbb.', '.wwwwwww.', '.wwbbrrr.', '...bbrr..', '....r..r.', '...kk....'],
     ] as const,
     young: [
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbbrr.', '..kk...'],
-      ['..bbb..', '.beebd.', 'bbbbdd.', '.bbrrr.', '..kk...'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbbrr.', '..bkk..'],
+      ['.ddd...', 'deebbb.', '.wwwbb.', '.wbrrr.', '..bkk..'],
     ] as const,
   },
 

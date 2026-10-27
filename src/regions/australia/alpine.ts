@@ -85,6 +85,12 @@ export const alpine: Biome = {
       behaviour: 'Works along a branch, hanging sideways to reach seed.',
       body: { kind: 'bird', size: [8, 6], beak: 2, tail: { len: 6, style: 'down' }, legs: 1 },
       palette: { b: '#c0202c', d: '#7a1018', l: '#e85a52', e: '#120808', w: '#2a4a9a', k: '#1a1a2a' },
+      // A second state for the days it's seen on the wing between perches rather than
+      // sitting in the canopy.
+      alt: { zone: 'sky', sprite: { pal: { d: '#1a1418', b: '#c0302a', h: '#6a5ac0', y: '#3a5ac0' }, frames: [
+        ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
+        ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+      ] as const } },
     },
     {
       key: 'wombat',
@@ -102,6 +108,13 @@ export const alpine: Biome = {
       flourish: 'dig',
       body: { kind: 'bulky', size: [11, 6], legs: 2, ears: 1, tail: { len: 0, style: 'none' } },
       palette: { b: '#7a6a52', d: '#50452f', l: '#a2927a', e: '#120e08', n: '#241c14' },
+      // Dug in, days it isn't out grazing — same `zone: 'burrow'` (still near its hole
+      // either way), just a different pose: a dirt mound with its small ears and nose the
+      // only thing showing.
+      alt: { zone: 'burrow', sprite: { pal: { d: '#50452f', l: '#a2927a', e: '#120e08', b: '#7a6a52', n: '#4a3a26' }, frames: [
+        ['.dd....', 'lebnnn.', 'nnnnnnn'],
+        ['.dd....', 'lebnnn.', 'nnnnnnn'],
+      ] as const } },
     },
     {
       key: 'echidna',
@@ -119,6 +132,12 @@ export const alpine: Biome = {
       flourish: 'dig',
       body: { kind: 'bulky', size: [8, 5], legs: 1, beak: 3, spines: true, tail: { len: 0, style: 'none' } },
       palette: { b: '#4a3a28', d: '#2a2018', l: '#c8a860', e: '#0e0a06', n: '#1a1410' },
+      // "Digs straight down and disappears" — a real zone change, not just a pose swap: a
+      // row of spine tips is all that still shows above the dirt.
+      alt: { zone: 'burrow', sprite: { pal: { l: '#e8dcb8', d: '#141210', n: '#4a3a26' }, frames: [
+        ['l.l.l.l.', 'ldldldld', 'nnnnnnnn'],
+        ['l.l.l.l.', 'ldldldld', 'nnnnnnnn'],
+      ] as const } },
     },
     {
       key: 'corroboree-frog',

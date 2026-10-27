@@ -91,7 +91,11 @@ export const costaRica: Region = {
           behaviour: 'Sits upright on a branch, then drops to snatch a fruit and returns to the same perch.',
           flourish: 'display',
           body: { kind: 'bird', size: [8, 7], beak: 2, crest: 2, tail: { len: 14, style: 'down' }, legs: 1 },
-          palette: { b: '#1a6a46', d: '#0e3e2a', l: '#3aa06a', e: '#120e08', r: '#c0302a', w: '#f0ece2' } },
+          palette: { b: '#1a6a46', d: '#0e3e2a', l: '#3aa06a', e: '#120e08', r: '#c0302a', w: '#f0ece2' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0e3e2a', b: '#1a6a46', h: '#c0302a', y: '#2a9a66' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
         { key: 'tapir', slot: 2, common: "Baird's tapir", scientific: 'Tapirus bairdii',
           traits: ['Heavy dark body with a short mobile snout', 'Pale face and a short upright mane'],
           iucn: 'EN', fact: 'The largest land mammal in Central America, and an important seed disperser through the forest it walks.',
@@ -113,7 +117,11 @@ export const costaRica: Region = {
           behaviour: 'Sits hunched on a high branch; now and then its throat wattle swells as it calls.',
           flourish: 'display',
           body: { kind: 'bird', size: [9, 7], beak: 2, crest: 3, tail: { len: 4, style: 'down' }, legs: 1 },
-          palette: { b: '#1a1814', d: '#0a0908', l: '#34302a', e: '#120e08', r: '#c0302a' } },
+          palette: { b: '#1a1814', d: '#0a0908', l: '#34302a', e: '#120e08', r: '#c0302a' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#1a1a1c', h: '#c0302a', y: '#141418' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
       ],
       understory: [
         { key: 'bromeliad-cr', label: 'Bromeliads', what: 'Tank bromeliads on every branch', colour: '#6a9a5c' },
@@ -170,7 +178,11 @@ export const costaRica: Region = {
           source: iucn('Ara macao'), activity: 'diurnal', zone: 'canopy', stages: ['chick', 'fledgling', 'adult', 'elder'],
           flourish: 'pair', behaviour: 'Two birds sit together in the canopy, calling loudly as they pass overhead.',
           body: { kind: 'bird', size: [9, 7], beak: 3, tail: { len: 9, style: 'down' }, legs: 1 },
-          palette: { b: '#d8302a', d: '#9a201c', l: '#f05a4a', e: '#140e08', w: '#3a5ac0', y: '#e8c030' } },
+          palette: { b: '#d8302a', d: '#9a201c', l: '#f05a4a', e: '#140e08', w: '#3a5ac0', y: '#e8c030' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#3a5ac0', b: '#d8302a', h: '#e8c030', y: '#d8302a' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
         { key: 'poison-dart-frog', slot: 3, common: 'Strawberry poison frog', scientific: 'Oophaga pumilio',
           traits: ['Bright red body with blue-black legs', 'Barely two centimetres long'],
           iucn: 'LC', fact: 'Carries its tadpoles one at a time, piggyback, up into separate water-filled bromeliads.',

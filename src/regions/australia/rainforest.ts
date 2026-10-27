@@ -169,6 +169,10 @@ export const subtropicalRainforest: Biome = {
       flourish: 'bower',
       body: { kind: 'bird', size: [8, 6], beak: 2, tail: { len: 3, style: 'down' }, legs: 1 },
       palette: { b: '#1b1a2e', d: '#0d0c18', l: '#3a3860', e: '#6a5ad8', y: '#c8c0a0', g: '#4a6a3a' },
+      alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#16151c', h: '#3a3a5c', y: '#8a6ac0' }, frames: [
+        ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
+        ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+      ] as const } },
     },
     {
       key: 'alberts-lyrebird',

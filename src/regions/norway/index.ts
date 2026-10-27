@@ -157,7 +157,11 @@ export const norway: Region = {
           source: iucn('Tetrao urogallus'), activity: 'diurnal', zone: 'ground', stages: ['chick', 'juvenile', 'adult', 'elder'],
           flourish: 'display', behaviour: 'Struts with its tail fanned, wings dropped, at the forest edge.',
           body: { kind: 'bird', size: [10, 9], beak: 2, tail: { len: 6, style: 'fan' }, legs: 2 },
-          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#c0302a', w: '#8a8470' } },
+          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#3a3a3e', e: '#c0302a', w: '#8a8470' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#1a1a1c', h: '#8a8470', y: '#c0302a' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
       ],
       understory: [
         { key: 'lingonberry', label: 'Lingonberry', what: 'Low berry shrubs across the forest floor', colour: '#4a6a3c' },
@@ -214,7 +218,11 @@ export const norway: Region = {
           source: iucn('Fratercula arctica'), activity: 'diurnal', zone: 'waterEdge', stages: ['chick', 'juvenile', 'adult', 'elder'],
           behaviour: 'Stands at a burrow mouth on the cliff, then launches out over the water.',
           body: { kind: 'bird', size: [6, 5], beak: 3, legs: 1, tail: { len: 1, style: 'none' } },
-          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#f0ece0', e: '#120e08', y: '#e8a030', r: '#c0302a' } },
+          palette: { b: '#1a1a1c', d: '#0a0a0c', l: '#f0ece0', e: '#120e08', y: '#e8a030', r: '#c0302a' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#0a0a0c', b: '#1a1a1c', h: '#f0ece0', y: '#e8a030' }, frames: [
+            ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
+            ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+          ] as const } } },
         { key: 'kongeorn', slot: 4, common: 'Golden eagle', scientific: 'Aquila chrysaetos',
           traits: ['Golden-brown nape', 'Broad dark wings held in a slight dihedral'],
           iucn: 'LC', fact: 'Patrols the open plateau for ptarmigan and hare, soaring for long stretches without a wingbeat.',

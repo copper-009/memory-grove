@@ -110,11 +110,18 @@ export const coastalHeath: Biome = {
       fact: 'Catches bees in the air and rubs the sting out against a branch before swallowing them.',
       source: ala('Merops ornatus'),
       activity: 'diurnal',
-      zone: 'sky',
+      // Was `zone: 'sky'` — but its own `behaviour` is "darts out... and swings back to the
+      // same twig", i.e. perched most of the time with brief sorties, not a full-time flier
+      // like the eagles. `canopy` is the honest primary; the sortie is the `alt` below.
+      zone: 'canopy',
       stages: ['chick', 'fledgling', 'adult', 'elder'],
       behaviour: 'Darts out from a perch, snatches something, and swings back to the same twig.',
       body: { kind: 'bird', size: [7, 5], beak: 3, tail: { len: 5, style: 'down' }, legs: 1 },
       palette: { b: '#4aa05a', d: '#2a6a3a', l: '#8ad078', e: '#15120a', y: '#d8a83a', k: '#1a1a1a', w: '#4a8ad8' },
+      alt: { zone: 'sky', sprite: { pal: { d: '#b06a2a', b: '#3a9a5c', h: '#c8d888', y: '#2a5a3a' }, frames: [
+        ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+        ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ] as const } },
     },
     {
       key: 'long-necked-turtle',

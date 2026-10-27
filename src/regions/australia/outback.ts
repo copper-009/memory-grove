@@ -157,6 +157,12 @@ export const outback: Biome = {
       flourish: 'dig',
       body: { kind: 'quadruped', size: [8, 5], legs: 2, ears: 5, tail: { len: 6, style: 'down' } },
       palette: { b: '#b0a496', d: '#7a6f62', l: '#dcd4c6', e: '#14100c', n: '#1a1a1a', w: '#f0ece2' },
+      // Dug in, days it isn't out foraging — same `zone: 'burrow'`, just a different pose:
+      // "enormous rabbit-like ears" are the one thing a dirt mound can't hide.
+      alt: { zone: 'burrow', sprite: { pal: { d: '#7a6f62', l: '#dcd4c6', e: '#14100c', n: '#4a3a26' }, frames: [
+        ['d.....d', 'd.....d', '.lennn.', 'nnnnnnn'],
+        ['d.....d', 'd.....d', '.lennn.', 'nnnnnnn'],
+      ] as const } },
     },
   ],
 

@@ -92,7 +92,11 @@ export const eastAfrica: Region = {
           source: iucn('Coracias caudatus'), activity: 'diurnal', zone: 'canopy', stages: ['chick', 'fledgling', 'adult', 'elder'],
           behaviour: 'Perches conspicuously, drops to snatch an insect, and returns to the same twig.',
           body: { kind: 'bird', size: [7, 5], beak: 2, tail: { len: 6, style: 'down' }, legs: 1 },
-          palette: { b: '#2a7ac0', d: '#154a7a', l: '#6ab0e8', e: '#120e08', p: '#c088d0', g: '#4a9a50' } },
+          palette: { b: '#2a7ac0', d: '#154a7a', l: '#6ab0e8', e: '#120e08', p: '#c088d0', g: '#4a9a50' },
+          alt: { zone: 'sky', sprite: { pal: { d: '#c088d0', b: '#2a7a50', h: '#2a7ac0', y: '#1a2a4a' }, frames: [
+            ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
+            ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+          ] as const } } },
         { key: 'secretary-bird', slot: 2, common: 'Secretarybird', scientific: 'Sagittarius serpentarius',
           traits: ['Long crane-like legs and a long tail', 'A spray of black quill-like crest feathers'],
           iucn: 'EN', fact: 'Hunts on foot across open grassland, stamping prey — including snakes — with its feet.',

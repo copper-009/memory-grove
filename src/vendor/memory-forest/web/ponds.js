@@ -82,7 +82,9 @@ function drawDryPond(g, env, p, cx, cy, w, h) {
     const ang = R() * Math.PI * 2, len = (0.3 + R() * 0.35) * Math.min(w, h);
     pxLine(g, cx, cy, cx + Math.cos(ang) * len, cy + Math.sin(ang) * len * 0.5);
   }
-  if (env.afterItem) env.afterItem(g, p);
+  // Memory Garden change: a hosted creature at this pond used to be painted here, once, as
+  // part of the land layer's own build. It's drawn live every frame instead now — see
+  // `AF.drawHosted`, `web/visitors.js` — so there's nothing left to do for it at this point.
 }
 AF.drawPond = function (g, env, p) {
   if (!p.it.first) return;
@@ -127,7 +129,8 @@ AF.drawPond = function (g, env, p) {
   const Rg = rng(p.it.seed ^ 0x9e3779), gx = cx + (Rg() - 0.5) * w * 0.4, gy = cy - h * 0.05 + Rg() * h * 0.2, glen = Math.max(1, Math.round(w * 0.14));
   if (th.frozen) pxLine(g, gx - glen, gy + 1, gx + glen, gy - 1);
   else g.fillRect(Math.round(gx - glen / 2), Math.round(gy), glen, 1);
-  if (env.afterItem) env.afterItem(g, p);
+  // Memory Garden change: see the dry-pond branch above — a hosted creature here is now
+  // drawn live every frame by `AF.drawHosted` instead of baked in at this point.
 };
 AF.findPuddles = function (env) {
   if (!env.theme.puddles || env.mood.landscape === 'lake') return [];
