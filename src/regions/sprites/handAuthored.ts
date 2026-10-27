@@ -232,32 +232,36 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
     ] as const,
   },
+  // Round 9: "the heaviest eagle alive" — was sharing the plain eagle template's 14x5 grid,
+  // identical in size to every ordinary eagle in the roster. Wingspan (its defining feature)
+  // widened substantially, same silhouette style.
   'japan:stellers-sea-eagle': {
-    // Dramatic white shoulder and tail patches on an otherwise near-black body, with a huge
-    // orange bill — the heaviest eagle alive, and the most visually distinct of this group.
     pal: { d: '#161412', b: '#1a1614', h: '#f4f0e6', y: '#e8862a' },
     flies: true,
     frames: [
-      ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
-      ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ['........hh.........', 'ddd....bbhy....ddd.', '..ddddbbbbbbbbdddd.', '....dddbbbbbbddd...', '........hh.........'],
+      ['d..............d....', '.ddd..hh....ddd.....', '...dddbbhy.ddd......', '....ddbbbbbbdd......', '........hh..........'],
     ] as const,
     young: [
-      ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
-      ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+      ['......hh......', 'dd...bbhy...dd', '.ddbbbbbbbbdd.', '....hh........'],
+      ['d..........d..', '.dd.hh...dd...', '..dbbhy.d.....', '....hh........'],
     ] as const,
   },
+  // Round 9: "wingspan over three metres... can soar for hours" — was sharing the plain
+  // eagle template's 14x5 grid, identical in size to every ordinary eagle in the roster,
+  // despite condors having a noticeably bigger wingspan than any eagle. Widened to match.
   'patagonia:condor': {
     // Andean condor: the `h` patch becomes the bare pinkish-red head skin (not feathers),
     // the real identifying mark at a glance, over a black body.
     pal: { d: '#161412', b: '#201c18', h: '#c97858', y: '#3a3028' },
     flies: true,
     frames: [
-      ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
-      ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ['........hh.........', 'ddd....bbhy....ddd.', '..ddddbbbbbbbbdddd.', '....dddbbbbbbddd...', '........hh.........'],
+      ['d..............d....', '.ddd..hh....ddd.....', '...dddbbhy.ddd......', '....ddbbbbbbdd......', '........hh..........'],
     ] as const,
     young: [
-      ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
-      ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+      ['......hh......', 'dd...bbhy...dd', '.ddbbbbbbbbdd.', '....hh........'],
+      ['d..........d..', '.dd.hh...dd...', '..dbbhy.d.....', '....hh........'],
     ] as const,
   },
   'patagonia:andean-condor-steppe': {
@@ -266,12 +270,12 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     pal: { d: '#161412', b: '#201c18', h: '#c97858', y: '#3a3028' },
     flies: true,
     frames: [
-      ['......hh.....', 'dd...bbhy....', '.dddbbbbbbdd.', '...ddbbbbdd..', '......hh.....'],
-      ['d..........d.', '.dd..hh...dd.', '...dbbhy.d...', '....bbbbbb...', '......hh.....'],
+      ['........hh.........', 'ddd....bbhy....ddd.', '..ddddbbbbbbbbdddd.', '....dddbbbbbbddd...', '........hh.........'],
+      ['d..............d....', '.ddd..hh....ddd.....', '...dddbbhy.ddd......', '....ddbbbbbbdd......', '........hh..........'],
     ] as const,
     young: [
-      ['.....hh....', 'dd..bbhy...', '.ddbbbbdd..', '.....hh....'],
-      ['d........d.', '.dd.hh..dd.', '..dbbhy.d..', '.....hh....'],
+      ['......hh......', 'dd...bbhy...dd', '.ddbbbbbbbbdd.', '....hh........'],
+      ['d..........d..', '.dd.hh...dd...', '..dbbhy.d.....', '....hh........'],
     ] as const,
   },
 
@@ -308,18 +312,22 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
 
   // -- Shared from the vendored engine's own `owl` sprite — a compact perched bird, the ear
   // tufts already built into the top row.
+  // Round 9: "the largest owl alive" — this was 5x7, the smallest sprite in the entire
+  // 130-creature roster, smaller even than the much smaller burrowing owl. The comment this
+  // replaces claimed "size comes from this creature's own stage/band, not the sprite grid" —
+  // checked directly against `visitors.js`'s `paintSprite`: there is no such mechanism, a
+  // sprite's native grid is its actual on-screen footprint, so that assumption was simply
+  // wrong and left this owl undersized. Scaled up to large-bird tier, shaggy ear tufts and
+  // bright yellow eyes kept prominent.
   'japan:blakistons-fish-owl': {
-    // The world's largest living owl species — mottled brown, the same compact silhouette
-    // reads fine at any absolute size (size comes from this creature's own stage/band, not
-    // the sprite grid).
-    pal: { b: '#5a4530', d: '#2e2318', y: '#e8862a', l: '#9a8060' },
+    pal: { b: '#5a4530', d: '#2e2318', y: '#e8b02a', l: '#9a8060' },
     frames: [
-      ['d...d', 'bbbbb', 'bybyb', 'bbdbb', 'blllb', 'blllb', '.b.b.'],
-      ['d...d', 'bbbbb', 'bybyb', 'bbdbb', 'blllb', 'blllb', '.b.b.'],
+      ['d.......d', 'dd.....dd', '.bbbbbbb.', '.bybbbyb.', '.bbdbdbb.', 'bbbbbbbbb', 'blllllllb', 'blllllllb', '.b.b.b.b.'],
+      ['d.......d', 'dd.....dd', '.bbbbbbb.', '.bybbbyb.', '.bbdbdbb.', 'bbbbbbbbb', 'blllllllb', 'blllllllb', '.b.b.b.b.'],
     ] as const,
     young: [
-      ['bybyb', 'bbdbb', 'blllb', '.b.b.'],
-      ['bybyb', 'bbdbb', 'blllb', '.b.b.'],
+      ['.bbbbb.', '.bybyb.', '.bbdbb.', 'bbbbbbb', 'blllllb', '.b.b.b.'],
+      ['.bbbbb.', '.bybyb.', '.bbdbb.', 'bbbbbbb', 'blllllb', '.b.b.b.'],
     ] as const,
   },
   'patagonia:burrowing-owl': {
@@ -501,19 +509,21 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['....l.', '...lll', '.bbdle', 'bbbb..', '.dd...', '.dd...'],
     ] as const,
   },
+  // Round 9: "the largest living lemur" — was sharing sifaka's exact shape/size, which fit
+  // the FORM well (both Indriidae, the same tailless upright pose) but left indri identical
+  // in size to its much smaller cousin, and no bigger than ring-tailed or red-fronted lemur
+  // either. Scaled up from that shared base, same recognisable pose, to read as clearly the
+  // biggest lemur in the roster. Palette is the old bake's own: black body, white rump
+  // patch, and the amber-gold eyes a real indri actually has.
   'madagascar:indri': {
-    // Same tailless, upright shape as the kept sifaka — a close cousin, both Indriidae, and a
-    // much better fit than the oversized bespoke template baked.generated.ts drew indri with.
-    // Palette is the old bake's own: black body, white rump patch, and the amber-gold eyes a
-    // real indri actually has.
     pal: { b: '#1a1814', d: '#0a0908', l: '#f0ece2', e: '#d8c060' },
     frames: [
-      ['.....l.', '..bblll', '.bbbdle', 'dddd...', '..ddd..', '..ddd..'],
-      ['.....l.', '..bblll', '.bbbdle', 'dddd...', '...dd..', '..ddd..'],
+      ['......l..', '...bbllll', '..bbbbdle', 'ddddd....', '.ddddd...', '..ddd....', '..ddd....'],
+      ['......l..', '...bbllll', '..bbbbdle', 'ddddd....', '..dddd...', '...ddd...', '..ddd....'],
     ] as const,
     young: [
-      ['....l.', '...lll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
-      ['....l.', '...lll', '.bbdle', 'bbbb..', 'ddd...', '.dd...'],
+      ['....l..', '..bllll', '.bbbdle', 'ddd....', 'dddd...', '.ddd...'],
+      ['....l..', '..bllll', '.bbbdle', 'ddd....', '.dddd..', '..ddd..'],
     ] as const,
   },
 
@@ -628,15 +638,17 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 6: "make the snout a bit longer and also the tail a bit longer" across all three
   // crocodilians — snout-top row extended, tail runs extended, same wiggle offset preserved.
   // Round 7: "add some more teeth (one more)" — a third alternating tooth mark.
+  // Round 9: "the largest living reptile" — was smaller than the Nile crocodile in this
+  // roster despite being the real larger species. Tail lengthened further to exceed it.
   'australia:saltwater-crocodile': {
     pal: { b: '#4a5a34', d: '#2a3420', e: '#0c0c08', t: '#5e6e44', w: '#e8e4d0' },
     frames: [
-      ['......e.................', 'bbbbbbbbbbb.............', '.wbwbwbbbbbbbbbbbbtttt..', 'bbbbbbbbbbbbbbbbtttt....', '.ddbddbddbddbdd.tttt....'],
-      ['......e.................', 'bbbbbbbbbbb.............', '.wbwbwbbbbbbbbbbbbbtttt.', 'bbbbbbbbbbbbbbbbbtttt...', '.ddbddbddbddbdd..tttt...'],
+      ['......e....................', 'bbbbbbbbbbb................', '.wbwbwbbbbbbbbbbbbttttttt..', 'bbbbbbbbbbbbbbbbttttttt....', '.ddbddbddbddbdd.ttttttt....'],
+      ['......e....................', 'bbbbbbbbbbb................', '.wbwbwbbbbbbbbbbbbbttttttt.', 'bbbbbbbbbbbbbbbbbttttttt...', '.ddbddbddbddbdd..ttttttt...'],
     ] as const,
     young: [
-      ['....e...........', 'bbbb............', '.wbwbwbbbbbtttt.', 'bbbbbbbbbbtttt..', '.dbdbdbdbd.ttt..'],
-      ['....e............', 'bbbb.............', '.wbwbwbbbbbbtttt.', 'bbbbbbbbbbbtttt..', '.dbdbdbdbd..ttt..'],
+      ['....e..............', 'bbbb...............', '.wbwbwbbbbbttttttt.', 'bbbbbbbbbbttttttt..', '.dbdbdbdbd.tttttt..'],
+      ['....e...............', 'bbbb................', '.wbwbwbbbbbbttttttt.', 'bbbbbbbbbbbttttttt..', '.dbdbdbdbd..tttttt..'],
     ] as const,
   },
   // Round 4: "probably the best of them, make sure all the crocs are different in some way
@@ -645,15 +657,17 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Borneo's peat-stained blackwater rivers is the honest difference to draw, not a invented one.
   // Round 6: same snout/tail lengthening as the other crocodilians.
   // Round 7: "add some more teeth (one more)" — a third alternating tooth mark.
+  // Round 9: "the largest living reptile" — the same species as australia:saltwater-
+  // crocodile, so it gets the same tail lengthening to exceed the Nile crocodile.
   'borneo:estuarine-crocodile': {
     pal: { b: '#5a5a30', d: '#343420', e: '#0c0c08', t: '#6e6e3e', w: '#e8e4d0' },
     frames: [
-      ['......e.................', 'bbbbbbbbbbb.............', '.wbwbwbbbbbbbbbbbbtttt..', 'bbbbbbbbbbbbbbbbtttt....', '.ddbddbddbddbdd.tttt....'],
-      ['......e.................', 'bbbbbbbbbbb.............', '.wbwbwbbbbbbbbbbbbbtttt.', 'bbbbbbbbbbbbbbbbbtttt...', '.ddbddbddbddbdd..tttt...'],
+      ['......e....................', 'bbbbbbbbbbb................', '.wbwbwbbbbbbbbbbbbttttttt..', 'bbbbbbbbbbbbbbbbttttttt....', '.ddbddbddbddbdd.ttttttt....'],
+      ['......e....................', 'bbbbbbbbbbb................', '.wbwbwbbbbbbbbbbbbbttttttt.', 'bbbbbbbbbbbbbbbbbttttttt...', '.ddbddbddbddbdd..ttttttt...'],
     ] as const,
     young: [
-      ['....e...........', 'bbbb............', '.wbwbwbbbbbtttt.', 'bbbbbbbbbbtttt..', '.dbdbdbdbd.ttt..'],
-      ['....e............', 'bbbb.............', '.wbwbwbbbbbbtttt.', 'bbbbbbbbbbbtttt..', '.dbdbdbdbd..ttt..'],
+      ['....e..............', 'bbbb...............', '.wbwbwbbbbbttttttt.', 'bbbbbbbbbbttttttt..', '.dbdbdbdbd.tttttt..'],
+      ['....e...............', 'bbbb................', '.wbwbwbbbbbbttttttt.', 'bbbbbbbbbbbttttttt..', '.dbdbdbdbd..tttttt..'],
     ] as const,
   },
   // Round 4: "teeth a bit big, maybe a bit more of a tail" — smaller teeth, tail stretched
@@ -891,6 +905,17 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     young: [
       ['.bbb...', 'bbbe...', 'bbww...', '.b.ww..', '.d.d...'],
       ['.bbb...', 'bbbe...', 'bbww...', '.b.ww..', 'd.d....'],
+    ] as const,
+  },
+  // Round 9: "one of the heaviest insects in the world" — was still on baked.generated.ts's
+  // own 6x6 shape, smaller than every butterfly in the roster. A hand-authored override
+  // (same shape, scaled up with an extra leg row) so it reads as clearly the biggest
+  // invertebrate here, not the smallest.
+  'aotearoa:wetapunga': {
+    pal: { b: '#6a5436', d: '#3e2f1c', l: '#9a8050', e: '#120c06', y: '#c0a060' },
+    frames: [
+      ['.dd..l...', '..bbllll.', '.bbbbdle.', '.dd......', '..ddd....', '..ddd....', '..d.d....'],
+      ['.dd..l...', '..bbllll.', '.bbbbdle.', '.dd......', '...dd....', '..ddd....', '.d.d.....'],
     ] as const,
   },
   'madagascar:radiated-tortoise': {

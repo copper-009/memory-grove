@@ -15,6 +15,7 @@
  *        --outfile=/tmp/gallery.mjs && node /tmp/gallery.mjs
  */
 import { REGIONS } from '../src/regions';
+import { HAND_SPRITES } from '../src/regions/sprites/handAuthored';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -61,10 +62,11 @@ interface Entry {
   young?: readonly [readonly string[], readonly string[]];
 }
 
-const HAND_KEYS = new Set([
-  'australia:kookaburra', 'australia:cockatoo', 'australia:eastern-grey-kangaroo',
-  'australia:lace-monitor', 'australia:koala', 'australia:southern-cassowary', 'australia:platypus',
-]);
+// Read straight from HAND_SPRITES's own keys rather than a hand-maintained list — that list
+// was only ever the first seven species (drawn before the gallery-review redo pass started),
+// never updated as every round since added more, so the gallery's "hand"/"baked" tag had
+// been silently wrong for most of the roster.
+const HAND_KEYS = new Set(Object.keys(HAND_SPRITES));
 
 const entries: Entry[] = [];
 for (const region of REGIONS) {
