@@ -682,17 +682,22 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // above the body, with nothing connecting them to it, so they read as a decoration
   // sitting on top of the head rather than a jaw. Rebuilt on the same structure the three
   // regular crocodilians already use successfully: teeth embedded directly in the body/jaw
-  // row itself. A gharial's famously long, thin snout (carrying many more visible
-  // interlocking teeth than a regular croc) is kept as an extra-long front section.
+  // row itself.
+  // Round 9: "so close, the head is too long now" — that fix dropped the genuine two-row-
+  // thick BODY section the regular crocodilians (and this sprite's own earlier design) have:
+  // everything was a single row tall from snout tip to tail, so the whole long shape read as
+  // one undifferentiated head with nothing to contrast it against. Snout shortened and a
+  // real thicker body section restored behind it, with a proper row of small legs along the
+  // belly — the snout now reads as clearly shorter than, and distinct from, the body.
   'nepal:gharial': {
     pal: { b: '#4a6a4a', d: '#2a3e2a', e: '#0c0c08', t: '#5e7e5e', w: '#e8e4d0' },
     frames: [
-      ['..............e...........', 'bbbbbbbbbbbbbbbb..........', 'wbwbwbwbwbwbwbbbbbbbbbtt..', '............ddbddbddbdd.tt'],
-      ['..............e............', 'bbbbbbbbbbbbbbbb...........', 'wbwbwbwbwbwbwbbbbbbbbbbtt..', '............ddbddbddbdd..tt'],
+      ['.........e...............', 'bbbbbbbbbb...............', 'wbwbwbwbbbbbbbbbbbbbbtt..', '.........bbbbbbbbbbbbtt..', '.........ddbddbddbddd.tt.'],
+      ['.........e................', 'bbbbbbbbbb................', 'wbwbwbwbbbbbbbbbbbbbbbtt..', '.........bbbbbbbbbbbbbtt..', '.........ddbddbddbddd..tt.'],
     ] as const,
     young: [
-      ['..........e.........', 'bbbbbbbbbbbb........', 'wbwbwbwbbbbbbbbbtt..', '........ddbddbdd.t..'],
-      ['..........e.........', 'bbbbbbbbbbbb........', 'wbwbwbwbbbbbbbbbbtt.', '........ddbddbdd..t.'],
+      ['.......e...........', 'bbbbbbb............', 'wbwbwbbbbbbbbbtt...', '.......bbbbbbbtt...', '.......ddbddbd.tt..'],
+      ['.......e............', 'bbbbbbb.............', 'wbwbwbbbbbbbbbbtt...', '.......bbbbbbbbtt...', '.......ddbddbd..tt..'],
     ] as const,
   },
 
