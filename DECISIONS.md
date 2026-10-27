@@ -906,3 +906,60 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     expected, not just type-checking green.
   - `tsc`/`vitest` (153/153)/`lint` clean throughout. Gallery rebuilt (130 creatures),
     committed to `vendor`, pushed, republished.
+- **Round 13 — the gallery's own feedback on round 12: real blob contrast, flight states for
+  real, burrow extension, and hosted creatures that were never actually alive.** The user
+  opened the published gallery, sent two reference pixel-art bird images ("I think could
+  work... use them as a quick basis for perch styles") alongside a third found elsewhere, and
+  said "there seems to be a lot of problems with birds".
+  - **The real bug, found with a script, not a screenshot.** A contrast audit over every
+    round-12 `HAND_SPRITES` entry (fraction of non-blank pixels each palette colour actually
+    covers, luminance spread between any that clear 12%) showed all sixteen birds at zero:
+    the "accent" colours from round 12's first pass — an eye-stripe, a belly fleck — covered
+    under 1% of each sprite's real pixels once background padding was excluded from the
+    denominator (the first version of the audit, which didn't exclude it, gave a false "it's
+    fine" read for several — corrected before trusting any of its numbers). One body colour
+    dominated almost everything; that is the literal "it's basically a blob" complaint.
+    Rebuilt all sixteen around genuine colour-blocked regions — a head-cap, body, belly-band
+    and tail each sized to actually read (three size tiers: tiny/small/large) — re-run after:
+    every one from 42 to 230 spread, several real regions apiece. The swan itself, checked
+    the same way, was already fine (spread 201) — the blobby reference image was a found
+    comparison, not a screenshot of this project's own work.
+  - **"All the flying birds... a second flying animation like eagles, scaled to size."** Added
+    `Creature.alt` (`zone: 'sky'`) built from the confirmed `wedge-tailed-eagle` glide/flap
+    shape, recoloured and scaled to two sizes, for the 13 of the sixteen that genuinely fly
+    between perches (skipped the pipit, rock wren and lyrebird — ground specialists where
+    flight isn't the signature behaviour). Found and fixed a real pre-existing mismatch along
+    the way: `rainbow-bee-eater` had `zone: 'sky'` (permanently airborne, circling) while its
+    own `behaviour` text says "darts out from a perch... swings back to the same twig" —
+    swapped to `canopy` primary with the flight pose as its own `alt`, matching every other
+    species here instead of being the one exception.
+  - **"Yes, implement the round-10 one" (burrow/dig).** Wombat had no hand-authored sprite at
+    all; gave it one (low barrel body, its own trait list) plus a dug-in `alt` — same `zone:
+    'burrow'` either way (already "near its hole"), just a different pose: a dirt mound with
+    only its small ears and nose showing. Bilby, same construction, its own huge ears the
+    tell. Echidna's `alt` is a genuine zone change instead (`ground` -> `burrow`) — "digs
+    straight down and disappears" is a real relocation, not just a pose swap — a row of spine
+    tips above the mound.
+  - **"I would like all animals to roam or animate even at rest unless sleeping" — and the
+    deeper bug this surfaced.** Added a slow sideways sway for hosted creatures, same
+    `env.t`-driven sine-wave technique the idle glance already used. It measured as exactly
+    zero movement over real elapsed time (checked directly via the harness: `env.t` sampled
+    2.5 real seconds apart, `x0` identical down to the pixel) — traced to `env.afterItem`
+    being called from inside `engine.steps(env)`, which `core.js`'s `build()` runs exactly
+    once per scene (mount, resize, or a refine pass), baking hosted-creature pixels into the
+    cached, static `land` canvas layer. `env.t` is only ever live inside `frame()`'s own
+    per-frame loop; at build time it was effectively frozen, which means the idle glance
+    shipped two rounds ago never actually played out live either — fixed at whatever value
+    `env.t` happened to hold at build time, not animating. Moved hosted-creature drawing out
+    of the land bake entirely into a new `AF.drawHosted(g, env, t)`, called every frame next
+    to the already-live `AF.drawFlyers`/`AF.drawVisitors` (`core.js`); `engine.steps` and
+    `ponds.js`'s two `env.afterItem` call sites now just note it moved. Trade-off accepted
+    deliberately: a hosted creature drawn as its own top layer each frame is no longer
+    occluded by a nearer tree's canopy happening to overlap its exact spot, which static
+    tree-by-tree baking gave for free — checked across several scenes and judged rare enough
+    that the alternative (every hosted creature provably inert) was far worse. Verified live
+    via the harness: hosted-creature `env.staticBoxes` position now genuinely shifts pixel by
+    pixel across real elapsed time, where it was provably fixed before the fix and provably
+    moving after.
+  - `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to
+    `vendor`, pushed, republished.
