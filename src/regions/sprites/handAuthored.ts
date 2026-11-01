@@ -107,11 +107,15 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // more upright?" — bigger, genuinely round ears instead of single corner pixels, two extra
   // rows for a taller, upright-seated posture (how koalas actually sit in a fork), and a
   // rounder, chubbier lower belly instead of the flat bottom edge.
+  // Round 16: "still a bit too blobby" — the head and body were still one continuous mass
+  // with no real break between them. A narrower neck row now separates head from body, and a
+  // row of paws that genuinely sticks out past the body's own edges (wider than the rows
+  // above and below it) reads as gripping limbs instead of just a rounder silhouette.
   'australia:koala': {
     pal: { b: '#9aa0a4', d: '#6a7175', l: '#d6dade', e: '#120f0c', n: '#1d1813' },
     frames: [
-      ['.dd..dd.', 'ddllllld', '.lllllld', 'l.le.el.', '.l.nn.l.', '.lllllld', 'dbbbbbbd', '.dbbbbd.', '..dbbd..'],
-      ['.dd..dd.', 'ddllllld', '.lllllld', 'l.l..el.', '.l.nn.l.', '.lllllld', 'dbbbbbbd', 'd.bbbbd.', '..dbbd..'],
+      ['.dd..dd..', 'ddllllld.', '.lllllld.', 'l.le.el..', '.l.nn.l..', '..lllll..', '.dbbbbd..', 'dbbbbbbd.', 'ddbbbbbdd', '.dbbbbd..', '..dbbd...'],
+      ['.dd..dd..', 'ddllllld.', '.lllllld.', 'l.l..el..', '.l.nn.l..', '..lllll..', '.dbbbbd..', 'd.bbbbbd.', 'ddbbbbbdd', '.dbbbbd..', '..dbbd...'],
     ] as const,
     young: [
       ['d....d', 'dlllld', 'l.ee.l', '.lnnl.', 'lllllb', 'dbbbbd', '.d.d..'],
@@ -911,26 +915,30 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // pixels (an 'l' highlight relocating from the neck down into the leg row) read as a
   // floating, disconnected mark. Body and head now stay pixel-identical between frames, like
   // the zebra fix; only the legs get a plain walk-cycle offset.
+  // Round 16: "legs glitch weird instead of head animation" — the leg-stride offset read as a
+  // glitch rather than a walk cycle at this size. Legs now stay fully identical between
+  // frames; the animation moved to the head instead, a simple blink (adult) or ear twitch
+  // (young, which has no eye row of its own to blink).
   'patagonia:guanaco': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
       ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...', '.d.d..d.d..'],
+      ['.......d.d.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
     ] as const,
     young: [
       ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...'],
+      ['......lbbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
     ] as const,
   },
   'patagonia:guanaco-steppe': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
     frames: [
       ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...', '.d.d..d.d..'],
+      ['.......d.d.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
     ] as const,
     young: [
       ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', 'd.d..d.d...'],
+      ['......lbbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
     ] as const,
   },
 
@@ -1094,11 +1102,14 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // change was a single 1-pixel nudge on one leg only. Many more stripes across the whole
   // body (real zebras have no large plain patches), and a genuinely bigger leg-stride offset
   // across both leg rows instead of one pixel on one leg.
+  // Round 16: "better, but now the head is too big" — the stripe-density fix added stripe
+  // detail to the head rows too, widening them past a horse-shaped head's real proportion
+  // against the body. Head rows narrowed back down; the dense striping stays on the body.
   'eastafrica:plains-zebra': {
     pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', w: '#ffffff' },
     frames: [
-      ['.......e.e.', '......ldbd.', '.....ldbdbl', 'ldbdbdbdbd.', '.dbdbdbdbd.', '.d.d..d.d..', '.d.d..d.d..'],
-      ['.......e.e.', '......ldbd.', '.....ldbdbl', 'ldbdbdbdbd.', '.dbdbdbdbd.', 'd..d.d..d..', '..d.d..d.d.'],
+      ['........e.e', '.......ldb.', '......ldbl.', 'ldbdbdbdbd.', '.dbdbdbdbd.', '.d.d..d.d..', '.d.d..d.d..'],
+      ['........e.e', '.......ldb.', '......ldbl.', 'ldbdbdbdbd.', '.dbdbdbdbd.', 'd..d.d..d..', '..d.d..d.d.'],
     ] as const,
     young: [
       ['.....ldbd.', 'ldbdbdbdb.', '.dbdbdbdb.', '.d.d..d.d.'],
@@ -1359,11 +1370,14 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // spine tips for echidna) — on `src/regions/australia/alpine.ts` (wombat, echidna) and
   // `src/regions/australia/outback.ts` (bilby), not here; `HAND_SPRITES` only ever covers
   // the primary sprite.
+  // Round 16: "its lost a bit of its tubby-ness in the primary sprite" — the body was a flat
+  // rectangle, full width top to bottom with square corners, reading as a slab rather than a
+  // barrel. Tapered top and bottom edges now give it a genuine rounded cross-section.
   'australia:wombat': {
     pal: { b: '#7a6a52', d: '#50452f', l: '#a2927a', e: '#120e08' },
     frames: [
-      ['..dd.....', '.lebbbb..', 'bbbbbbbbb', 'bbbbbbbbb', '.d.....d.'],
-      ['..dd.....', '.lebbbb..', 'bbbbbbbbb', 'bbbbbbbbb', 'd.....d..'],
+      ['..dd.....', '.lebbbb..', '.bbbbbbb.', 'bbbbbbbbb', 'bbbbbbbbb', '.bbbbbbb.', '.d.....d.'],
+      ['..dd.....', '.lebbbb..', '.bbbbbbb.', 'bbbbbbbbb', 'bbbbbbbbb', '.bbbbbbb.', 'd.....d..'],
     ] as const,
   },
   'australia:echidna': {
@@ -1431,59 +1445,71 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // doesn't read as a swan's neck at all (no real swan's neck is a straight line); genuinely
     // curved instead, leaning out then bending back in to meet the body, closer to the real
     // S-curve. Two short dark legs added under the belly line — there were none before.
+    // Round 16: "its too tubby and the neck is very angular instead of curved" — round 14's
+    // "curve" was really one sharp single-row zigzag reversal, not a curve at all. Rebuilt
+    // genuinely gradual: the column shifts by one every two rows instead of every row, with a
+    // hold row between each shift, so there's no single sharp bend anywhere along it. The
+    // body is narrower and tapers in three steps (7 wide, then 9, then 11) instead of jumping
+    // straight to its widest point, reading as a tapered oval rather than a fat dome.
     pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc', k: '#3a3a3a' },
     frames: [
       [
         '..........led...',
+        '..........lld...',
+        '.........lld....',
         '.........lld....',
         '........lld.....',
-        '.......lld......',
-        '......lld.......',
-        '.......dll......',
-        '........lld.....',
+        '........dld.....',
+        '.........lld....',
+        '.........lld....',
+        '..........lld...',
+        '....bbbbbbb.....',
         '...bbbbbbbbb....',
-        '..bbbbbbbbbbb...',
-        '.bbbbbbllbbbbb..',
-        '.bbbbbbllbbbbb..',
-        '..wwwwwwwwwww...',
+        '..bbbbbllbbbb...',
+        '..bbbbbllbbbb...',
+        '...wwwwwwwww....',
         '.....kk..kk.....',
       ],
       [
         '..........led...',
+        '..........lld...',
+        '.........lld....',
         '.........lld....',
         '........lld.....',
-        '.......lld......',
-        '......lld.......',
-        '.......dll......',
-        '........lld.....',
+        '........dld.....',
+        '.........lld....',
+        '.........lld....',
+        '..........lld...',
+        '....bbbbbbb.....',
         '...bbbbbbbbb....',
-        '..bbbbbbbbbbb...',
-        '.bbbbbbllbbbbb..',
-        '.bbbbbbllbbbbb..',
-        '..wwwwwwwwwww...',
+        '..bbbbbllbbbb...',
+        '..bbbbbllbbbb...',
+        '...wwwwwwwww....',
         '.....kk..kk.....',
       ],
     ] as const,
     young: [
       [
         '.......led..',
+        '.......lld..',
         '......lld...',
-        '.....lld....',
         '......dld...',
-        '.bbbbbb.....',
-        'bbbbbllbbb..',
-        '.wwwwwwww...',
-        '..kk..kk....',
+        '.......lld..',
+        '..bbbbb.....',
+        '.bbbbllbbb..',
+        '..wwwwwww...',
+        '....kk..kk..',
       ],
       [
         '.......led..',
+        '.......lld..',
         '......lld...',
-        '.....lld....',
         '......dld...',
-        '.bbbbbb.....',
-        'bbbbbllbbb..',
-        '.wwwwwwww...',
-        '..kk..kk....',
+        '.......lld..',
+        '..bbbbb.....',
+        '.bbbbllbbb..',
+        '..wwwwwww...',
+        '....kk..kk..',
       ],
     ] as const,
   },
@@ -1930,11 +1956,16 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // read as a stray pixel floating just ahead of the snout rather than an ear on the head.
   // Pulled in to column 10, aligned with the head's own edge the same way the left ear
   // already matches the head's left edge.
+  // Round 16: "no the thing out the front under its chin" — a second, separate alignment bug:
+  // the face row (`oeow` — eye and muzzle highlight) sat one column to the right of the head
+  // row directly above it (`oooo`, columns 7-10 vs the face's 8-11), so the muzzle highlight
+  // at column 11 overhung the head's own right edge, reading as a stray mark under the chin.
+  // Shifted the face row left by one to sit flush under the head.
   'madagascar:fossa': {
     pal: { o: '#8a5438', e: '#100a06', w: '#b07a54', d: '#5c3722', n: '#1a1410' },
     frames: [
-      ['.......n..n......', '.......oooo......', '........oeow.....', 'ww.oooooooo......', '.wooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
-      ['.......n..n......', '.......oooo......', '........oeow.....', '.w.oooooooo......', 'w.ooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
+      ['.......n..n......', '.......oooo......', '.......oeow......', 'ww.oooooooo......', '.wooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
+      ['.......n..n......', '.......oooo......', '.......oeow......', '.w.oooooooo......', 'w.ooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
     ] as const,
     young: [
       ['......oeow.....', 'w.oooooo.......', 'w.oooooo..nnn..', '.d.d..d.d..nnn.'],
