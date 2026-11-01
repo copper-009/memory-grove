@@ -1019,16 +1019,22 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // Round 4: "give it a bit more of a tail" — a trailing tail added behind the body.
   // Round 5: "it doesn't even look like a bird" — a real monal is pheasant-sized, not a tiny
   // perching bird. Scaled up with a fuller body and a longer tail.
+  // Round 16 (an older note, missed until now — "keep" items don't surface in a redo-only
+  // scan): "give it a bit more of a tail, it doesn't even look like a bird" — the old body
+  // was one amorphous dark mass with no distinct tail silhouette. Rebuilt on the same
+  // head-cap/body/belly/tail family the rest of the bird roster uses, with the monal's own
+  // real bands — wire-like purple crest, iridescent green neck, coppery-red breast — kept as
+  // genuine horizontal colour bands rather than scattered flecks, and a real tail extending
+  // clear of the body.
   'nepal:himalayan-monal': {
-    // A crest and genuinely iridescent, not just colourful, plumage — a monal's real signature.
-    pal: { b: '#1a3a6a', d: '#0c1a30', l: '#2a6a5a', e: '#140f0a', c: '#8a3ab0', y: '#c0392b', w: '#f0ece0' },
+    pal: { c: '#8a3ab0', d: '#0c1a30', e: '#140f0a', b: '#1a3a6a', l: '#2a6a5a', y: '#c0392b', w: '#f0ece0', r: '#0c1a30', k: '#2a2018' },
     frames: [
-      ['..c..c.....', '...ddd.....', '..ddddd....', '..dllll....', '..dlyye....', '.wwwdddd...', 'dwwwddddd..', '.dd...ddddd', '......d..dd'],
-      ['..c..c......', '...ddd......', '..ddddd.....', '..dllll.....', '..dlyye.....', '.wwwdddd....', 'dwwwddddd...', '.dd....ddddd', '......d...dd'],
+      ['..c...c..', '...dd....', '..ddeeb..', '...llll..', '..yybbb..', '...wwww..', '...wwbrr.', '....bbrr.', '.....kk..'],
+      ['..c...c..', '...dd....', '..ddeeb..', '...llll..', '..yybbb..', '...wwww..', '...wwbrr.', '......br.', '.....kk..'],
     ] as const,
     young: [
-      ['.c.c..', '.ddd..', '.lll..', '.dlye.', 'wwdd..', 'dwwdd.', '.dd.d.'],
-      ['.c.c..', '.ddd..', '.lll..', '.dlye.', 'wwdd..', 'dwwdd.', '.dd.d.'],
+      ['.c.c...', '.dd....', 'deeb...', '.llll..', 'yybb...', '.www...', '.wbrr..', '..kk...'],
+      ['.c.c...', '.dd....', 'deeb...', '.llll..', 'yybb...', '.www...', '..wbrr.', '..kk...'],
     ] as const,
   },
   // Round 2: the repeating toe-texture down the whole body length read as a centipede's many
