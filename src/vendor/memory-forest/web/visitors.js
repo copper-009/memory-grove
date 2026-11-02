@@ -54,17 +54,29 @@ const FRONT_SLOTS = [0.9, 0.22, 0.75, 0.38, 0.6, 0.12, 0.52, 0.82];
 // WALK_SPEED pixels a second (of env.u, so the same pace at any size), its legs changing with
 // the ground covered: a step every STRIDE of its own length, never with a clock, so its feet
 // never slide (a short way is a short walk, not a long one on the spot)
-const ROAM_EVERY = 150, ROAM_STAGGER = 41, ROAM_OFFSET = 37, WALK_SPEED = 7, STRIDE = 0.25;
+// Memory Garden change (Round 26, fix 6): "animals should be moving around more in general
+// and switching between their animations more often" — at the original 150s, a front
+// visitor only set off on a new walk about once every two and a half minutes, which reads
+// as motionless on anything but a long, patient watch. Cut to a third, with STAGGER/OFFSET
+// scaled down to match (they're already only a fraction of ROAM_EVERY, used to spread
+// several animals' schedules apart, not a separate pace of their own).
+const ROAM_EVERY = 50, ROAM_STAGGER = 14, ROAM_OFFSET = 12, WALK_SPEED = 7, STRIDE = 0.25;
 // how far either side of its spot an animal wanders, as a share of the width
 const ROAM_REACH = 0.045;
 // a resting animal shows its second frame (a glance, a nibble) while a slow wave is above this
-const IDLE_GLANCE = 0.93;
+// Memory Garden change (Round 26, fix 6): was 0.93 (sin > 0.93 is a sliver of the cycle,
+// easy to miss between glances); 0.8 roughly doubles how much of each cycle reads as "just
+// glanced", and the cycle itself below runs faster too, so idle animals visibly shift
+// state far more often without constantly twitching.
+const IDLE_GLANCE = 0.8;
+const IDLE_GLANCE_CYCLE = 1.1;  // was a bare 0.7 inline at each call site; now shared and faster
 // Memory Garden change: how far a hosted creature sways from its exact host spot, in pixels
 // — a grazing one (deer/stag, and any region creature on a ground/slope/burrow depth band)
 // wanders further than one perched still in a tree or at a pond's edge, and a sleepy one
 // barely at all. A still species (crocodiles) gets none, same as it skips the idle glance.
 const HOST_SWAY = { graze: 5, perched: 2, sleepy: 1 };
-const HOST_SWAY_CYCLE = 0.12;  // much slower than IDLE_GLANCE's flick — a real wander, not a jitter
+// Round 26, fix 6: was 0.12 (a ~52s sway cycle, barely perceptible); nearly doubled.
+const HOST_SWAY_CYCLE = 0.22;
 // a rabbit hops rather than walks: a hop every RABBIT_HOP_LEN pixels (of env.u), RABBIT_HOP_PX high
 const RABBIT_HOP_LEN = 6, RABBIT_HOP_PX = 3;
 // the animals stand this far below the front row (of the height), never off the canvas
@@ -158,14 +170,28 @@ function chooseHosts(env, list, trees, open) {
   const inForest = {};
   const keys = list.map(v => v.key);
   const R = rng(daySeed(env)), any = pool => pool[Math.floor(R() * pool.length)];
+  // Memory Garden change (Round 26, fix 6): "i also cant see alot of them so their
+  // distribution should be higher at the front and decrease the further they go back into
+  // the scene." `any` above picks uniformly across a whole pool — in a mature forest the
+  // owl, squirrel and any canopy/trunk/water region creature were about as likely to land
+  // ten rows back (tiny, hazy, often behind nearer canopy) as right at the front. `near`
+  // sorts by depth and skews the pick toward the front with NEAR_BIAS — still occasionally
+  // further back, so the grove doesn't feel scripted, just more often somewhere you'll
+  // actually see it.
+  const NEAR_BIAS = 2.4;
+  const near = pool => {
+    if (!pool.length) return undefined;
+    const sorted = pool.slice().sort((a, b) => a.it.fromFront - b.it.fromFront);
+    return sorted[Math.min(sorted.length - 1, Math.floor(Math.pow(R(), NEAR_BIAS) * sorted.length))];
+  };
   // the owl perches on one of the oldest trees, the heron wades at one of the ponds
   const old = trees.filter(p => p.it.stage === ANCIENT), older = old.length ? old : trees.filter(p => p.it.stage === OLD);
-  if (keys.includes('owl') && older.length) inForest.owl = { host: any(older) };
+  if (keys.includes('owl') && older.length) inForest.owl = { host: near(older) };
   const ponds = env.placed.filter(p => p.it.pond && p.it.first && open(p));
-  if (keys.includes('heron') && ponds.length) inForest.heron = { host: any(ponds) };
+  if (keys.includes('heron') && ponds.length) inForest.heron = { host: near(ponds) };
   // the squirrels sit at the foot of a grown tree the owl hasn't taken
   const grown = trees.filter(p => p.it.stage >= MATURE && (!inForest.owl || p !== inForest.owl.host));
-  if (keys.includes('squirrel') && grown.length) inForest.squirrel = { host: any(grown) };
+  if (keys.includes('squirrel') && grown.length) inForest.squirrel = { host: near(grown) };
   const band = (lo, hi) => trees.filter(p => p.it.fromFront >= lo && p.it.fromFront <= hi);
   for (const [key, lo, hi] of [['deer', 2, 4], ['stag', 4, 6]]) {
     if (!keys.includes(key)) continue;
@@ -193,6 +219,13 @@ function chooseHosts(env, list, trees, open) {
   // empty and several slots landing in the same place. Spread proportionally across
   // whatever depth this grove actually has instead.
   const maxFront = trees.reduce((m, p) => Math.max(m, p.it.fromFront || 0), 2);
+  // Memory Garden change (Round 26, fix 6): spreading those five bands across the grove's
+  // *entire* depth put the later slots (unlocked well into a biome's progress, not lesser
+  // creatures) ten-plus rows back in a mature forest — small, hazy, often the one thing on
+  // screen nobody noticed. FRONT_BAND_CAP keeps every ground/slope/burrow band within a
+  // comfortably visible stretch of the front regardless of how deep the whole grove runs.
+  const FRONT_BAND_CAP = 9;
+  const bandMax = Math.min(maxFront, FRONT_BAND_CAP);
   for (const v of list) {
     if (v.key in inForest) continue;
     const taken = new Set(Object.values(inForest).map(s => s.host));
@@ -204,14 +237,14 @@ function chooseHosts(env, list, trees, open) {
       // dwelling species grounded — visibly wrong for a species that doesn't walk — for as
       // long as it took the grove to grow one, not because it had nowhere to perch.
       const pool = trees.filter(p => p.it.stage >= YOUNG && !taken.has(p));
-      if (pool.length) inForest[v.key] = { host: any(pool) };
+      if (pool.length) inForest[v.key] = { host: near(pool) };
     } else if (v.zone === 'water' || v.zone === 'waterEdge') {
       const wet = ponds.filter(p => !taken.has(p));
-      if (wet.length) inForest[v.key] = { host: any(wet) };
+      if (wet.length) inForest[v.key] = { host: near(wet) };
     } else if (v.zone === 'ground' || v.zone === 'slope' || v.zone === 'burrow') {
-      const slot = v.slot || 0, bandW = Math.max(1.5, maxFront / 5), lo = slot * bandW, hi = lo + bandW * 1.4;
+      const slot = v.slot || 0, bandW = Math.max(1.5, bandMax / 5), lo = slot * bandW, hi = lo + bandW * 1.4;
       const free = pool => pool.filter(p => !taken.has(p));
-      const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, maxFront));
+      const pool = free(band(lo, hi)).length ? free(band(lo, hi)) : free(band(0, bandMax));
       if (pool.length) inForest[v.key] = { host: any(pool), graze: true };
     }
   }
@@ -277,7 +310,7 @@ AF.drawHosted = function (g, env, t) {
       // per creature (`hashStr(key)`) so a scene with several hosted animals doesn't have
       // them all glance in lockstep.
       const glancing = !env.still && !(v && v.still) && spr.frames.length > 1
-        && Math.sin(t * AF.u.cyc(0.7) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) > IDLE_GLANCE;
+        && Math.sin(t * AF.u.cyc(IDLE_GLANCE_CYCLE) + (hashStr(key) % 1000) / 1000 * AF.u.TAU) > IDLE_GLANCE;
       const frame = spr.frames[glancing ? (spr.frames.length - 1 - base) : base];
       let x0, y0;
       if (key === 'owl') { const h = AF.STAGE_H[p.it.stage] * env.u * p.s; x0 = Math.round(p.x - 2); y0 = Math.round(p.y - h - frame.length + 3); }
@@ -404,7 +437,7 @@ AF.drawVisitors = function (g, env, t) {
     const moving = !env.still && !AF.LOOP && ph < walk && dist >= 1, q = moving ? ph / walk : 1;
     const x = from + (to - from) * q, gone = dist * q, dir = to >= from ? 1 : -1;
     const stride = Math.max(1, spr.frames[0][0].length * STRIDE);
-    let frame = spr.frames[moving ? Math.floor(gone / stride) % spr.frames.length : (Math.sin(t * AF.u.cyc(0.7) + i * 2.1) > IDLE_GLANCE ? spr.frames.length - 1 : 0)], dy = 0;
+    let frame = spr.frames[moving ? Math.floor(gone / stride) % spr.frames.length : (Math.sin(t * AF.u.cyc(IDLE_GLANCE_CYCLE) + i * 2.1) > IDLE_GLANCE ? spr.frames.length - 1 : 0)], dy = 0;
     // a rabbit hops rather than walks: each hop a fixed length of ground, the last one shorter
     if (v.key === 'rabbit') { frame = spr.frames[0]; if (moving) dy = -Math.round(Math.abs(Math.sin(gone / (RABBIT_HOP_LEN * env.u) * Math.PI)) * RABBIT_HOP_PX); }
     const flip = FACES_LEFT[v.key] ? dir > 0 : dir < 0;  // face the way it last went
