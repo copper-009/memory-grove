@@ -1248,3 +1248,26 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   (`handAuthored.ts`) and the ground/wandering `alt` pose (`coastal.ts`). `tsc`/`vitest`
   (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed,
   republished.
+- **Round 24 — rebuilt the swan against the actual reference image: thick curved neck,
+  two-tone beak, speckled body texture, wing/tail notches.** "no that shape was wrong, there
+  was no shading, and it didnt follow the reference exactly. it was too big but it was also
+  too blobby." Round 23's premise — that the round-19a shape was correct and only its scale
+  had been wrong — was itself wrong: that shape was built from a secondhand memory of the
+  reference image rather than checked against it, and the memory wasn't good enough. Asked the
+  user to resend the reference and rebuilt directly against it this time, properly. Real
+  differences from every prior attempt: a genuinely THICK, consistently-wide neck (earlier
+  rounds made it either the same width as the body's own taper or a thin 1-2px stalk — never
+  an actual thick curve) with a real two-lean S-bend; a two-tone beak (a darker rust base,
+  a lighter pink tip, matching the reference's own two colours instead of one flat orange bar
+  or nub); a gold eye dot, missing from every earlier version; a stepped wing-notch on the
+  body's top edge and a stepped tail-notch at the rear instead of a plain dome; and scattered
+  darker speckle marks across the body surface instead of a flat fill — the reference's actual
+  shading, not an invented highlight/shadow scheme from an earlier round. Canvas widened from
+  14 back to 18 to give the thicker neck and the notches room to read, staying well under round
+  19a's 19-wide version — the body's own texture breaking up the silhouette is what stops it
+  reading as blobby at this size, not shrinking it further. Verified against both the gallery's
+  inspection-scale render and its true in-game-scale icon (two separate Playwright screenshots
+  of the real `review/gallery.html`) before shipping. Applied to both the water/swimming pose
+  (`handAuthored.ts`) and the ground/wandering `alt` pose (`coastal.ts`). `tsc`/`vitest`
+  (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed,
+  republished.
