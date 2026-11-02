@@ -436,17 +436,25 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
 
   // -- Shared from the vendored engine's own `squirrel` sprite, recoloured — sitting up with
   // something in its paws.
+  // Round 18: "no animation" (reported on `norway:ekorn`, which shares this exact shape —
+  // the whole small-rodent family inherited the same bug from here). Frame 0 and frame 1
+  // were byte-identical: this sitting-up posture comes from the vendored engine's own
+  // `squirrel` sprite, drawn back when hosted creatures were painted once and never redrawn
+  // live (see `AF.drawHosted`'s own history), so a second frame was never worth the effort —
+  // now that hosted creatures genuinely animate every frame, that's exactly backwards. The
+  // tail-tip now drops out of the topmost row between frames (a real silhouette change, not a
+  // pixel nudge), plus a blink.
   'canada:hoary-marmot': {
     // A big ground squirrel at heart — muted grey-brown instead of the native sprite's
     // red-brown, same sitting-up posture.
     pal: { r: '#8a7a60', R: '#6a5c46', t: '#9a8c70', T: '#7a6c54', l: '#c4b89a', e: '#140e06', d: '#3a3020', a: '#8a7a60', c: '#4a3e2e' },
     frames: [
       ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
-      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+      ['........', 'tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '..tRrrla', '...d.dd.'],
     ] as const,
     young: [
       ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
-      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+      ['tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '...d.dd.'],
     ] as const,
   },
 
@@ -618,6 +626,21 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     young: [
       ['.....o..o', '.....oooo', '......oeo', '.ooooooo.', '.ooooooo.', '.d.d..d.d'],
       ['.....o..o', '.....oooo', '......oeo', '.oooooooo', '.ooooooo.', '.d.d..d.d'],
+    ] as const,
+  },
+  // Round 18: "no animation" — still baked, and the baked frame0/frame1 only differed by a
+  // single leg pixel. A genuine second state instead: ears dip and the eye closes, since this
+  // species' own behaviour ("curls asleep along a branch, tail wrapped over its face") is
+  // literally about resting, not a walk cycle.
+  'nepal:red-panda': {
+    pal: { b: '#b0502a', d: '#6a2e14', l: '#d88a54', e: '#120c06', w: '#f0ece0', n: '#2a2018' },
+    frames: [
+      ['.....dd', '..bblll', 'lbwwdle', 'ldww...', '..ddd..', '..ddd..'],
+      ['.......', '..bblll', 'lbwwdld', 'ldww...', '..ddd..', '..ddd..'],
+    ] as const,
+    young: [
+      ['....l.', '...lll', '.bbdle', 'bwwb..', 'dww...', '.dd...'],
+      ['......', '...lll', '.bbdld', 'bwwb..', 'dww...', '.dd...'],
     ] as const,
   },
   'borneo:sunda-clouded-leopard': {
@@ -925,26 +948,30 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // time, specific to this body (no antlers to hide, unlike the deer template the original
   // glitch came from): the head and eyes move from the top of the neck down to the body
   // line, a real dip rather than a reshuffle with leftover pixels.
+  // Round 18: "ok the head's going down but the nose doesn't move" — the eye marks did double
+  // duty as the only thing near the muzzle, so the "nose" never read as its own moving part.
+  // Given a real dedicated dark nose mark, separate from the eye, so it visibly travels from
+  // up near the face (head up) down to ground level, ahead of the body (head down grazing).
   'patagonia:guanaco': {
-    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
+    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4', n: '#3a2a18' },
     frames: [
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['............', '............', '.......bbbl.', 'lbbbbbbbbee.', '.bbbbbbbbbd.', '.d.d..d.dd..', '.d.d..d.d...'],
+      ['.......e.e.', '.......bbb.', '......lbbln', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['............', '............', '.......bbbl.', 'lbbbbbbbbe..', '.bbbbbbbbbnd', '.d.d..d.dd..', '.d.d..d.d...'],
     ] as const,
     young: [
-      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['...........', 'lbbbbbbbee.', '.bbbbbbbbd.', '.d.d..d.dd.'],
+      ['.......bbb.', '......lbbln', 'lbbbbbbbb..', '.d.d..d.d..'],
+      ['............', '.......bbbl.', 'lbbbbbbbbnd.', '.d.d..d.dd..'],
     ] as const,
   },
   'patagonia:guanaco-steppe': {
-    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4' },
+    pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4', n: '#3a2a18' },
     frames: [
-      ['.......e.e.', '.......bbb.', '.......bbbl', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
-      ['............', '............', '.......bbbl.', 'lbbbbbbbbee.', '.bbbbbbbbbd.', '.d.d..d.dd..', '.d.d..d.d...'],
+      ['.......e.e.', '.......bbb.', '......lbbln', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['............', '............', '.......bbbl.', 'lbbbbbbbbe..', '.bbbbbbbbbnd', '.d.d..d.dd..', '.d.d..d.d...'],
     ] as const,
     young: [
-      ['.......bbb.', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..'],
-      ['...........', 'lbbbbbbbee.', '.bbbbbbbbd.', '.d.d..d.dd.'],
+      ['.......bbb.', '......lbbln', 'lbbbbbbbb..', '.d.d..d.d..'],
+      ['............', '.......bbbl.', 'lbbbbbbbbnd.', '.d.d..d.dd..'],
     ] as const,
   },
 
@@ -1122,15 +1149,24 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // genuine 2-pixel bands. For the animation: its own `behaviour` text already names the real
   // one — "tail swishing, head rising often to watch" — a real tail added, swishing between
   // the two frames, rather than depending on the near-invisible 1px leg nudge to register.
+  // Round 18: "stripes needs to be more stripy and there's no animation" — the tail-swish
+  // from round 17 was apparently too subtle to register (and the species is graze-hosted,
+  // defaulting to its second frame almost all the time, so the swap rarely even showed).
+  // Rebuilt around a real head-up/head-down motion instead — its own behaviour text already
+  // names it ("head rising often to watch") — purpose-built for this body rather than copying
+  // the deer template's reshuffle the way round 7's version did (that's what caused the
+  // original "zigzag glitch" this file's own history records; this one is hand-built, not a
+  // naive copy, so it doesn't carry the same risk). Stripes widened further and extended onto
+  // the legs, which had none before.
   'eastafrica:plains-zebra': {
     pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', t: '#1a1814' },
     frames: [
-      ['........e.e', '.......ldb.', '......ldbl.', 'lddbbddbbd.', '.ddbbddbbd.', 't..........', '.d.d..d.d..', '.d.d..d.d..'],
-      ['........e.e', '.......ldb.', '......ldbl.', 'lddbbddbbd.', '.ddbbddbbd.', '.t.........', 'd..d.d..d..', '..d.d..d.d.'],
+      ['........e.e', '.......ldb.', '......ldbl.', 'lddbbddbbd.', '.ddbbddbbd.', 't..........', '.d.l..d.l..', '.d.l..d.l..'],
+      ['............', '............', '......ldbl..', 'lddbbddbbee.', '.ddbbddbbbd.', '.t..........', '.d.l..d.ld..', '.d.l..d.ld..'],
     ] as const,
     young: [
-      ['.....ldb.', 'lddbbddb.', '.ddbbddb.', 't........', '.d.d..d.d'],
-      ['.....ldb.', 'lddbbddb.', '.ddbbddb.', '.t.......', 'd..d.d..d'],
+      ['.....ldb.', 'lddbbddb.', '.ddbbddb.', 't........', '.d.l..d.l'],
+      ['...........', '......ldbl.', 'lddbbddbee.', '.ddbbddbbd.', '.t.........'],
     ] as const,
   },
   // Round 2: still read as a blob at the first fixed-up size — rounder, taller body mass this
@@ -1480,65 +1516,68 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // copied from each other and never actually varied when the neck was redrawn in round 16,
     // so there was truly nothing to animate regardless of the engine. Frame 1 now genuinely
     // differs: the head and the first two neck rows shift one column, a small head-turn.
+    // Round 18: "still looks weird" — five rounds of incremental tweaks to the same 9-row
+    // neck (which never got shorter, only re-angled) hadn't actually resolved it. Rebuilt
+    // properly this time rather than nudging again: a shorter neck (6 rows, was 9 — the old
+    // ratio against the 5-row body read as spindly and disproportionate regardless of how
+    // smooth any individual bend was), a single consistent diagonal lean instead of another
+    // multi-bend "S" (the S reads as a lumpy bent-pipe elbow at this resolution; a plain
+    // consistent lean is what actually looks like a graceful curve at this scale), and the
+    // body widened back out to match. Beak and legs from round 17 kept; head-turn animation
+    // rebuilt to match the new shorter neck.
     pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc', k: '#3a3a3a', x: '#0a0a0a' },
     frames: [
       [
-        '..........leee..',
-        '..........lxd...',
-        '.........lld....',
-        '.........lld....',
-        '........lld.....',
-        '........dld.....',
-        '.........lld....',
-        '.........lld....',
-        '..........lld...',
-        '....bbbbbbb.....',
-        '...bbbbbbbbb....',
-        '..bbbbbllbbbb...',
-        '..bbbbbllbbbb...',
-        '...wwwwwwwww....',
-        '.....kk..kk.....',
+        '.......leee.',
+        '.......lxd..',
+        '......lld...',
+        '.....lld....',
+        '....lld.....',
+        '...lld......',
+        '..bbbbbbb...',
+        '.bbbbbbbbb..',
+        'bbbbbllbbbb.',
+        'bbbbbllbbbb.',
+        '.wwwwwwwww..',
+        '...kk..kk...',
       ],
-      [
-        '.........leee...',
-        '.........lxd....',
-        '.........lld....',
-        '.........lld....',
-        '........lld.....',
-        '........dld.....',
-        '.........lld....',
-        '.........lld....',
-        '..........lld...',
-        '....bbbbbbb.....',
-        '...bbbbbbbbb....',
-        '..bbbbbllbbbb...',
-        '..bbbbbllbbbb...',
-        '...wwwwwwwww....',
-        '.....kk..kk.....',
-      ],
-    ] as const,
-    young: [
       [
         '......leee..',
         '......lxd...',
         '.....lld....',
-        '.....dld....',
-        '......lld...',
-        '..bbbbb.....',
-        '.bbbbllbbb..',
-        '..wwwwwww...',
-        '....kk..kk..',
+        '.....lld....',
+        '....lld.....',
+        '...lld......',
+        '..bbbbbbb...',
+        '.bbbbbbbbb..',
+        'bbbbbllbbbb.',
+        'bbbbbllbbbb.',
+        '.wwwwwwwww..',
+        '...kk..kk...',
+      ],
+    ] as const,
+    young: [
+      [
+        '....leee.',
+        '....lxd..',
+        '...lld...',
+        '..lld....',
+        '.lld.....',
+        'bbbbb....',
+        'bbllbbb..',
+        '.wwwwww..',
+        '..kk..kk.',
       ],
       [
-        '.....leee...',
-        '.....lxd....',
-        '.....lld....',
-        '.....dld....',
-        '......lld...',
-        '..bbbbb.....',
-        '.bbbbllbbb..',
-        '..wwwwwww...',
-        '....kk..kk..',
+        '...leee..',
+        '...lxd...',
+        '..lld....',
+        '..lld....',
+        '.lld.....',
+        'bbbbb....',
+        'bbllbbb..',
+        '.wwwwww..',
+        '..kk..kk.',
       ],
     ] as const,
   },
@@ -2018,29 +2057,32 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   },
   // Red squirrel: the hoary marmot's own confirmed base ("yes yes, use this for the base
   // for other small rodents" — the user's explicit note on that entry), recoloured rust-red.
+  // Round 18: "no animation" — same fix as the hoary-marmot base this shares: tail-tip drops
+  // out of the topmost row between frames, plus a blink.
   'norway:ekorn': {
     pal: { r: '#a8502a', R: '#6a3018', t: '#d08050', T: '#a8703e', l: '#f0e8dc', e: '#120c06', d: '#3a2010', a: '#a8502a', c: '#6a3018' },
     frames: [
       ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
-      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+      ['........', 'tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '..tRrrla', '...d.dd.'],
     ] as const,
     young: [
       ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
-      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+      ['tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '...d.dd.'],
     ] as const,
   },
   // Siberian flying squirrel: the same hoary-marmot base, recoloured to this species' own
   // soft grey — it spends most of its time clinging in the canopy (`zone: 'trunk'`) rather
   // than actually gliding, which this sitting pose represents honestly.
+  // Round 18: same shared-base animation fix as hoary-marmot and ekorn.
   'japan:ezo-momonga': {
     pal: { r: '#a8a69c', R: '#6e6c64', t: '#d8d6cc', T: '#b4b2a8', l: '#f2f0e8', e: '#0c0a08', d: '#4a4842', a: '#a8a69c', c: '#6e6c64' },
     frames: [
       ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
-      ['.tt..d.d', 'tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '..tRrrla', '...d.dd.'],
+      ['........', 'tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '..tRrrla', '...d.dd.'],
     ] as const,
     young: [
       ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
-      ['tTTt.rrr', 'tTt.Rrer', '.tTRrrlc', '...d.dd.'],
+      ['tTTt.rrr', 'tTt.Rrdr', '.tTRrrlc', '...d.dd.'],
     ] as const,
   },
 };
