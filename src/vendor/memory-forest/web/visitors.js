@@ -311,6 +311,19 @@ AF.drawHosted = function (g, env, t) {
   }
 };
 
+// Memory Garden change: every other drawing path in this file scales its sprite to the
+// scene somehow — a hosted creature by `depthK` (partial tree-depth scale, the comment at
+// `scaleAnchored`'s own definition), a front visitor/the cabin by `AF.visitK`, a tree by its
+// own row's computed cell width. A flyer had none of that: `paintSprite` below painted it at
+// literal 1 sprite-pixel = 1 screen-pixel, a fixed size in actual screen pixels no matter how
+// many trees/creatures the rest of the scene had compressed to fit. In a young, sparse forest
+// that native size looks fine; in a mature one (hundreds of trees, everything else drawn
+// small to fit) an unscaled flyer reads as comically oversized next to it — exactly the
+// "butterfly clearly way too big" bug. FLYER_SCALE shrinks it to a fixed, forest-size-
+// independent fraction of native size instead, via the same `scaleAnchored` helper the
+// hosted-creature fix above already uses, anchored at the flyer's own circling position.
+const FLYER_SCALE = 0.7;
+
 /* the eagle circles high over the forest, behind the trees */
 AF.drawFlyers = function (g, env, t) {
   const { W, H } = env, color = visitorColor(env, 0);
@@ -320,8 +333,11 @@ AF.drawFlyers = function (g, env, t) {
     const cx = Math.round(W * SKY_X + Math.cos(a) * W * SKY_RX), cy = Math.round(H * SKY_Y + Math.sin(a) * H * SKY_RY);
     const frame = spr.frames[!env.still && Math.floor(t * SKY_FLAP_FPS) % SKY_FLAP_EVERY === 0 ? 1 : 0];
     const x0 = cx - Math.floor(frame[0].length / 2), y0 = cy - Math.floor(frame.length / 2);
-    paintSprite(g, frame, x0, y0, spr.pal, color, Math.sin(a) > 0);  // it faces the way it circles
-    env.skyBoxes.push({ v, x0: x0 - 1, y0: y0 - 1, x1: x0 + frame[0].length + 1, y1: y0 + frame.length + 1 });
+    scaleAnchored(g, FLYER_SCALE, cx, cy, () => {
+      paintSprite(g, frame, x0, y0, spr.pal, color, Math.sin(a) > 0);  // it faces the way it circles
+    });
+    const hw = frame[0].length * FLYER_SCALE / 2, hh = frame.length * FLYER_SCALE / 2;
+    env.skyBoxes.push({ v, x0: Math.round(cx - hw) - 1, y0: Math.round(cy - hh) - 1, x1: Math.round(cx + hw) + 1, y1: Math.round(cy + hh) + 1 });
   });
 };
 
