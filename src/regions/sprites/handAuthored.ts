@@ -1997,15 +1997,23 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // body row happened to share the fox's structure, with nothing of its own to connect it to
   // anything. A fossa has no white marking at all ("rich reddish-brown fur" — its own trait
   // text) — not repositioned this time, removed outright, the body now one continuous shape.
+  // Round 18: "its a dark mark, slightly diagonally down, near its chin" — the real culprit,
+  // which the round-17 fix hadn't touched: a separate `nnn` zigzag sitting to the right of
+  // the head (columns 11-13, past the head's own 7-10 span) with a gap before it, so it read
+  // as a disconnected dark shape right by the face. Checked against the explicitly "confirmed"
+  // sibling this shape is built from (`nepal:bengal-tiger`, same template, same provenance
+  // comment) — it carries no equivalent mark at all, just body and legs, so this was fossa-
+  // specific cruft, not a feature. Removed; the body's own extra length (11 wide against the
+  // tiger's 10) is what carries "long body" now, not a disconnected appendage.
   'madagascar:fossa': {
     pal: { o: '#8a5438', e: '#100a06', w: '#b07a54', d: '#5c3722', n: '#1a1410' },
     frames: [
-      ['.......n..n......', '.......oooo......', '.......oeow......', 'ooooooooooo......', '.oooooooooo......', '.wooooooo.nnn....', '..d.d..d.d..nnn..'],
-      ['.......n..n......', '.......oooo......', '.......oeow......', 'ooooooooooo......', 'ooooooooooo......', 'w.ooooooo..nnn...', '..d.d..d.d...nnn.'],
+      ['.......n..n......', '.......oooo......', '.......oeow......', 'ooooooooooo......', '.oooooooooo......', '.wooooooo........', '..d.d..d.d.......'],
+      ['.......n..n......', '.......oooo......', '.......oeow......', 'ooooooooooo......', 'ooooooooooo......', 'w.ooooooo........', '..d.d..d.d.......'],
     ] as const,
     young: [
-      ['......oeow.....', 'oooooooo.......', 'oooooooo..nnn..', '.d.d..d.d..nnn.'],
-      ['......oeow.....', '.ooooooo.......', '.ooooooo...nnn.', '.d.d..d.d...nnn'],
+      ['......oeow.....', 'oooooooo.......', 'oooooooo.......', '.d.d..d.d......'],
+      ['......oeow.....', '.ooooooo.......', '.ooooooo.......', '.d.d..d.d......'],
     ] as const,
   },
   // Red squirrel: the hoary marmot's own confirmed base ("yes yes, use this for the base
