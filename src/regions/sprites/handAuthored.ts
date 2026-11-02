@@ -952,25 +952,32 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // duty as the only thing near the muzzle, so the "nose" never read as its own moving part.
   // Given a real dedicated dark nose mark, separate from the eye, so it visibly travels from
   // up near the face (head up) down to ground level, ahead of the body (head down grazing).
+  // Round 19: "yes but now the nose is on the back pf the head" — the round-18 nose mark sat
+  // one row below the head block and one column short of the eye's own rightmost column, so
+  // it never actually projected past the face — it read as a separate dark patch trailing the
+  // jaw, not a muzzle sticking out front. Recoloured the head block's own front-most pixel to
+  // the nose colour instead of appending a detached mark past it — guaranteed to look attached
+  // since it shares a cell boundary with the rest of the head, and it's now the genuine
+  // front-most point of the silhouette (frame 1's already-good nose placement is untouched).
   'patagonia:guanaco': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4', n: '#3a2a18' },
     frames: [
-      ['.......e.e.', '.......bbb.', '......lbbln', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbn.', '......lbb..', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
       ['............', '............', '.......bbbl.', 'lbbbbbbbbe..', '.bbbbbbbbbnd', '.d.d..d.dd..', '.d.d..d.d...'],
     ] as const,
     young: [
-      ['.......bbb.', '......lbbln', 'lbbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbn.', '......lbb..', 'lbbbbbbbb..', '.d.d..d.d..'],
       ['............', '.......bbbl.', 'lbbbbbbbbnd.', '.d.d..d.dd..'],
     ] as const,
   },
   'patagonia:guanaco-steppe': {
     pal: { b: '#c4a878', d: '#8a7050', l: '#e8dcc0', e: '#140f0a', w: '#f0e8d4', n: '#3a2a18' },
     frames: [
-      ['.......e.e.', '.......bbb.', '......lbbln', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
+      ['.......e.e.', '.......bbn.', '......lbb..', 'lbbbbbbbb..', '.bbbbbbbb..', '.d.d..d.d..', '.d.d..d.d..'],
       ['............', '............', '.......bbbl.', 'lbbbbbbbbe..', '.bbbbbbbbbnd', '.d.d..d.dd..', '.d.d..d.d...'],
     ] as const,
     young: [
-      ['.......bbb.', '......lbbln', 'lbbbbbbbb..', '.d.d..d.d..'],
+      ['.......bbn.', '......lbb..', 'lbbbbbbbb..', '.d.d..d.d..'],
       ['............', '.......bbbl.', 'lbbbbbbbbnd.', '.d.d..d.dd..'],
     ] as const,
   },
@@ -1158,59 +1165,52 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // original "zigzag glitch" this file's own history records; this one is hand-built, not a
   // naive copy, so it doesn't carry the same risk). Stripes widened further and extended onto
   // the legs, which had none before.
-  // Round 19: "literally the three problem children keep causing problems ... fix up the
-  // zebra please" — the cramped 12-wide canvas never had room for the body to read as a horse
-  // shape or for the stripes to read as real bands rather than pixel noise. Rebuilt on a much
-  // bigger canvas (matching the swan rebuild this round): a real head with ear and muzzle
-  // highlight, a proper neck-to-body silhouette, dense 1-wide alternating stripe bands
-  // running the full length of the body and down onto all four legs, and a bolder head-up vs
-  // head-down swing between frames (the whole neck/head block repositions, not a 1px nudge).
+  // Round 19: "its like a monster now, remember jus t model off the deer, take away antlers,
+  // and give it stripes of any angle other than just straight" — the from-scratch horse
+  // redesign read as alien rather than zebra-shaped. Rebuilt literally on the vendored deer
+  // template (`japan:sika`/`nepal:spotted-deer`/`norway:reinsdyr` share this exact shape) —
+  // same proportions, same proven neck-to-body silhouette. Antler rows blanked out (zebras
+  // don't have them). The body-fill rows get alternating stripe characters, offset by one
+  // column between the two body rows so the bands read as diagonal rather than a flat
+  // straight repeat — the column directly under the head stays solid, matching the
+  // template's own solid neck-to-shoulder join, so the head doesn't float disconnected from
+  // the body the way the first stripe attempt did.
   'eastafrica:plains-zebra': {
-    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', t: '#1a1814' },
+    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff' },
     frames: [
       [
-        '..................dd..',
-        '.................ddbd.',
-        '................debbl.',
-        '...............dbbbb..',
-        '..............db.bbd..',
-        '.dbdbdbdbdbdbdb.bbd...',
-        '.dbdbdbdbdbdbdbbbbd...',
-        't.dbdbdbdbdbdbdbb.....',
-        '..d.b..d.b..d.b..d....',
-        '..d.b..d.b..d.b..d....',
+        '...........',
+        '...........',
+        '.......bbb.',
+        '.......bbbl',
+        'lbdbdbdbb..',
+        '.dbdbdbdb..',
+        '.d.d..d.d..',
+        '.d.d..d.d..',
       ],
       [
-        '.......................',
-        '.......................',
-        '..................dd...',
-        '.................ddbd..',
-        '................debbl..',
-        '.dbdbdbdbdbdbdb.dbbbb..',
-        '.dbdbdbdbdbdbdbdb.bbd..',
-        't.dbdbdbdbdbdbdbbbbd...',
-        '..d.b..d.b..d.b..dbb...',
-        '..d.b..d.b..d.b..d.....',
+        '...........',
+        '...........',
+        '...........',
+        '...........',
+        'lbdbdbdbd..',
+        '.bdbdbdbdb.',
+        '.d.d..d.bbl',
+        '.d.d..d.d..',
       ],
     ] as const,
     young: [
       [
-        '............dd.',
-        '...........debl',
-        '..........dbbb.',
-        '.dbdbdbdb.bbd..',
-        '.dbdbdbdbbbd...',
-        't.dbdbdbdb.....',
-        '.d.b..d.b..d...',
+        '.......bbb.',
+        'lbdbdbdbb..',
+        '.dbdbdbdb..',
+        '.d.d..d.d..',
       ],
       [
-        '................',
-        '............dd..',
-        '...........debl.',
-        '.dbdbdbd.dbbb...',
-        '.dbdbdbdbb.bbd..',
-        't.dbdbdbdbbbd...',
-        '.d.b..d.b..d....',
+        '.......bbb.',
+        'lbdbdbdb...',
+        '.dbdbdbdb..',
+        '.d.d..d.d..',
       ],
     ] as const,
   },
@@ -1280,21 +1280,28 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // was right, but the body was a flat solid-colour oval. Real giraffes are famous for their
   // reticulated patch coat, so a few dark patches scattered across the body (irregular, not
   // a border or a repeating grid) are the missing piece.
+  // Round 19: flagged "redo" with no note this round. By eye against a real giraffe: the
+  // shape/head/patches were already fine (nothing else on the review called them out), but the
+  // legs were short relative to the long neck — real giraffes are famous for legs almost as
+  // long as the neck, and five rows of leg against nine of neck read disproportionate.
+  // Lengthened the splayed lower legs by two more rows for a genuinely leggy stance.
   'eastafrica:masai-giraffe': {
     pal: { b: '#c89850', d: '#6a4a26', e: '#120e08' },
     frames: [
       [
         '..d.d....', '.bbb.....', 'bebd.....', '.bbd.....', '.bd......', '.bd......', '.bd......', '.bd......', '.bd......',
         '..bdbbd..', '.bbdbbdb.', '.bdbbdbb.', '..bdbdb..', '..d...d..', '..d...d..', '..d...d..', '.d.....d.', '.d.....d.',
+        '.d.....d.', '.d.....d.',
       ],
       [
         '..d.d....', '.bbb.....', 'bebd.....', '.bbd.....', '.bd......', '.bd......', '.bd......', '.bd......', '.bd......',
         '..bdbbd..', '.bbdbbdb.', '.bdbbdbb.', '..bdbdb..', '..d...d..', '..d...d..', '.d.....d.', '..d...d..', '.d.....d.',
+        '.d.....d.', '.d.....d.',
       ],
     ] as const,
     young: [
-      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', '.d...d.', '.d...d.'],
-      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', 'd...d..', '.d...d.'],
+      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', '.d...d.', '.d...d.', '.d...d.'],
+      ['.d.d...', 'bbb....', 'beb....', '.bbd...', '.bd....', '.bd....', '.bdbb..', 'bbdbbd.', 'd...d..', '.d...d.', '.d...d.'],
     ] as const,
   },
   // Round 14: "should be bird design" — this was still the old pre-redesign quadruped-style
@@ -1561,84 +1568,76 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // copied from each other and never actually varied when the neck was redrawn in round 16,
     // so there was truly nothing to animate regardless of the engine. Frame 1 now genuinely
     // differs: the head and the first two neck rows shift one column, a small head-turn.
-    // Round 19: "literally the three problem children keep causing problems" — five rounds of
+    // Round 19a: "literally the three problem children keep causing problems" — five rounds of
     // incremental tweaks hadn't landed, so the user supplied an actual reference image (a
     // clean black-swan icon: a real triangular beak, a true sweeping neck curve, a broad dome
     // body that widens quickly near the neck rather than tapering gradually, a pointed tail
-    // with a stepped wing-fold notch). Rebuilt against that reference directly — bigger
-    // canvas than any earlier attempt, so the curve has room to actually read as a curve
-    // instead of a diagonal line, and a proper wide triangular beak instead of a colour dot.
-    // Dropped the separate wing-crease patch and leg marks from earlier rounds — the
-    // reference doesn't have them, and the wing-fold notch at the tail now does that job.
+    // with a stepped wing-fold notch). Rebuilt against that reference directly on a big
+    // 19-wide canvas so the curve had room to read as a curve instead of a diagonal line.
+    // Round 19b: "now its back to being a massive blob" — the 19-wide rebuild was shape-correct
+    // but scaled nothing like the rest of the roster (kookaburra/cockatoo are 9 wide, the
+    // penguin is 6), so a solid-black body that size reads as an oversized mass next to every
+    // other creature rather than a swan. Same beak/curve/dome language from the reference,
+    // scaled down to a 13-14-wide canvas in line with the rest of the bird roster.
     pal: { b: '#1c1a20', o: '#d8814a' },
     frames: [
       [
-        '.......bb..........',
-        '......bbbb.........',
-        '......bbbb.........',
-        '.....bbbb..........',
-        '....oobbb..........',
-        '...ooo.bb..........',
-        '........bb.........',
-        '........bb.........',
-        '.......bbbb........',
-        '......bbbbbbb......',
-        '.....bbbbbbbbbb....',
-        '....bbbbbbbbbbbbb..',
-        '...bbbbbbbbbbbbbbb.',
-        '..bbbbbbbbbbbbbbbb.',
-        '.bbbbbbbbbbbbbbbbb.',
-        'bbbbbbbbbbbbbbbbbb.',
-        'bbbbbbbbbbbbbbbb.bb',
-        '.bbbbbbbbbbbbb...bb',
+        '......bb.....',
+        '.....bbbb....',
+        '....oobb.....',
+        '...ooo.bb....',
+        '.......bb....',
+        '......bbb....',
+        '.....bbbbb...',
+        '....bbbbbbb..',
+        '...bbbbbbbbb.',
+        '..bbbbbbbbbb.',
+        '.bbbbbbbbbbb.',
+        'bbbbbbbbbbbb.',
+        'bbbbbbbbb.bbb',
       ],
       [
-        '......bb...........',
-        '.....bbbb..........',
-        '.....bbbb..........',
-        '....bbbb...........',
-        '...oobbb...........',
-        '..ooo.bb...........',
-        '........bb.........',
-        '........bb.........',
-        '.......bbbb........',
-        '......bbbbbbb......',
-        '.....bbbbbbbbbb....',
-        '....bbbbbbbbbbbbb..',
-        '...bbbbbbbbbbbbbbb.',
-        '..bbbbbbbbbbbbbbbb.',
-        '.bbbbbbbbbbbbbbbbb.',
-        'bbbbbbbbbbbbbbbbbb.',
-        'bbbbbbbbbbbbbbbb.bb',
-        '.bbbbbbbbbbbbb...bb',
+        '.....bb......',
+        '....bbbb.....',
+        '...oobb......',
+        '..ooo.bb.....',
+        '.......bb....',
+        '......bbb....',
+        '.....bbbbb...',
+        '....bbbbbbb..',
+        '...bbbbbbbbb.',
+        '..bbbbbbbbbb.',
+        '.bbbbbbbbbbb.',
+        'bbbbbbbbbbbb.',
+        'bbbbbbbbb.bbb',
       ],
     ] as const,
     young: [
       [
-        '....bb..........',
-        '...bbbb.........',
-        '..oobb..........',
-        '.ooo.bb.........',
-        '......bb........',
-        '......bbb.......',
-        '.....bbbbbb.....',
-        '....bbbbbbbbb...',
-        '...bbbbbbbbbbb..',
-        '..bbbbbbbbbbbb..',
-        '.bbbbbbbbbbbb.bb',
+        '....bb......',
+        '...bbbb.....',
+        '..oobb......',
+        '.ooo.bb.....',
+        '.....bb.....',
+        '....bbb.....',
+        '...bbbbb....',
+        '..bbbbbbb...',
+        '.bbbbbbbbb..',
+        'bbbbbbbbbb..',
+        'bbbbbbb.bbb.',
       ],
       [
-        '...bb...........',
-        '..bbbb..........',
-        '.oobb...........',
-        'ooo.bb..........',
-        '......bb........',
-        '......bbb.......',
-        '.....bbbbbb.....',
-        '....bbbbbbbbb...',
-        '...bbbbbbbbbbb..',
-        '..bbbbbbbbbbbb..',
-        '.bbbbbbbbbbbb.bb',
+        '...bb.......',
+        '..bbbb......',
+        '.oobb.......',
+        'ooo.bb......',
+        '.....bb.....',
+        '....bbb.....',
+        '...bbbbb....',
+        '..bbbbbbb...',
+        '.bbbbbbbbb..',
+        'bbbbbbbbbb..',
+        'bbbbbbb.bbb.',
       ],
     ] as const,
   },
