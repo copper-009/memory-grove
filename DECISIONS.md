@@ -1122,3 +1122,30 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   often to watch" behaviour text. Both row-width-validated via the sprite-width checker
   (`vitest`) before committing. `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130
   creatures), committed to `vendor`, pushed, republished.
+- **Round 19 follow-up — shrunk the swan, rebuilt the zebra on the actual deer template,
+  fixed the guanaco's nose, lengthened the giraffe's legs.** `australia:black-swan` ("now its
+  back to being a massive blob" — the reference-driven rebuild above was shape-correct but
+  scaled nothing like the rest of the bird roster: kookaburra/cockatoo are 9 wide, the penguin
+  is 6. A solid-black body at 19-wide reads as an oversized mass next to everything else in the
+  forest regardless of how clean its silhouette is. Kept the reference's beak/curve/dome
+  language, scaled down to 13-14 wide, in line with the rest of the roster). `eastafrica:
+  plains-zebra` ("its like a monster now, remember just model off the deer, take away antlers,
+  and give it stripes of any angle other than just straight" — the from-scratch horse rebuild
+  above read as alien. Dropped it and rebuilt literally on the vendored deer template
+  (`japan:sika`/`nepal:spotted-deer`/`norway:reinsdyr` share this exact shape) — same proven
+  proportions, antler rows blanked out, body-fill rows given alternating stripe characters
+  offset by one column between rows so the bands read as diagonal instead of a flat repeat.
+  First attempt at this put a dark stripe directly under the head's own column, which broke
+  the template's normally-solid neck-to-shoulder connection and made the head look detached —
+  caught by rendering against a solid background instead of the gallery's own transparency,
+  fixed by keeping that one junction column solid). `patagonia:guanaco`/`guanaco-steppe` ("yes
+  but now the nose is on the back pf the head" — the round-18 nose mark sat one row below the
+  head block and one column short of the eye's own rightmost column, so it never actually
+  projected past the face as a muzzle — it read as a separate dark patch trailing the jaw.
+  Recoloured the head block's own front-most pixel to the nose colour instead of appending a
+  detached mark past it, guaranteeing it reads as attached since it shares a cell boundary with
+  the rest of the head). `eastafrica:masai-giraffe` (flagged redo with no note — by eye against
+  a real giraffe, the shape/patches were fine, but the legs were short relative to the long
+  neck; lengthened the splayed lower legs by two rows for a genuinely leggy stance). `tsc`/
+  `vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`,
+  pushed, republished.
