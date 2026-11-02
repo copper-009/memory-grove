@@ -106,12 +106,16 @@ export const coastalHeath: Biome = {
       // Round 20: kept in sync with the water pose's own "too angular" fix in
       // handAuthored.ts — same smaller beak, same smooth single-direction neck diagonal, same
       // symmetric cone body and tapered-diamond wing patch, legs appended underneath.
-      alt: { zone: 'ground', sprite: { pal: { b: '#1c1a20', l: '#3a3742', d: '#0e0d12', o: '#d8814a', w: '#e8e4dc' }, frames: [
-        ['.......bb...', '......obb...', '.....lbb....', '....lbb.....', '...lbb......', '...bb.......', '..lbbbb.....', '.lbbbbbb....', 'lbbbbbbbb...', 'lbbbbwbbb...', 'bbbbwwwbb...', '...d.....d..', '...d.....d..'],
-        ['.......bb...', '......obb...', '.....lbb....', '....lbb.....', '...lbb......', '...bb.......', '..lbbbb.....', '.lbbbbbb....', 'lbbbbbbbb...', 'lbbbbwbbb...', 'bbbbwwwbb...', '..d.....d...', '...d.....d..'],
+      // Round 21: kept in sync with the water pose's full rebuild — "you tell me if that
+      // looks like a swan" (it didn't). Same genuinely-thinner-than-the-body neck with a real
+      // two-direction lean, same distinct shoulder step into the body, same small diagonal
+      // wing stripe instead of a diamond, legs appended underneath the new body shape.
+      alt: { zone: 'ground', sprite: { pal: { b: '#1c1a20', l: '#3a3742', o: '#d8814a', w: '#e8e4dc', d: '#0e0d12' }, frames: [
+        ['........bb.....', '........bb.....', '.......obb.....', '.......lb......', '......lb.......', '......bb.......', '.......b.......', '.......b.......', '.......b.......', '....lbbbbbbb...', '...lbbbbwbbbb..', '..lbbbbwwbbbb..', '.bbbbbbbbbbbbbb', '....d......d...', '....d......d...'],
+        ['........bb.....', '........bb.....', '.......obb.....', '.......lb......', '......lb.......', '......bb.......', '.......b.......', '.......b.......', '.......b.......', '....lbbbbbbb...', '...lbbbbwbbbb..', '..lbbbbwwbbbb..', '.bbbbbbbbbbbbbb', '...d......d....', '....d......d...'],
       ] as const, young: [
-        ['....bb......', '...obb......', '..lbb.......', '.lbb........', 'lbbb........', 'bbbbb.......', 'bbbwbb......', 'bwwwbb......', '.d......d...'],
-        ['....bb......', '...obb......', '..lbb.......', '.lbb........', 'lbbb........', 'bbbbb.......', 'bbbwbb......', 'bwwwbb......', 'd......d....'],
+        ['.....bb....', '....obb....', '....lb.....', '...lb......', '...b.......', '...b.......', '.lbbbbb....', 'lbbbwbbb...', 'bbbbbbbbb..', '..d.....d..'],
+        ['....bb.....', '...obb.....', '...lb......', '..lb.......', '..b........', '..b........', '.lbbbbb....', 'lbbbwbbb...', 'bbbbbbbbb..', '.d.....d...'],
       ] as const } },
     },
     {
