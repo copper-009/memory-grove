@@ -117,23 +117,29 @@ A region needs:
   logged there.
 - Run `npm run species-doc` afterwards to regenerate `reference/SPECIES.md`.
 
-A region's own creature/plant art isn't drawn yet — the grove scene is the vendored Memory
-Forest engine's own generic pine/round trees and stock animal roster (Phase 2; see
-`DECISIONS.md`), the same for every region until Phase 3 wires region-specific rendering
-through `trees.js`'s hook functions. A `Creature` still needs a `sprite` (or the older
-`body`/`palette` pair — see `src/regions/types.ts`'s `CreatureSprite`) and a `PlantSpecies`
-still needs `crown`/`bark`, both schema-checked by `validate.ts`; that data is just not
-reaching the screen yet for any region but whatever Phase 3 has wired up so far.
+Every region's own creature and plant art is drawn now — Phase 3 wired real species-specific
+trees through `trees.js`'s hook functions for every biome in every region (not just each
+region's primary biome; see `DECISIONS.md`), and hand-authored or baked `CreatureSprite` data
+(`src/regions/sprites/`) renders live for hosted creatures via `AF.drawHosted`. A `Creature`
+still needs a `sprite` (or the older `body`/`palette` pair — see `src/regions/types.ts`'s
+`CreatureSprite`) and a `PlantSpecies` still needs `crown`/`bark`, both schema-checked by
+`validate.ts` — that's not optional scaffolding left for later, it's what actually reaches
+the screen.
 
 ## Known limitations / stubbed for v1
 
 Kept honest here rather than glossed over:
 
-- **The scene is always Golden Lake, every region, regardless of settings.** The vendored
-  engine (Phase 2) supports its own full set of environments/landscapes/landmarks/weather —
-  nothing about the engine limits this — but `mfAdapter.ts`'s `goldenLakeMood` hardcodes the
-  one scene for now. Wiring real scenery choice (and region-specific rendering through
-  `trees.js`'s hook functions) is Phase 3's main remaining work; see `DECISIONS.md`.
+- **Time of day and weather are always "golden hour, clear," regardless of biome or
+  settings.** Scenery itself is real and region-specific now — `mfLandscape.ts`'s
+  `landscapeForBiome` picks lake/river/meadow/mountains from each `Biome`'s own
+  `hasWater`/key, `mfLandmark.ts` adds a `peak` landmark for the three biomes with one
+  (Everest for the Himalaya, Fuji for Satoyama, Kosciuszko for the Australian Alps), and
+  every biome has its own ground colour and species-correct trees — verified across all
+  three landscapes and confirmed again directly (`npm run` the harness and screenshot a few
+  biomes) while touching this doc. What's genuinely still stubbed is the full
+  preset-picker/live-weather system `mfAdapter.ts`'s own module comment names — porting it is
+  real remaining work, not something any biome's data already drives.
 - **Settings read as one flat list**, not literal tabs (Scenery/Forest/Nature/Weather) —
   the SDK has no tabbed-settings API. Approximated with an id-prefix convention
   (`scenery.*`, `forest.*`, ...); see `DECISIONS.md`.
