@@ -1158,15 +1158,60 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // original "zigzag glitch" this file's own history records; this one is hand-built, not a
   // naive copy, so it doesn't carry the same risk). Stripes widened further and extended onto
   // the legs, which had none before.
+  // Round 19: "literally the three problem children keep causing problems ... fix up the
+  // zebra please" — the cramped 12-wide canvas never had room for the body to read as a horse
+  // shape or for the stripes to read as real bands rather than pixel noise. Rebuilt on a much
+  // bigger canvas (matching the swan rebuild this round): a real head with ear and muzzle
+  // highlight, a proper neck-to-body silhouette, dense 1-wide alternating stripe bands
+  // running the full length of the body and down onto all four legs, and a bolder head-up vs
+  // head-down swing between frames (the whole neck/head block repositions, not a 1px nudge).
   'eastafrica:plains-zebra': {
     pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806', t: '#1a1814' },
     frames: [
-      ['........e.e', '.......ldb.', '......ldbl.', 'lddbbddbbd.', '.ddbbddbbd.', 't..........', '.d.l..d.l..', '.d.l..d.l..'],
-      ['............', '............', '......ldbl..', 'lddbbddbbee.', '.ddbbddbbbd.', '.t..........', '.d.l..d.ld..', '.d.l..d.ld..'],
+      [
+        '..................dd..',
+        '.................ddbd.',
+        '................debbl.',
+        '...............dbbbb..',
+        '..............db.bbd..',
+        '.dbdbdbdbdbdbdb.bbd...',
+        '.dbdbdbdbdbdbdbbbbd...',
+        't.dbdbdbdbdbdbdbb.....',
+        '..d.b..d.b..d.b..d....',
+        '..d.b..d.b..d.b..d....',
+      ],
+      [
+        '.......................',
+        '.......................',
+        '..................dd...',
+        '.................ddbd..',
+        '................debbl..',
+        '.dbdbdbdbdbdbdb.dbbbb..',
+        '.dbdbdbdbdbdbdbdb.bbd..',
+        't.dbdbdbdbdbdbdbbbbd...',
+        '..d.b..d.b..d.b..dbb...',
+        '..d.b..d.b..d.b..d.....',
+      ],
     ] as const,
     young: [
-      ['.....ldb.', 'lddbbddb.', '.ddbbddb.', 't........', '.d.l..d.l'],
-      ['...........', '......ldbl.', 'lddbbddbee.', '.ddbbddbbd.', '.t.........'],
+      [
+        '............dd.',
+        '...........debl',
+        '..........dbbb.',
+        '.dbdbdbdb.bbd..',
+        '.dbdbdbdbbbd...',
+        't.dbdbdbdb.....',
+        '.d.b..d.b..d...',
+      ],
+      [
+        '................',
+        '............dd..',
+        '...........debl.',
+        '.dbdbdbd.dbbb...',
+        '.dbdbdbdbb.bbd..',
+        't.dbdbdbdbbbd...',
+        '.d.b..d.b..d....',
+      ],
     ] as const,
   },
   // Round 2: still read as a blob at the first fixed-up size — rounder, taller body mass this
@@ -1516,68 +1561,84 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // copied from each other and never actually varied when the neck was redrawn in round 16,
     // so there was truly nothing to animate regardless of the engine. Frame 1 now genuinely
     // differs: the head and the first two neck rows shift one column, a small head-turn.
-    // Round 18: "still looks weird" — five rounds of incremental tweaks to the same 9-row
-    // neck (which never got shorter, only re-angled) hadn't actually resolved it. Rebuilt
-    // properly this time rather than nudging again: a shorter neck (6 rows, was 9 — the old
-    // ratio against the 5-row body read as spindly and disproportionate regardless of how
-    // smooth any individual bend was), a single consistent diagonal lean instead of another
-    // multi-bend "S" (the S reads as a lumpy bent-pipe elbow at this resolution; a plain
-    // consistent lean is what actually looks like a graceful curve at this scale), and the
-    // body widened back out to match. Beak and legs from round 17 kept; head-turn animation
-    // rebuilt to match the new shorter neck.
-    pal: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc', k: '#3a3a3a', x: '#0a0a0a' },
+    // Round 19: "literally the three problem children keep causing problems" — five rounds of
+    // incremental tweaks hadn't landed, so the user supplied an actual reference image (a
+    // clean black-swan icon: a real triangular beak, a true sweeping neck curve, a broad dome
+    // body that widens quickly near the neck rather than tapering gradually, a pointed tail
+    // with a stepped wing-fold notch). Rebuilt against that reference directly — bigger
+    // canvas than any earlier attempt, so the curve has room to actually read as a curve
+    // instead of a diagonal line, and a proper wide triangular beak instead of a colour dot.
+    // Dropped the separate wing-crease patch and leg marks from earlier rounds — the
+    // reference doesn't have them, and the wing-fold notch at the tail now does that job.
+    pal: { b: '#1c1a20', o: '#d8814a' },
     frames: [
       [
-        '.......leee.',
-        '.......lxd..',
-        '......lld...',
-        '.....lld....',
-        '....lld.....',
-        '...lld......',
-        '..bbbbbbb...',
-        '.bbbbbbbbb..',
-        'bbbbbllbbbb.',
-        'bbbbbllbbbb.',
-        '.wwwwwwwww..',
-        '...kk..kk...',
+        '.......bb..........',
+        '......bbbb.........',
+        '......bbbb.........',
+        '.....bbbb..........',
+        '....oobbb..........',
+        '...ooo.bb..........',
+        '........bb.........',
+        '........bb.........',
+        '.......bbbb........',
+        '......bbbbbbb......',
+        '.....bbbbbbbbbb....',
+        '....bbbbbbbbbbbbb..',
+        '...bbbbbbbbbbbbbbb.',
+        '..bbbbbbbbbbbbbbbb.',
+        '.bbbbbbbbbbbbbbbbb.',
+        'bbbbbbbbbbbbbbbbbb.',
+        'bbbbbbbbbbbbbbbb.bb',
+        '.bbbbbbbbbbbbb...bb',
       ],
       [
-        '......leee..',
-        '......lxd...',
-        '.....lld....',
-        '.....lld....',
-        '....lld.....',
-        '...lld......',
-        '..bbbbbbb...',
-        '.bbbbbbbbb..',
-        'bbbbbllbbbb.',
-        'bbbbbllbbbb.',
-        '.wwwwwwwww..',
-        '...kk..kk...',
+        '......bb...........',
+        '.....bbbb..........',
+        '.....bbbb..........',
+        '....bbbb...........',
+        '...oobbb...........',
+        '..ooo.bb...........',
+        '........bb.........',
+        '........bb.........',
+        '.......bbbb........',
+        '......bbbbbbb......',
+        '.....bbbbbbbbbb....',
+        '....bbbbbbbbbbbbb..',
+        '...bbbbbbbbbbbbbbb.',
+        '..bbbbbbbbbbbbbbbb.',
+        '.bbbbbbbbbbbbbbbbb.',
+        'bbbbbbbbbbbbbbbbbb.',
+        'bbbbbbbbbbbbbbbb.bb',
+        '.bbbbbbbbbbbbb...bb',
       ],
     ] as const,
     young: [
       [
-        '....leee.',
-        '....lxd..',
-        '...lld...',
-        '..lld....',
-        '.lld.....',
-        'bbbbb....',
-        'bbllbbb..',
-        '.wwwwww..',
-        '..kk..kk.',
+        '....bb..........',
+        '...bbbb.........',
+        '..oobb..........',
+        '.ooo.bb.........',
+        '......bb........',
+        '......bbb.......',
+        '.....bbbbbb.....',
+        '....bbbbbbbbb...',
+        '...bbbbbbbbbbb..',
+        '..bbbbbbbbbbbb..',
+        '.bbbbbbbbbbbb.bb',
       ],
       [
-        '...leee..',
-        '...lxd...',
-        '..lld....',
-        '..lld....',
-        '.lld.....',
-        'bbbbb....',
-        'bbllbbb..',
-        '.wwwwww..',
-        '..kk..kk.',
+        '...bb...........',
+        '..bbbb..........',
+        '.oobb...........',
+        'ooo.bb..........',
+        '......bb........',
+        '......bbb.......',
+        '.....bbbbbb.....',
+        '....bbbbbbbbb...',
+        '...bbbbbbbbbbb..',
+        '..bbbbbbbbbbbb..',
+        '.bbbbbbbbbbbb.bb',
       ],
     ] as const,
   },
