@@ -1606,72 +1606,72 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // — previously a hard-cornered rectangle — is now a small tapered diamond instead.
     // Round 21: "you tell me if that looks like a swan" — it didn't: a dark triangle with a
     // notch cut in the top corner for a "neck", and the diamond wing patch read as a plus
-    // sign. Every round back to 11 kept the neck the SAME width as the body's own taper, so
-    // no matter how smooth any individual edge was, neck and body were always one continuous
-    // silhouette with nothing to tell them apart as two different parts of a bird. Rebuilt
-    // from scratch around that one idea: the neck is a genuine 1-2px-wide column, visibly
-    // thinner than the body at every row, with a real two-direction lean (out, then back) —
-    // not a single diagonal — so it reads as a curved stalk, and the body only begins at a
-    // distinct "shoulder" row where the silhouette jumps from the neck's own width straight to
-    // the body's, instead of growing into it gradually. Wing mark is now a small two-row
-    // diagonal stripe, not a symmetric diamond that reads as an unrelated plus-sign icon.
-    pal: { b: '#1c1a20', l: '#3a3742', o: '#d8814a', w: '#e8e4dc' },
+    // sign. Rebuilt from scratch around a thin neck distinct from the body — but that
+    // abandoned the user's own reference image from round 19 entirely to invent a new shape.
+    // Round 22: "that is not the shape of the reference i gave you, try again please." Went
+    // back to the exact round-19a data — built directly against that reference image (real
+    // triangular beak, sweeping neck curve, a dome body that blooms quickly, a stepped notch
+    // at the tail) before it was shrunk to fix "massive blob" and then redesigned twice more,
+    // drifting further from the reference each time. That 19-wide/18-tall shape was never
+    // wrong — only its SCALE was the problem. Downscaled it algorithmically (box-sampled,
+    // "any foreground pixel in the box survives") to 14-wide, in line with the rest of the
+    // bird roster, instead of redrawing freehand again, so this stays faithful to what was
+    // actually approved as the right shape rather than drifting on another hand pass.
+    pal: { b: '#1c1a20', o: '#d8814a' },
     frames: [
       [
-        '........bb.....',
-        '........bb.....',
-        '.......obb.....',
-        '.......lb......',
-        '......lb.......',
-        '......bb.......',
-        '.......b.......',
-        '.......b.......',
-        '.......b.......',
-        '....lbbbbbbb...',
-        '...lbbbbwbbbb..',
-        '..lbbbbwwbbbb..',
-        '.bbbbbbbbbbbbbb',
-        'bbbbbbbbbbbbbb.',
+        '.....bb.......',
+        '.....bbb......',
+        '....bbbb......',
+        '...oobb.......',
+        '..ooobb.......',
+        '......bb......',
+        '.....bbbb.....',
+        '....bbbbbbbb..',
+        '...bbbbbbbbbb.',
+        '..bbbbbbbbbbbb',
+        '.bbbbbbbbbbbbb',
+        'bbbbbbbbbbbbbb',
+        'bbbbbbbbbbbb.b',
       ],
       [
-        '.......bb......',
-        '.......bb......',
-        '......obb......',
-        '......lb.......',
-        '.....lb........',
-        '.....bb........',
-        '......b........',
-        '......b........',
-        '......b........',
-        '....lbbbbbbb...',
-        '...lbbbbwbbbb..',
-        '..lbbbbwwbbbb..',
-        '.bbbbbbbbbbbbbb',
-        'bbbbbbbbbbbbbb.',
+        '.....b........',
+        '....bbb.......',
+        '...bbbb.......',
+        '..oobb........',
+        '..oobb........',
+        '......bb......',
+        '.....bbbb.....',
+        '....bbbbbbbb..',
+        '...bbbbbbbbbb.',
+        '..bbbbbbbbbbbb',
+        '.bbbbbbbbbbbbb',
+        'bbbbbbbbbbbbbb',
+        'bbbbbbbbbbbb.b',
       ],
     ] as const,
     young: [
       [
-        '.....bb....',
-        '....obb....',
-        '....lb.....',
-        '...lb......',
-        '...b.......',
-        '...b.......',
-        '.lbbbbb....',
-        'lbbbwbbb...',
-        'bbbbbbbbb..',
+        '...bb......',
+        '..bbb......',
+        '..obb......',
+        '.oobb......',
+        '....bbb....',
+        '....bbbb...',
+        '...bbbbbb..',
+        '..bbbbbbbb.',
+        '.bbbbbbbbbb',
       ],
       [
-        '....bb.....',
-        '...obb.....',
-        '...lb......',
-        '..lb.......',
-        '..b........',
-        '..b........',
-        '.lbbbbb....',
-        'lbbbwbbb...',
-        'bbbbbbbbb..',
+        '..bb.......',
+        '..bbb......',
+        '.oob.......',
+        'ooobb......',
+        '....bbb....',
+        '....bbbb...',
+        '...bbbbbb..',
+        '..bbbbbbbb.',
+        '.bbbbbbbbbb',
       ],
     ] as const,
   },
