@@ -1149,3 +1149,47 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   neck; lengthened the splayed lower legs by two rows for a genuinely leggy stance). `tsc`/
   `vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`,
   pushed, republished.
+- **Round 20 — swan shading and a real ground/water dual-state, zebra's missing eye, and a
+  pond-reflection tint fix.** `australia:black-swan`: "you can use multiple colours for
+  shading to make the shape better, it needs legs for wandering and then another sprite for
+  swimming" — still flat 2-colour (black body, orange beak). Added a lighter highlight along
+  the neck/back's outer curve, a darker shadow along the underside, and the white wing-flash
+  black swans actually show at rest (a real trait the species once had in the very first baked
+  sprite, lost across redesigns). The water/swimming pose stays primary (matches the species'
+  own `zone: 'water'` and "glides slowly across open water" — no legs needed, same as the
+  beaver's water pose); the legs-for-wandering half of the request is a new `alt: { zone:
+  'ground', ... }` on the creature definition in `src/regions/australia/coastal.ts`, a genuine
+  standing pose with two visible legs, not a recolour — the exact same water/ground split
+  `canada:beaver` already uses, not a new pattern invented for this. `eastafrica:plains-zebra`:
+  "where is its eyes" — the deer-modelled rebuild inherited the template's own eye-less
+  convention (deer relies on highlight marks, not a dot). Added a real eye on the head-up
+  pose's own head row; for the head-down pose, where the head merges into the front of the
+  body row with no row of its own, recoloured the front-most stripe cell instead of adding a
+  new mark, since an eye dropped anywhere else in the alternating stripe pattern gets flanked
+  by same-colour neighbours and vanishes.
+  - **Pond reflections, a real investigation rather than a guess.** "i realised i dont like the
+    look of the ponds, the original reflections that are like the big water sat at the front of
+    some was better for shimmering, i meant true reflections of stuff behind it but if thats
+    too hard no worries." Set up a Playwright-driven render harness (`tools/harness/mf.ts`,
+    bundled with esbuild, served over a plain static server, not committed — same approach
+    this file's own history already used for the tooltip and region-placement work) and
+    screenshotted both a `hasWater` biome (the big lake, `AF.buildWater`/`AF.drawWater` in
+    the vendored engine) and a non-water biome with the `gappy` fixture (long study breaks,
+    which place small ponds) to compare them side by side rather than reasoning from the code
+    alone. The big lake's reflection was crisp — a genuinely legible mirrored treeline with
+    real colour variation. The small ponds' reflection, zoomed in, was a washed-out grey-tan
+    smear: technically a real pixel capture of whatever stood above the pond (`ponds.js`'s own
+    `AF.drawPond`, captured and mirrored the same way the lake does), but tinted toward the
+    water colour far more heavily (0.45, plus up to another 0.3 of depth-darkening) than the
+    lake's own (0.28 base tint). Brought both ratios down (0.45→0.22, 0.3→0.15) — re-screenshot
+    confirmed the mirrored trunks and canopy colour now actually read as a reflection instead
+    of flattening to a grey oval, without losing the water tint entirely. Small ponds will
+    still never look as dramatic as the big lake (they're a few pixels tall by nature), but
+    they now read as *a reflection*, which is what was asked for, rather than reverting to a
+    flat procedural shimmer.
+  - `patagonia:guanaco-steppe` was also re-flagged redo this round with no note, at a
+    byte-identical sprite to `patagonia:guanaco` (marked "keep" in the very same review pass) —
+    left untouched rather than guessed at, since there is nothing to change that the paired
+    entry doesn't already carry; worth a second look from the user directly.
+  - `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to
+    `vendor`, pushed, republished.
