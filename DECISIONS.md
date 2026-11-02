@@ -1193,3 +1193,17 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     entry doesn't already carry; worth a second look from the user directly.
   - `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to
     `vendor`, pushed, republished.
+- **Round 21 — smoothed the swan's neck, back and wings, shrunk the beak further.** "bit
+  better but too angular and beak is too large", then mid-fix: "the angular also means the
+  back and wings." Beak cut down to a single nub (was still a 5-wide bar inherited from
+  round 17). The neck's column shift was inconsistent — every two rows in most places but an
+  abrupt 1-row jump around the old larger beak — and that inconsistency, not the diagonal
+  itself, is what actually read as jagged; rebuilt as a true 1-column-per-row 45° diagonal,
+  the smoothest a diagonal reads at this resolution. The body had the identical problem one
+  level up: it jumped from the narrow neck to its full width in one or two big steps. Rebuilt
+  as a symmetric cone that grows by exactly one column on each side per row, with no jumps,
+  and the wing-flash patch — a hard-cornered rectangle before — is now a small tapered
+  diamond. Applied identically to both the water/swimming pose (`handAuthored.ts`) and the
+  ground/wandering `alt` pose (`coastal.ts`) added last round, so the two states stay visually
+  consistent with each other rather than drifting apart. `tsc`/`vitest` (153/153)/`lint`
+  clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed, republished.
