@@ -42,6 +42,24 @@ import { landmarkForBiome } from './mfLandmark';
 import { buildCreatureVisitors } from './mfCreatures';
 import type { MfCreatureSprite } from './mfCreatures';
 
+/** Round 26: "the random birds... should be replaced with the identified bird for the
+ * ecosystem" — the vendored ambience's own background flock (`effects/ambience.js`'s
+ * `part('birds')`) draws an abstract flat v/dash mark, the same for every biome, with no
+ * idea any of this project's own species data exists. Many biomes already give a creature a
+ * perched/flying dual state (`Creature.alt.zone === 'sky'`) for exactly this situation — a
+ * bird that's usually perched but sometimes shown flying. Picking the first one here gives
+ * the background flock a real, identified species' sprite instead of the generic mark,
+ * wherever one exists; biomes with no such bird keep the original abstract flock untouched
+ * (there's no species to put there). The *named* visitor's own perched/flying alternation is
+ * unrelated and untouched by this — this only reskins the decorative background flock. */
+function birdSpriteForBiome(biome: Biome | undefined): MfCreatureSprite | undefined {
+  if (!biome) return undefined;
+  for (const creature of biome.creatures) {
+    if (creature.alt?.zone === 'sky') return { pal: creature.alt.sprite.pal, frames: creature.alt.sprite.frames };
+  }
+  return undefined;
+}
+
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
  * flat per-seed roll, since the vendored engine has no concept of Memory Garden's own
@@ -161,6 +179,10 @@ export interface MfMood {
   landmark: string;
   moon: number;
   source: string;
+  /** The current biome's own perched/flying bird (see `birdSpriteForBiome` above), passed
+   * through `theme.js` to `effects/ambience.js`'s background flock. Undefined when the biome
+   * has no such species — the flock then keeps the vendored engine's own abstract mark. */
+  birdSprite?: MfCreatureSprite;
 }
 
 /** `presets.py`'s first preset, "Golden hour by the lake" (`envs/natural.json`'s own
@@ -172,10 +194,16 @@ export interface MfMood {
  * always being Golden LAKE regardless of what's picked. `landmark` follows the biome the
  * same way (`mfLandmark.ts`) — `'none'` for every biome without one defining snow-capped
  * peak of its own. */
-export function goldenHourMood(moonPhase = 0, special = 'natural', landscape: LandscapeKey = 'lake', landmark = 'none'): MfMood {
+export function goldenHourMood(
+  moonPhase = 0,
+  special = 'natural',
+  landscape: LandscapeKey = 'lake',
+  landmark = 'none',
+  birdSprite?: MfCreatureSprite,
+): MfMood {
   return {
     time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
-    environment: special, landscape, landmark,
+    environment: special, landscape, landmark, birdSprite,
     moon: Math.round(moonPhase * 1000) / 1000, source: 'preset',
   };
 }
@@ -263,7 +291,7 @@ export function buildMfPayload(grove: Grove, roster: CreatureRoster, opts: MfAda
     visitors,
     creatureSprites,
     anniversaries: [],
-    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark),
+    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark, birdSpriteForBiome(opts.biome)),
     journal: '',
     events: [],
     merged: null,

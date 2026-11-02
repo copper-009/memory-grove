@@ -422,4 +422,12 @@ AF.drawVisitors = function (g, env, t) {
     env.visitorBoxes.push({ v, x0: Math.round(at.x) - drawnHalf, y0: fy - frame.length * big, x1: Math.round(at.x) + drawnHalf, y1: fy });
   });
 };
+
+// Memory Garden change: `effects/ambience.js`'s background flock wants to paint a real
+// species' sprite (Round 26 — see `mfAdapter.ts`'s `birdSpriteForBiome`) instead of its own
+// abstract mark, but `paintSprite`/`scaleAnchored` above are private to this file's own
+// closure, the same way every vendored file is its own IIFE. Exposed rather than
+// reimplemented a second time in ambience.js.
+AF.paintSprite = paintSprite;
+AF.scaleAnchored = scaleAnchored;
 })();

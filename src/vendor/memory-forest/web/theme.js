@@ -53,6 +53,11 @@ AF.theme = function (mood, stats, events) {
   if (th.orb) th.orb.phase = mood.moon;
   th.tint = th.tint || null; th.tintAmt = th.tintAmt || 0;
   th.flies = 0; th.birds = 0; th.stars = th.stars || 0;
+  // Memory Garden change: the current biome's own perched/flying bird (Round 26 —
+  // `mfAdapter.ts`'s `birdSpriteForBiome`), passed through for `effects/ambience.js`'s
+  // background flock to paint instead of its own abstract mark. `undefined` (most biomes
+  // have no bird with a flying alt state) leaves the flock exactly as it always drew.
+  th.birdSprite = mood.birdSprite;
   const calm = w === 'clear' || w === 'cloudy' || w === 'after_rain';
   const clearSky = w === 'clear' || w === 'after_rain';
   if (calm && (night || mood.time === 'dusk')) th.flies = clamp(stats.streak || 0, 0, MAX_FLIES);

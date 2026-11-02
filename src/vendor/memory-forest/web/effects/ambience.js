@@ -68,15 +68,31 @@ part('flies', {
   },
 });
 
+// Memory Garden change: the real identified bird (`th.birdSprite`, Round 26) is drawn at
+// this fixed fraction of its native size — a background flock member, meant to read as a
+// small distant silhouette, smaller than a focal flyer (`visitors.js`'s own FLYER_SCALE is
+// 0.7 for exactly one creature circling prominently; a flock of several is busier, so stays
+// smaller to avoid cluttering the sky with several bird-sized marks at once).
+const BIRD_SPRITE_SCALE = 0.55;
+
 part('birds', {
   init(st, { th, A, W, H, u }) {
     for (let i = 0; i < (th.birds || 0); i++) st.birds.push({ x: A() * W, y: H * (0.1 + A() * 0.2), v: (3 + A() * 3) * u, ph: A() * 6 });
   },
   front(g, env, t, st) {
-    const th = env.theme, { W, u } = env;
+    const th = env.theme, { W, u } = env, spr = th.birdSprite;
     g.fillStyle = st.C.bird || th.birdC || '#3a3a4a';
     for (const b of st.birds) {
       const x = Math.round(((b.x + t * AF.u.trip(b.v, W + 20)) % (W + 20)) - 10), y = Math.round(b.y + Math.sin(t * AF.u.cyc(0.6) + b.ph) * 2 * u), up = Math.sin(t * AF.u.cyc(5) + b.ph) > 0;
+      if (spr && AF.paintSprite && AF.scaleAnchored) {
+        // the identified species' own two frames stand in for the up/down wing-beat this
+        // part already alternated on, so it still flaps at the same cadence as before.
+        const frame = spr.frames[up ? 0 : 1], flip = Math.cos(t * AF.u.cyc(0.6)) < 0;
+        AF.scaleAnchored(g, BIRD_SPRITE_SCALE, x, y, () => {
+          AF.paintSprite(g, frame, x - Math.round(frame[0].length / 2), y - Math.round(frame.length / 2), spr.pal, c => c, flip);
+        });
+        continue;
+      }
       if (up) { g.fillRect(x, y, 1, 1); g.fillRect(x - 1, y - 1, 1, 1); g.fillRect(x + 1, y - 1, 1, 1); g.fillRect(x - 2, y - 2, 1, 1); g.fillRect(x + 2, y - 2, 1, 1); }
       else g.fillRect(x - 1, y, 3, 1);
     }
