@@ -103,12 +103,15 @@ export const coastalHeath: Biome = {
       // swans do come up onto the bank to graze, and the water pose (in handAuthored.ts) has
       // no legs at all, same reasoning as the beaver's water/ground pair. A genuine standing
       // pose with two visible legs, not a recolour of the swimming body.
+      // Round 20: kept in sync with the water pose's own "too angular" fix in
+      // handAuthored.ts — same smaller beak, same smooth single-direction neck diagonal, same
+      // symmetric cone body and tapered-diamond wing patch, legs appended underneath.
       alt: { zone: 'ground', sprite: { pal: { b: '#1c1a20', l: '#3a3742', d: '#0e0d12', o: '#d8814a', w: '#e8e4dc' }, frames: [
-        ['......bb.....', '.....lbbb....', '....oolb.....', '...ooo.bb....', '.......bb....', '......lbb....', '.....lbbbb...', '....lbbbbbb..', '...lbbbwwbb..', '..lbbbwwwbb..', '.lbbbbbbbbb..', '...d.....d...', '...d.....d...'],
-        ['......bb.....', '.....lbbb....', '....oolb.....', '...ooo.bb....', '.......bb....', '......lbb....', '.....lbbbb...', '....lbbbbbb..', '...lbbbwwbb..', '..lbbbwwwbb..', '.lbbbbbbbbb..', '..d.....d....', '...d.....d...'],
+        ['.......bb...', '......obb...', '.....lbb....', '....lbb.....', '...lbb......', '...bb.......', '..lbbbb.....', '.lbbbbbb....', 'lbbbbbbbb...', 'lbbbbwbbb...', 'bbbbwwwbb...', '...d.....d..', '...d.....d..'],
+        ['.......bb...', '......obb...', '.....lbb....', '....lbb.....', '...lbb......', '...bb.......', '..lbbbb.....', '.lbbbbbb....', 'lbbbbbbbb...', 'lbbbbwbbb...', 'bbbbwwwbb...', '..d.....d...', '...d.....d..'],
       ] as const, young: [
-        ['....bb......', '...lbbb.....', '..oolb......', '.ooo.bb.....', '.....bb.....', '....lbb.....', '...lbbbb....', '..lbbbbbb...', '.lbbbbbbbb..', 'lbbbbbbbbb..', '..d......d..'],
-        ['....bb......', '...lbbb.....', '..oolb......', '.ooo.bb.....', '.....bb.....', '....lbb.....', '...lbbbb....', '..lbbbbbb...', '.lbbbbbbbb..', 'lbbbbbbbbb..', '.d......d...'],
+        ['....bb......', '...obb......', '..lbb.......', '.lbb........', 'lbbb........', 'bbbbb.......', 'bbbwbb......', 'bwwwbb......', '.d......d...'],
+        ['....bb......', '...obb......', '..lbb.......', '.lbb........', 'lbbb........', 'bbbbb.......', 'bbbwbb......', 'bwwwbb......', 'd......d....'],
       ] as const } },
     },
     {
