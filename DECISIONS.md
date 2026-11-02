@@ -1207,3 +1207,24 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   ground/wandering `alt` pose (`coastal.ts`) added last round, so the two states stay visually
   consistent with each other rather than drifting apart. `tsc`/`vitest` (153/153)/`lint`
   clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed, republished.
+- **Round 22 — rebuilt the swan from scratch: a real thin curved neck, a distinct shoulder, no
+  more plus-sign wing mark.** "you tell me if that looks like a swan" (with a screenshot
+  attached) — it didn't: a dark triangle with a notch cut in the top corner standing in for a
+  neck, and the tapered-diamond wing patch read as an unrelated plus-sign icon. Traced the
+  root cause back across every round since 11: the neck was always drawn the SAME width as the
+  body's own taper, only thinner because it happened to be near the body's narrow top end — no
+  matter how smooth any individual edge was, neck and body were one continuous silhouette with
+  nothing to tell a viewer's eye they were two different parts of a bird. Rebuilt around one
+  idea instead of another edge tweak: the neck is now a genuine 1-2px-wide column, visibly
+  thinner than the body at every single row, with a real two-direction lean (out, then back)
+  rather than one diagonal, so it reads as a curved stalk; the body only begins at a distinct
+  "shoulder" row where the silhouette jumps straight from the neck's own width to the body's,
+  instead of growing into it gradually the way every earlier attempt did. The wing mark is now
+  a small two-row diagonal stripe, not a symmetric diamond. Verified against the actual
+  rendered gallery this time (a Playwright screenshot of the real `review/gallery.html`, not
+  just the standalone preview tool used every prior round) before shipping — that gap between
+  "looks right in an isolated preview" and "looks right in the gallery's own render" is exactly
+  what let two rounds in a row ship something that plainly didn't read as a swan. Applied to
+  both the water/swimming pose (`handAuthored.ts`) and the ground/wandering `alt` pose
+  (`coastal.ts`). `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures),
+  committed to `vendor`, pushed, republished.
