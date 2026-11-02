@@ -60,6 +60,21 @@ function birdSpriteForBiome(biome: Biome | undefined): MfCreatureSprite | undefi
   return undefined;
 }
 
+/** Round 26: "they should still have snow on them if they are [evergreens]" — every biome
+ * genuinely snow-capped (alpine high country, southern alps, rocky-alpine, high Himalaya,
+ * fjord plateau, taiga, northern snow country) already declares `ambience: ['snow', ...]`,
+ * but nothing ever read `Biome.ambience` anywhere — a fully wired-looking field that was
+ * actually dead data. `th.snow` (`theme.js`) turns out to be a genuinely light touch when
+ * set on its own, not the full blizzard transformation: crown-top dusting
+ * (`engines/pixel/trees.js`), snow-shade under a tree (`engines/pixel/ground.js`), grey
+ * reeds at a pond's edge (`ponds.js`) — it's the *weather* branch (`w === 'snow'`) that also
+ * overhauls the sky/ground/water colours, and this doesn't touch that at all. So a
+ * permanently snow-capped biome gets its crowns dusted without the golden-hour scene being
+ * forced into a blizzard it never asked for. */
+function biomeIsSnowy(biome: Biome | undefined): boolean {
+  return Boolean(biome?.ambience?.includes('snow'));
+}
+
 /** `forest_data.py`'s `make_tree`'s shape: what `layout.js`/`engines/pixel/trees.js` read
  * from each tree. `kind` (0 round, 1 pine) is derived the same way the original does — a
  * flat per-seed roll, since the vendored engine has no concept of Memory Garden's own
@@ -183,6 +198,9 @@ export interface MfMood {
    * through `theme.js` to `effects/ambience.js`'s background flock. Undefined when the biome
    * has no such species — the flock then keeps the vendored engine's own abstract mark. */
   birdSprite?: MfCreatureSprite;
+  /** Whether the current biome is permanently snow-capped (see `biomeIsSnowy` above) —
+   * passed through `theme.js` to set `th.snow` regardless of weather. */
+  snow: boolean;
 }
 
 /** `presets.py`'s first preset, "Golden hour by the lake" (`envs/natural.json`'s own
@@ -200,10 +218,11 @@ export function goldenHourMood(
   landscape: LandscapeKey = 'lake',
   landmark = 'none',
   birdSprite?: MfCreatureSprite,
+  snow = false,
 ): MfMood {
   return {
     time: 'golden_hour', clock: false, weather: 'clear', special, wind: false,
-    environment: special, landscape, landmark, birdSprite,
+    environment: special, landscape, landmark, birdSprite, snow,
     moon: Math.round(moonPhase * 1000) / 1000, source: 'preset',
   };
 }
@@ -291,7 +310,7 @@ export function buildMfPayload(grove: Grove, roster: CreatureRoster, opts: MfAda
     visitors,
     creatureSprites,
     anniversaries: [],
-    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark, birdSpriteForBiome(opts.biome)),
+    mood: goldenHourMood(opts.moonPhase, envForBiome(opts.biomeKey) ?? 'natural', landscape, landmark, birdSpriteForBiome(opts.biome), biomeIsSnowy(opts.biome)),
     journal: '',
     events: [],
     merged: null,

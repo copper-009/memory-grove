@@ -58,6 +58,14 @@ AF.theme = function (mood, stats, events) {
   // background flock to paint instead of its own abstract mark. `undefined` (most biomes
   // have no bird with a flying alt state) leaves the flock exactly as it always drew.
   th.birdSprite = mood.birdSprite;
+  // Memory Garden change: a permanently snow-capped biome (Round 26 — mfAdapter.ts's
+  // biomeIsSnowy, from the biome's own already-declared `ambience: ['snow', ...]`, never
+  // read anywhere before this) gets its crowns dusted regardless of weather — `th.snow` on
+  // its own is a light touch (crown-top dusting, snow-shade under a tree, grey pond reeds),
+  // not the full sky/ground/water blizzard overhaul the `w === 'snow'` weather branch below
+  // also does, so this doesn't fight with weather ever being wired up for real: that branch
+  // still runs after this and simply confirms th.snow = true alongside everything else it does.
+  th.snow = Boolean(mood.snow);
   const calm = w === 'clear' || w === 'cloudy' || w === 'after_rain';
   const clearSky = w === 'clear' || w === 'after_rain';
   if (calm && (night || mood.time === 'dusk')) th.flies = clamp(stats.streak || 0, 0, MAX_FLIES);
