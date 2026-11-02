@@ -57,7 +57,7 @@ AF.mount = function (root, data, opts) {
   hookCog(root, data);
 
   // the whole forest's layout, and the one being drawn: it, or a visit's close-up (web/visit.js)
-  const base = AF.layout(data.trees);
+  const base = AF.layout(data.trees, { sparse: data.sparse });
   let layout = base;
   // with animations off the forest is one still moment: every redraw uses this time
   const stillAt = performance.now();

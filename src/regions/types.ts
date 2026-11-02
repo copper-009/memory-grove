@@ -229,6 +229,18 @@ export interface Biome {
    * none, rather than every biome getting the same generic lake backdrop.
    */
   hasWater?: boolean;
+  /**
+   * Round 26: "this is what the outback australia should look like... currently is far too
+   * dense with trees despite being largely desert in some places." Genuinely sparse,
+   * open-ground biomes (true desert/semi-desert, not just "a bit dry") — gates the
+   * open-ground spacing in `src/vendor/memory-forest/web/layout.js`'s `AF.layout` (a real
+   * gap between plantings rather than every slot in the grid filled edge to edge), so the
+   * same tree count a lush biome would pack solid instead reads as scattered growth across
+   * open ground. Not the same signal as a dry *ground colour* — several biomes look parched
+   * without being this sparse; set it only where the real place genuinely has bare ground
+   * between plants most of the time, not just a dry-toned canopy.
+   */
+  sparse?: boolean;
   plants: PlantSpecies[];
   /** Exactly five, one per unlock slot. */
   creatures: Creature[];

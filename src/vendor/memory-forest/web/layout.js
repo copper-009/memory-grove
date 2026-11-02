@@ -44,8 +44,31 @@ AF.DEEP = { crown: 10, step: 8, rise: 1.5 };
 /* how deep in the haze deep-forest band k stands (0 is the nearest), never quite gone */
 AF.deepHaze = (th, k) => Math.min(0.92, (th.hzStep || 0.12) * (2.6 + k * 1.7));
 
+// Memory Garden change: a genuinely sparse biome (Round 26 — `Biome.sparse`, e.g. the
+// Outback: "far too dense with trees despite being largely desert in some places") opens a
+// real gap between plantings some of the time instead of every grid slot being filled edge
+// to edge, which is all this layout ever did before — there was no sparsity concept at all,
+// every biome packed the same tree count into the same tight grid regardless of what kind of
+// place it actually was.
+//
+// SPARSE_SKIP_CHANCE/MIN/MAX is how often, and how far, a non-pond tree leaves empty cells
+// behind it; ponds are unaffected (`fits`/`crowded` below just see more free cells to choose
+// from, never fewer). Skipping cells alone only pushes the *row count* up (the same number of
+// columns still has to fit more total cells somewhere) — and more rows packed into the same
+// fixed vertical band between the horizon and the ground just interleaves them, hiding any
+// horizontal gap behind the next row's crowns. SPARSE_ROW_BOOST counters that by widening
+// perRow itself for a sparse biome, up to SPARSE_ROW_MAX/_BIG instead of the usual
+// ROW_MAX/_BIG — more, narrower columns absorb the skipped cells without needing extra rows,
+// so the row count stays close to what a packed forest of the same size would need, but the
+// *placed* trees within each row end up several columns apart: real open ground between them,
+// not just a taller stack of still-touching rows.
+const SPARSE_SKIP_CHANCE = 0.55, SPARSE_SKIP_MIN = 1, SPARSE_SKIP_MAX = 3;
+const SPARSE_ROW_BOOST = 1.8, SPARSE_ROW_MAX = 60, SPARSE_ROW_MAX_BIG = 90;
+
 /* ---------- layout: one slot per tree, oldest at the back ---------- */
-AF.layout = function (trees) {
+AF.layout = function (trees, opts) {
+  const sparse = Boolean(opts && opts.sparse);
+  const sparseR = rng(0x5ea5e);
   const items = [];
   trees.forEach((t, i) => {
     if (t.gap) {
@@ -54,7 +77,11 @@ AF.layout = function (trees) {
     }
     items.push(Object.assign({}, t, { index: i, variant: t.seed % TREE_VARIANTS }));
   });
-  const n = items.length, perRow = clamp(Math.round(Math.sqrt(n) * ROW_SPREAD), ROW_MIN, n > BIG_FOREST_ITEMS ? ROW_MAX_BIG : ROW_MAX);
+  const n = items.length;
+  const rowMax = sparse
+    ? (n > BIG_FOREST_ITEMS ? SPARSE_ROW_MAX_BIG : SPARSE_ROW_MAX)
+    : (n > BIG_FOREST_ITEMS ? ROW_MAX_BIG : ROW_MAX);
+  const perRow = clamp(Math.round(Math.sqrt(n) * ROW_SPREAD * (sparse ? SPARSE_ROW_BOOST : 1)), ROW_MIN, rowMax);
   // ponds never split across rows and keep the two cells in front clear, so they stay visible
   const reserved = new Set(), water = new Set(); let cell = 0;
   const free = c => { while (reserved.has(c)) c++; return c; };
@@ -101,7 +128,14 @@ AF.layout = function (trees) {
   for (const unit of units) {
     tryWaiting();
     cell = free(cell);
-    if (!unit[0].pond) put(unit[0]);
+    if (!unit[0].pond) {
+      put(unit[0]);
+      // leave 1-2 cells empty behind this tree, some of the time, so the grid reads as
+      // scattered plantings with real open ground rather than a packed canopy wall
+      if (sparse && sparseR() < SPARSE_SKIP_CHANCE) {
+        cell += SPARSE_SKIP_MIN + Math.floor(sparseR() * (SPARSE_SKIP_MAX - SPARSE_SKIP_MIN + 1));
+      }
+    }
     else if (fits(cell, unit.length)) unit.forEach(put);
     else waiting.push(unit);
   }

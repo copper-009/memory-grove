@@ -260,6 +260,10 @@ export interface MfPayload {
    * `GroveSettings.animate`'s own `'on' | 'off' | 'system'` shape (`state.py`'s
    * `ANIMATION_VALUES` maps those same three strings to `true`/`false`/`'system'`). */
   animations: boolean | 'system';
+  /** The current biome's own `Biome.sparse` (Round 26) — `core.js` passes this to
+   * `AF.layout` to open real gaps between plantings instead of packing every slot edge to
+   * edge. `false` for every biome without the flag, same layout as always. */
+  sparse: boolean;
 }
 
 export interface MfAdapterOptions {
@@ -317,6 +321,7 @@ export function buildMfPayload(grove: Grove, roster: CreatureRoster, opts: MfAda
     forestSeed: grove.seed,
     dayNumber: grove.today,
     testForest: false,
+    sparse: Boolean(opts.biome?.sparse),
     animations: animate === 'system' ? 'system' : animate === 'on',
     tooltips: true,
     zoom: false,

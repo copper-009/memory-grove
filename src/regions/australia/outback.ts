@@ -13,6 +13,9 @@ export const outback: Biome = {
   landform: 'monolith',
   ground: ['#b06a42', '#9a5433', '#c08a52'],
   ambience: ['heatShimmer', 'passingFlock'],
+  // Round 26: "far too dense with trees despite being largely desert in some places" — real
+  // open ground between scattered desert oaks and ghost gums, not a packed canopy wall.
+  sparse: true,
 
   plants: [
     {
