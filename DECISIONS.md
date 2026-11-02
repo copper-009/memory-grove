@@ -1031,3 +1031,94 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
     sky"), plus a toolbar filter to the 21 (now considerably more) creatures that have one.
   - `tsc`/`vitest` (153/153)/`lint` clean throughout. Gallery rebuilt (130 creatures),
     committed to `vendor`, pushed, republished.
+- **Round 16 — fixed every re-flagged note, caught a real sprite-width validation bug.**
+  Pulled the latest review decisions again rather than assuming round 15 had settled
+  everything. `madagascar:fossa` ("no the thing out the front under its chin" — a second,
+  separate alignment bug from the ear fix: the face row overhung the head row directly above
+  it, shifted flush). `australia:black-swan` ("too tubby and the neck is very angular instead
+  of curved" — round 14's "curve" was one sharp zigzag reversal, not a curve; rebuilt genuinely
+  gradual, body tapering in three steps instead of jumping straight to its widest point).
+  `australia:koala` ("still a bit too blobby" — a narrower neck row to separate head from
+  body, and a paw row that actually sticks out past the body's edge). `australia:wombat`
+  ("lost its tubby-ness" — tapered top/bottom edges replace the flat rectangular body for a
+  real barrel cross-section). `eastafrica:plains-zebra` ("now the head is too big" — round 15's
+  stripe-density fix had widened the head rows too; pulled back down, dense striping kept on
+  the body only). `patagonia:guanaco`/`guanaco-steppe` ("legs glitch weird instead of head
+  animation" — leg-stride offset replaced with a blink/ear-twitch, legs now identical between
+  frames). Caught a real bug applying the koala fix: the sprite-width validator
+  (`src/regions/validate.test.ts`, already in the test suite) requires every row in a frame to
+  be the same width — the new paw row was 9 wide against the rest at 8, and vitest failed on
+  it immediately. Separately fixed `nepal:himalayan-monal` off an old "keep"-item note a
+  redo-only scan had missed ("give it a bit more of a tail, it doesn't even look like a bird"
+  — rebuilt on the bird family's head-cap/body/belly/tail shape, its real field marks as
+  bands instead of scattered flecks), and cleaned up two stale orphaned decisions
+  (`norway:elg-fjell`, `norway:fjellrev-forest`) that match no creature in current region data.
+  `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed, pushed,
+  republished.
+- **Round 17 — real beak + real animation for the swan, cleaner zebra stripes, a proper
+  guanaco grazing dip, fossa's last stray mark.** `australia:black-swan` ("there aint no beak
+  and its not animated" — both true: the beak was a single pixel buried in the head
+  silhouette, widened to a real 3-wide bar with its own eye dot; frame 0/frame 1 were
+  byte-identical, never varied when the neck was redrawn in round 16, so a head-turn shift was
+  added). `australia:long-necked-turtle` ("no animation" — the only prior difference was a
+  single leg pixel; animated the neck itself instead, its own signature trait, with a visible
+  head turn). `eastafrica:plains-zebra` ("stripes are still weird and no animation" —
+  single-pixel alternation read as noise, rebuilt as genuine 2px bands; a real tail added,
+  swishing between frames per its own behaviour text). `patagonia:guanaco`/`guanaco-steppe`
+  ("now the animation is just the horns blinking in and out instead of the head going down
+  like other deer" — built a genuine head-down grazing dip purpose-built for this body, not
+  copied from the deer template that caused the original glitch). `madagascar:fossa` ("the
+  thing out the front under its chin is still there" — a second, different mark from the one
+  fixed last round: a stray highlight inherited from the vendored fox sprite's own white
+  tail-tip, never a real fossa trait; removed outright). The user then corrected the fossa fix
+  directly — "the fossa mark is a dark mark at the front... a dark slightly diagonally down
+  mark near its chin" — the wrong (light) mark had been removed; the real culprit was a
+  separate dark zigzag disconnected from the head, past its own column span. Checked it
+  against the explicitly "confirmed" sibling this shape is built from (`nepal:bengal-tiger`,
+  same template, same provenance comment) — no equivalent mark there at all, confirming it was
+  fossa-specific cruft, not a real feature. Removed in a follow-up commit. Both rounds caught
+  real row-width mismatches via the sprite-width validator before committing (guanaco young
+  frames, fossa's adult frame). `tsc`/`vitest` (153/153)/`lint` clean throughout. Gallery
+  rebuilt (130 creatures), committed, pushed, republished.
+- **Round 18 — swan rebuilt shorter/simpler, stripe/head animation for the zebra, nose motion
+  for the guanaco, the whole rodent family animated.** `australia:black-swan` ("still looks
+  weird" after five rounds of small nudges to the same 9-row neck — stepped back and rebuilt
+  rather than nudging again: neck shortened to 6 rows, the multi-bend "S" replaced with a
+  single consistent diagonal lean that reads as graceful at this resolution where the S read
+  as a bent-pipe elbow). `eastafrica:plains-zebra` ("stripes needs to be more stripy and
+  there's no animation" — the tail-swish was too subtle, and the species is graze-hosted so it
+  defaults to its second frame almost all the time anyway; replaced with a real head-up/
+  head-down motion, its own behaviour text naming it directly — "head rising often to watch").
+  `patagonia:guanaco`/`guanaco-steppe` ("the head's going down but the nose doesn't move" —
+  the eye marks were doing double duty as the only thing near the muzzle; added a dedicated
+  dark nose mark, separate from the eye, travelling from near the face down to ground level
+  ahead of the body). `canada:hoary-marmot`, `norway:ekorn`, `japan:ezo-momonga` ("no
+  animation", reported on ekorn — which shares this exact shape with the other two, so the
+  whole small-rodent family had the same bug: frame 0/frame 1 were byte-identical, inherited
+  from when hosted creatures were painted once and never redrawn live. The tail-tip now drops
+  out of the topmost row between frames, plus a blink). `nepal:red-panda` ("no animation" —
+  still baked, with frames differing by a single leg pixel; given a real hand-authored second
+  state instead, ears dipping and the eye closing, matching its own behaviour — "curls asleep
+  along a branch" — rather than a walk cycle it doesn't do). `tsc`/`vitest` (153/153)/`lint`
+  clean. Gallery rebuilt (130 creatures), committed, pushed, republished.
+- **Round 19 — rebuilt the black swan from a reference image, rebuilt the zebra on a bigger
+  canvas.** "literally the three problem children keep causing problems ... use this a basis
+  for the swan and just fix up the zebra please." Five rounds of incremental tweaks to the
+  swan's same fundamental structure (rounds 11, 14, 16, 17, 18) never landed, so the user
+  supplied an actual reference image — a clean black-swan icon with a substantial triangular
+  beak, a true sweeping neck curve (lean left near the head, sweep right into the body), and a
+  broad dome body that blooms quickly near the neck rather than tapering gradually, ending in
+  a pointed tail with a stepped wing-fold notch. Rebuilt directly against that reference on a
+  much bigger canvas (19-wide adult, up from the 18-row/narrow designs every prior round was
+  still cramped into) so the curve has room to actually read as a curve; dropped the
+  eye/leg/wing-crease marks from every earlier round entirely, since the reference has none of
+  them and the wing-fold notch at the tail now does that silhouette work on its own.
+  `eastafrica:plains-zebra`: the old 12-wide canvas never had room for the body to read as a
+  horse shape or for stripes to read as real bands rather than pixel noise, regardless of how
+  many rounds of stripe-density tweaks it got. Rebuilt on the same bigger-canvas principle as
+  the swan — a proper head with ear and muzzle highlight, dense 1-wide stripe bands running
+  the full body and onto all four legs, and a bolder head-up/head-down swing (the whole
+  neck/head block repositions between frames, not a 1px nudge) matching its own "head rising
+  often to watch" behaviour text. Both row-width-validated via the sprite-width checker
+  (`vitest`) before committing. `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130
+  creatures), committed to `vendor`, pushed, republished.
