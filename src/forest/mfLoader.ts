@@ -47,14 +47,39 @@ declare global {
 let loaded: Promise<void> | null = null;
 const sceneryLoaded = new Set<string>();
 
+/** Memory Garden fix: these are plain `<script src="vendor/layout.js">` tags with a stable,
+ * unhashed URL — unlike a webpack/Vite-built bundle, which gets a fresh filename every
+ * build and so cache-busts itself for free. A long-lived host (a packaged desktop app's own
+ * embedded server, say) can keep serving a page whose browser cache still holds yesterday's
+ * `layout.js` under that same URL, even after the file on disk has genuinely changed and a
+ * `Cache-Control` header asked it to revalidate — some cache implementations just don't.
+ * One timestamp per page load, appended to every vendor URL below, makes that moot: the URL
+ * itself is different each time the page loads, so there is nothing to find questionably
+ * cached. These are a handful of small files loaded once per page, not a hot path, so there
+ * is no real cost to never reusing a cached copy. */
+const SESSION_BUST = String(Date.now());
+const bust = (url: string): string => url + (url.includes('?') ? '&' : '?') + 'v=' + SESSION_BUST;
+
 function loadScript(src: string): Promise<void> {
   return new Promise((resolvePromise, reject) => {
     const el = document.createElement('script');
-    el.src = src;
+    el.src = bust(src);
     el.onload = () => resolvePromise();
     el.onerror = () => reject(new Error(`Memory Forest engine script failed to load: ${src}`));
     document.head.appendChild(el);
   });
+}
+
+/** Same cache-busting as `loadScript`, for the engine's own stylesheet (`forest.css`) —
+ * call once, early, instead of a static `<link>` tag (which can't carry a per-load value). */
+export function loadMfStyles(): void {
+  const href = bust(`${vendorBase()}vendor/forest.css`);
+  if (document.querySelector(`link[data-mf-styles]`)) return;
+  const el = document.createElement('link');
+  el.rel = 'stylesheet';
+  el.href = href;
+  el.setAttribute('data-mf-styles', '1');
+  document.head.appendChild(el);
 }
 
 /** The base path scripts are served from — wherever this bundle's own assets sit, since
