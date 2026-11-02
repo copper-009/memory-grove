@@ -1609,69 +1609,95 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // sign. Rebuilt from scratch around a thin neck distinct from the body — but that
     // abandoned the user's own reference image from round 19 entirely to invent a new shape.
     // Round 22: "that is not the shape of the reference i gave you, try again please." Went
-    // back to the exact round-19a data — built directly against that reference image (real
-    // triangular beak, sweeping neck curve, a dome body that blooms quickly, a stepped notch
-    // at the tail) before it was shrunk to fix "massive blob" and then redesigned twice more,
-    // drifting further from the reference each time. That 19-wide/18-tall shape was never
-    // wrong — only its SCALE was the problem. Downscaled it algorithmically (box-sampled,
-    // "any foreground pixel in the box survives") to 14-wide, in line with the rest of the
-    // bird roster, instead of redrawing freehand again, so this stays faithful to what was
-    // actually approved as the right shape rather than drifting on another hand pass.
-    pal: { b: '#1c1a20', o: '#d8814a' },
+    // back to the exact round-19a data on the theory that only its scale had been wrong.
+    // Round 23: "no that shape was wrong, there was no shading, and it didnt follow the
+    // reference exactly. it was too big but it was also too blobby." Round 19a's shape was a
+    // flat 2-colour silhouette guessed from a memory of the reference, never actually checked
+    // against it pixel by pixel. Asked the user to resend the reference image and rebuilt
+    // directly against it this time, properly: a THICK, consistently-wide neck (not a thin
+    // stalk, and not the body's own taper) curving out then back in a real two-lean S; a
+    // two-tone beak (a darker rust base, a lighter pink tip, matching the reference exactly
+    // rather than one flat orange); a gold eye dot; a body with a stepped wing-notch on its
+    // top edge and a stepped tail-notch at the rear, not a plain dome; and scattered darker
+    // speckle marks across the body surface instead of a flat fill, which is the actual
+    // "shading" the reference has (its own black outline is a sticker-design artifact, not
+    // reproduced — nothing else in this roster uses one). Canvas widened back out from 14 to
+    // 18 to give the thicker neck and the notches room to read, but kept well under round
+    // 19a's 19-wide version; the body's own texture breaking up the silhouette is what stops
+    // it reading as "blobby" at this size, not shrinking it further.
+    pal: { b: '#2e2c2a', t: '#1c1a19', e: '#d8a830', r: '#b06a42', p: '#d89a8a' },
     frames: [
       [
-        '.....bb.......',
-        '.....bbb......',
-        '....bbbb......',
-        '...oobb.......',
-        '..ooobb.......',
-        '......bb......',
-        '.....bbbb.....',
-        '....bbbbbbbb..',
-        '...bbbbbbbbbb.',
-        '..bbbbbbbbbbbb',
-        '.bbbbbbbbbbbbb',
-        'bbbbbbbbbbbbbb',
-        'bbbbbbbbbbbb.b',
+        '.......bbb........',
+        '......bbbbb.......',
+        '.......bbbeb......',
+        '.........bbbbr....',
+        '...........bbbrr..',
+        '.............bbprr',
+        '.............bb.pp',
+        '...........bbb....',
+        '...........bbb....',
+        '..........bbb.....',
+        '..........bbb.....',
+        '.........bbbbb....',
+        '....bb.bbbbbbbb...',
+        '...bbbbbbbbbbbbb..',
+        '..bbbbbbbbbbtbbbb.',
+        '..bbbbbbtbbbbbbbb.',
+        '..bbbbbbbbbbbtbbb.',
+        '...bbbtbbbbbbbbbb.',
+        '..b.bbbbbbbbbbbbb.',
       ],
       [
-        '.....b........',
-        '....bbb.......',
-        '...bbbb.......',
-        '..oobb........',
-        '..oobb........',
-        '......bb......',
-        '.....bbbb.....',
-        '....bbbbbbbb..',
-        '...bbbbbbbbbb.',
-        '..bbbbbbbbbbbb',
-        '.bbbbbbbbbbbbb',
-        'bbbbbbbbbbbbbb',
-        'bbbbbbbbbbbb.b',
+        '..........bbb.......',
+        '.........bbbbb......',
+        '..........bbbeb.....',
+        '............bbbbr...',
+        '..............bbbrr.',
+        '................bbpr',
+        '...............bb..p',
+        '.............bbb....',
+        '.............bbb....',
+        '............bbb.....',
+        '............bbb.....',
+        '...........bbbbb....',
+        '......bb.bbbbbbbb...',
+        '.....bbbbbbbbbbbbb..',
+        '....bbbbbbbbbbtbbbb.',
+        '....bbbbbbtbbbbbbbb.',
+        '....bbbbbbbbbbbtbbb.',
+        '.....bbbtbbbbbbbbbb.',
+        '....b.bbbbbbbbbbbbb.',
       ],
     ] as const,
     young: [
       [
-        '...bb......',
-        '..bbb......',
-        '..obb......',
-        '.oobb......',
-        '....bbb....',
-        '....bbbb...',
-        '...bbbbbb..',
-        '..bbbbbbbb.',
-        '.bbbbbbbbbb',
+        '.....bbb.....',
+        '.....bbeb....',
+        '.......bbbr..',
+        '.........bbrr',
+        '.........b.pp',
+        '.......bb....',
+        '......bbb....',
+        '.....bbbbb...',
+        '...bbbbbbbb..',
+        '.bbbbbbbtbbb.',
+        '.bbbtbbbbbbb.',
+        '..bbbbbbtbbb.',
       ],
       [
-        '..bb.......',
-        '..bbb......',
-        '.oob.......',
-        'ooobb......',
-        '....bbb....',
-        '....bbbb...',
-        '...bbbbbb..',
-        '..bbbbbbbb.',
-        '.bbbbbbbbbb',
+        '......bbb....',
+        '......bbeb...',
+        '........bbbr.',
+        '..........bbr',
+        '..........b.p',
+        '.......bb....',
+        '......bbb....',
+        '.....bbbbb...',
+        '...bbbbbbbb..',
+        '.bbbbbbbtbbb.',
+        '.bbbtbbbbbbb.',
+        '..bbbbbbtbbb.',
       ],
     ] as const,
   },
