@@ -85,45 +85,30 @@ export const coastalHeath: Biome = {
 
   creatures: [
     {
-      key: 'black-swan',
+      // Round 25: the black swan is retired. Nine-plus rounds of hand-authored redesigns
+      // (11, 14, 16, 17, 18, 19a-c, 20, 21, 22, 23, 24) never landed — "objectively an
+      // abomination... i think we scrap it, its just not working". The user's own call:
+      // "just delete it, pick another animal to fill its place with a proven template to work
+      // from and just reskin that." Replaced with the Australasian grebe — a genuinely native
+      // Australian coastal-wetland diving bird that fills the same ecological role (a small
+      // water bird for this biome's water zone) but, critically, has a SHORT neck rather than
+      // a long curved one, so it fits the exact small-bird template `canada:common-loon` (a
+      // recolour of `aotearoa:takahe`) already uses successfully, twice, with zero redo
+      // flags against either. Reskinned, not redesigned — no new shape risk.
+      key: 'australasian-grebe',
       slot: 0,
-      common: 'Black swan',
-      scientific: 'Cygnus atratus',
-      traits: ['All-black plumage with a bright red bill', 'White flight feathers that show only in flight'],
+      common: 'Australasian grebe',
+      scientific: 'Tachybaptus novaehollandiae',
+      traits: ['Chestnut face and neck in breeding plumage', 'A small fluffy white patch at the base of the tail'],
       iucn: 'LC',
-      fact: 'Native to Australia and nowhere else originally. Pairs often stay together for years.',
-      source: ala('Cygnus atratus'),
+      fact: 'Dives for small fish and invertebrates, often staying under for twenty seconds or more, and anchors its floating nest to waterside vegetation.',
+      source: ala('Tachybaptus novaehollandiae'),
       activity: 'diurnal',
       zone: 'water',
-      stages: ['cygnet', 'juvenile', 'adult', 'elder'],
-      behaviour: 'Glides slowly across open water, dipping its long neck under.',
-      body: { kind: 'swimmer', size: [10, 6], neck: 5, beak: 2 },
-      palette: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc' },
-      // Round 19: "it needs legs for wandering and then another sprite for swimming" — black
-      // swans do come up onto the bank to graze, and the water pose (in handAuthored.ts) has
-      // no legs at all, same reasoning as the beaver's water/ground pair. A genuine standing
-      // pose with two visible legs, not a recolour of the swimming body.
-      // Round 20: kept in sync with the water pose's own "too angular" fix in
-      // handAuthored.ts — same smaller beak, same smooth single-direction neck diagonal, same
-      // symmetric cone body and tapered-diamond wing patch, legs appended underneath.
-      // Round 21: kept in sync with the water pose's full rebuild — "you tell me if that
-      // looks like a swan" (it didn't). Same genuinely-thinner-than-the-body neck with a real
-      // two-direction lean, same distinct shoulder step into the body, same small diagonal
-      // wing stripe instead of a diamond, legs appended underneath the new body shape.
-      // Round 22: "that is not the shape of the reference i gave you, try again please" — kept
-      // in sync with the water pose's own return to the round-19a reference-matched shape,
-      // downscaled rather than redrawn, legs appended underneath.
-      // Round 23: "no that shape was wrong, there was no shading ... it didnt follow the
-      // reference exactly" — kept in sync with the water pose's proper rebuild against the
-      // actual reference image (thick two-lean neck, two-tone beak, gold eye, wing/tail
-      // notches, speckled body texture), legs appended underneath the new body shape.
-      alt: { zone: 'ground', sprite: { pal: { b: '#2e2c2a', t: '#1c1a19', e: '#d8a830', r: '#b06a42', p: '#d89a8a', d: '#141312' }, frames: [
-        ['.......bbb........', '......bbbbb.......', '.......bbbeb......', '.........bbbbr....', '...........bbbrr..', '.............bbprr', '.............bb.pp', '...........bbb....', '...........bbb....', '..........bbb.....', '..........bbb.....', '.........bbbbb....', '....bb.bbbbbbbb...', '...bbbbbbbbbbbbb..', '..bbbbbbbbbbtbbbb.', '..bbbbbbtbbbbbbbb.', '..bbbbbbbbbbbtbbb.', '...bbbtbbbbbbbbbb.', '..b.bbbbbbbbbbbbb.', '.......d.......d..', '.......d.......d..'],
-        ['.......bbb........', '......bbbbb.......', '.......bbbeb......', '.........bbbbr....', '...........bbbrr..', '.............bbprr', '.............bb.pp', '...........bbb....', '...........bbb....', '..........bbb.....', '..........bbb.....', '.........bbbbb....', '....bb.bbbbbbbb...', '...bbbbbbbbbbbbb..', '..bbbbbbbbbbtbbbb.', '..bbbbbbtbbbbbbbb.', '..bbbbbbbbbbbtbbb.', '...bbbtbbbbbbbbbb.', '..b.bbbbbbbbbbbbb.', '......d.......d...', '.......d.......d..'],
-      ] as const, young: [
-        ['.....bbb.....', '.....bbeb....', '.......bbbr..', '.........bbrr', '.........b.pp', '.......bb....', '......bbb....', '.....bbbbb...', '...bbbbbbbb..', '.bbbbbbbtbbb.', '.bbbtbbbbbbb.', '..bbbbbbtbbb.', '....d.....d..'],
-        ['.....bbb.....', '.....bbeb....', '.......bbbr..', '.........bbrr', '.........b.pp', '.......bb....', '......bbb....', '.....bbbbb...', '...bbbbbbbb..', '.bbbbbbbtbbb.', '.bbbbbbbtbbb.', '.bbbtbbbbbb..', '.....d.....d.'],
-      ] as const } },
+      stages: ['chick', 'juvenile', 'adult', 'elder'],
+      behaviour: 'Dives for long stretches, then bobs back up somewhere else entirely.',
+      body: { kind: 'swimmer', size: [7, 5], neck: 1, beak: 1 },
+      palette: { b: '#241c16', l: '#9a4428', e: '#140f0a', w: '#e8e0d0', d: '#140f0a' },
     },
     {
       key: 'rainbow-bee-eater',

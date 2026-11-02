@@ -1538,167 +1538,24 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
       ['.gg.....', 'gegdd...', '.ggg....', 'ggww....', '.gggw...', '..ggg...', '..kk....', '...k....'],
     ] as const,
   },
-  // Round 3: "maybe try for the secretary bird method just make it a bit more squat with a
-  // curl neck and no long legs" — round 2's elegant long straight neck and visible leg rows
-  // were the opposite of what a floating swan needs. Squat body, neck curled back over it
-  // instead of stretched up, legs dropped entirely (a swimming bird's legs are underwater).
-  // Round 6: "Redraw (blob), Wrong scale" — scaled up overall, and the neck redrawn as a
-  // proper S-curve (the swan's signature feature) instead of a short squiggle, with a dark
-  // wing-crease line to break up the body silhouette.
-  // Round 7: "close, but still too blobby, I can't tell legs or wings" — legs are
-  // deliberately absent (a swimming bird's legs are underwater, round 3's own call), but the
-  // dark wing-crease line was nearly invisible against the equally dark body. Replaced with a
-  // real white wing-flash — black swans are known for white flight feathers visible even at
-  // rest, a genuine identifying feature, not an invented one — bold enough to actually read
-  // as a wing shape instead of a body-coloured notch.
-  'australia:black-swan': {
-    // Round 11 redesign — "a bit munted": the old neck read as a jagged staircase and the wing
-    // only showed as two isolated dots. This gives the neck a single consistent diagonal lean
-    // (reads as a smooth curve at this scale) and swaps the wedge body for a full rounded dome
-    // with a real wing-crease patch, not isolated flecks.
-    // Round 14: "there is no legs and neck is at a weird angle" — a single straight diagonal
-    // doesn't read as a swan's neck at all (no real swan's neck is a straight line); genuinely
-    // curved instead, leaning out then bending back in to meet the body, closer to the real
-    // S-curve. Two short dark legs added under the belly line — there were none before.
-    // Round 16: "its too tubby and the neck is very angular instead of curved" — round 14's
-    // "curve" was really one sharp single-row zigzag reversal, not a curve at all. Rebuilt
-    // genuinely gradual: the column shifts by one every two rows instead of every row, with a
-    // hold row between each shift, so there's no single sharp bend anywhere along it. The
-    // body is narrower and tapers in three steps (7 wide, then 9, then 11) instead of jumping
-    // straight to its widest point, reading as a tapered oval rather than a fat dome.
-    // Round 17: "there aint no beak and its not animated" — both true. `e` (meant to carry
-    // the beak) was a single pixel buried inside the head silhouette, not a shape that reads
-    // as a protruding beak at all; widened to a real 3-wide red-orange bar extending past the
-    // head's own outline, with its own dedicated black eye dot (`x`) next to it instead of
-    // sharing the one pixel. And frame 0 and frame 1 were, on inspection, byte-identical —
-    // copied from each other and never actually varied when the neck was redrawn in round 16,
-    // so there was truly nothing to animate regardless of the engine. Frame 1 now genuinely
-    // differs: the head and the first two neck rows shift one column, a small head-turn.
-    // Round 19a: "literally the three problem children keep causing problems" — five rounds of
-    // incremental tweaks hadn't landed, so the user supplied an actual reference image (a
-    // clean black-swan icon: a real triangular beak, a true sweeping neck curve, a broad dome
-    // body that widens quickly near the neck rather than tapering gradually, a pointed tail
-    // with a stepped wing-fold notch). Rebuilt against that reference directly on a big
-    // 19-wide canvas so the curve had room to read as a curve instead of a diagonal line.
-    // Round 19b: "now its back to being a massive blob" — the 19-wide rebuild was shape-correct
-    // but scaled nothing like the rest of the roster (kookaburra/cockatoo are 9 wide, the
-    // penguin is 6), so a solid-black body that size reads as an oversized mass next to every
-    // other creature rather than a swan. Same beak/curve/dome language from the reference,
-    // scaled down to a 13-14-wide canvas in line with the rest of the bird roster.
-    // Round 19c: "you can use multiple colours for shading to make the shape better, it needs
-    // legs for wandering and then another sprite for swimming" — this was still flat 2-colour
-    // (black body + beak) with no depth. Added a lighter highlight along the neck/back's outer
-    // curve, a darker shadow along the underside, and the white wing-flash black swans
-    // actually show at rest (the old baked sprite had this feature and lost it across
-    // redesigns). This is the WATER state — matches the species' own `zone: 'water'` and
-    // "glides slowly across open water" — so no legs here, same as the beaver's water pose.
-    // The legless-wandering half of the request is the `alt: { zone: 'ground', ... }` on the
-    // creature definition in `src/regions/australia/coastal.ts`, not here (same split as
-    // `canada:beaver`'s water/ground pair) — a real standing pose with visible legs.
-    // Round 20: "bit better but too angular and beak is too large" — then, mid-fix, "the
-    // angular also means the back and wings". The beak dropped from a 5-wide bar to a single
-    // nub. The neck's column shift was inconsistent (every-2-rows in places, abruptly 1 in
-    // others around the beak), which is what actually read as jagged rather than curved —
-    // rebuilt as a true 1-column-per-row 45° diagonal, the smoothest a diagonal gets at this
-    // resolution. The body/back had the same problem one level up: it jumped from a narrow
-    // neck straight to its full width in one or two big steps. Rebuilt as a symmetric cone
-    // that grows by exactly one column each side per row, no jumps, and the wing-flash patch
-    // — previously a hard-cornered rectangle — is now a small tapered diamond instead.
-    // Round 21: "you tell me if that looks like a swan" — it didn't: a dark triangle with a
-    // notch cut in the top corner for a "neck", and the diamond wing patch read as a plus
-    // sign. Rebuilt from scratch around a thin neck distinct from the body — but that
-    // abandoned the user's own reference image from round 19 entirely to invent a new shape.
-    // Round 22: "that is not the shape of the reference i gave you, try again please." Went
-    // back to the exact round-19a data on the theory that only its scale had been wrong.
-    // Round 23: "no that shape was wrong, there was no shading, and it didnt follow the
-    // reference exactly. it was too big but it was also too blobby." Round 19a's shape was a
-    // flat 2-colour silhouette guessed from a memory of the reference, never actually checked
-    // against it pixel by pixel. Asked the user to resend the reference image and rebuilt
-    // directly against it this time, properly: a THICK, consistently-wide neck (not a thin
-    // stalk, and not the body's own taper) curving out then back in a real two-lean S; a
-    // two-tone beak (a darker rust base, a lighter pink tip, matching the reference exactly
-    // rather than one flat orange); a gold eye dot; a body with a stepped wing-notch on its
-    // top edge and a stepped tail-notch at the rear, not a plain dome; and scattered darker
-    // speckle marks across the body surface instead of a flat fill, which is the actual
-    // "shading" the reference has (its own black outline is a sticker-design artifact, not
-    // reproduced — nothing else in this roster uses one). Canvas widened back out from 14 to
-    // 18 to give the thicker neck and the notches room to read, but kept well under round
-    // 19a's 19-wide version; the body's own texture breaking up the silhouette is what stops
-    // it reading as "blobby" at this size, not shrinking it further.
-    pal: { b: '#2e2c2a', t: '#1c1a19', e: '#d8a830', r: '#b06a42', p: '#d89a8a' },
+  // Round 25: the black swan is retired — nine-plus rounds of hand-authored redesigns (11,
+  // 14, 16, 17, 18, 19a-c, 20, 21, 22, 23, 24) never landed. "objectively an abomination...
+  // i think we scrap it, its just not working." User's own call: "just delete it, pick
+  // another animal to fill its place with a proven template to work from and just reskin
+  // that." Replaced with the Australasian grebe — a genuinely native Australian
+  // coastal-wetland diving bird, same water-zone ecological role, but with a SHORT neck
+  // instead of a long curved one, so it's a straight reskin of `canada:common-loon` (itself
+  // a recolour of `aotearoa:takahe`), a shape already proven twice with zero redo flags
+  // against either. No new shape, no new risk.
+  'australia:australasian-grebe': {
+    pal: { b: '#241c16', l: '#9a4428', e: '#140f0a', w: '#e8e0d0', d: '#140f0a' },
     frames: [
-      [
-        '.......bbb........',
-        '......bbbbb.......',
-        '.......bbbeb......',
-        '.........bbbbr....',
-        '...........bbbrr..',
-        '.............bbprr',
-        '.............bb.pp',
-        '...........bbb....',
-        '...........bbb....',
-        '..........bbb.....',
-        '..........bbb.....',
-        '.........bbbbb....',
-        '....bb.bbbbbbbb...',
-        '...bbbbbbbbbbbbb..',
-        '..bbbbbbbbbbtbbbb.',
-        '..bbbbbbtbbbbbbbb.',
-        '..bbbbbbbbbbbtbbb.',
-        '...bbbtbbbbbbbbbb.',
-        '..b.bbbbbbbbbbbbb.',
-      ],
-      [
-        '..........bbb.......',
-        '.........bbbbb......',
-        '..........bbbeb.....',
-        '............bbbbr...',
-        '..............bbbrr.',
-        '................bbpr',
-        '...............bb..p',
-        '.............bbb....',
-        '.............bbb....',
-        '............bbb.....',
-        '............bbb.....',
-        '...........bbbbb....',
-        '......bb.bbbbbbbb...',
-        '.....bbbbbbbbbbbbb..',
-        '....bbbbbbbbbbtbbbb.',
-        '....bbbbbbtbbbbbbbb.',
-        '....bbbbbbbbbbbtbbb.',
-        '.....bbbtbbbbbbbbbb.',
-        '....b.bbbbbbbbbbbbb.',
-      ],
+      ['...l...', '..lee..', '...b...', '.bbbbb.', '.wwwww.', '..d.d..', '..d.d..'],
+      ['...l...', '..lee..', '...b...', '.bbbbb.', '.wwwww.', '.d.d...', '.d.d...'],
     ] as const,
     young: [
-      [
-        '.....bbb.....',
-        '.....bbeb....',
-        '.......bbbr..',
-        '.........bbrr',
-        '.........b.pp',
-        '.......bb....',
-        '......bbb....',
-        '.....bbbbb...',
-        '...bbbbbbbb..',
-        '.bbbbbbbtbbb.',
-        '.bbbtbbbbbbb.',
-        '..bbbbbbtbbb.',
-      ],
-      [
-        '......bbb....',
-        '......bbeb...',
-        '........bbbr.',
-        '..........bbr',
-        '..........b.p',
-        '.......bb....',
-        '......bbb....',
-        '.....bbbbb...',
-        '...bbbbbbbb..',
-        '.bbbbbbbtbbb.',
-        '.bbbtbbbbbbb.',
-        '..bbbbbbtbbb.',
-      ],
+      ['..l...', '.lee..', '..b...', 'bbbbb.', '.www..', '..d.d.'],
+      ['..l...', '.lee..', '..b...', 'bbbbb.', '.www..', '.d.d..'],
     ] as const,
   },
 

@@ -307,17 +307,17 @@ Banksia and paperbark over still water, sedges, and waterlilies.
 
 **Slot 0**
 
-##### Black swan
-*Cygnus atratus* — creature — diurnal, water
+##### Australasian grebe
+*Tachybaptus novaehollandiae* — creature — diurnal, water
 
 - **IUCN status:** Least concern (LC)
-- **Traits:** All-black plumage with a bright red bill; White flight feathers that show only in flight
-- **Fact:** Native to Australia and nowhere else originally. Pairs often stay together for years.
-- **Source:** <https://bie.ala.org.au/search?q=Cygnus%20atratus>
+- **Traits:** Chestnut face and neck in breeding plumage; A small fluffy white patch at the base of the tail
+- **Fact:** Dives for small fish and invertebrates, often staying under for twenty seconds or more, and anchors its floating nest to waterside vegetation.
+- **Source:** <https://bie.ala.org.au/search?q=Tachybaptus%20novaehollandiae>
 **Slot 1**
 
 ##### Rainbow bee-eater
-*Merops ornatus* — creature — diurnal, sky
+*Merops ornatus* — creature — diurnal, canopy
 
 - **IUCN status:** Least concern (LC)
 - **Traits:** Green body with a copper crown and a black eye-stripe; Two long thin tail streamers
