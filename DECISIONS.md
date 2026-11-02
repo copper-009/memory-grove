@@ -1271,3 +1271,24 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   (`handAuthored.ts`) and the ground/wandering `alt` pose (`coastal.ts`). `tsc`/`vitest`
   (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed,
   republished.
+- **Round 25 — retired the black swan; replaced it with the Australasian grebe, a reskin of
+  the proven loon/takahē template.** "objectively an abomination... i think we scrap it, its
+  just not working." Nine-plus rounds of hand-authored redesigns on this one creature (11, 14,
+  16, 17, 18, 19a-c, 20, 21, 22, 23, 24) never converged — even shown the actual reference
+  image directly and rebuilt against it twice over, it still didn't land. The user's own call,
+  when asked how to leave it: "just delete it, pick another animal to fill its place with a
+  proven template to work from and just reskin that." Replaced with the Australasian grebe
+  (*Tachybaptus novaehollandiae*) — genuinely native to Australian coastal wetlands, filling
+  the same water-zone ecological role the swan held, but with a SHORT neck instead of a long
+  curved one, which is what made it a safe choice: a straight reskin of `canada:common-loon`
+  (itself a recolour of `aotearoa:takahe`), a simple short-neck/round-body shape already
+  proven twice in this exact roster with zero redo flags against either. No new shape drawn,
+  no new risk taken. Dropped the swan's hand-authored entry and its ground/water `alt` pair
+  entirely, along with the now-orphaned `baked.generated.ts` fallback entry for the old
+  species key — the generator script for that file (`scripts/bakeCreatureSprites.ts`) turned
+  out to be broken, depending on a procedural-frames module removed in an earlier refactor
+  unrelated to this change, so the one stale line was removed by hand rather than left
+  pointing at a species key nothing references any more. Regenerated `reference/SPECIES.md`
+  via `tools/species-doc.mjs` so the documentation doesn't drift from the data. `tsc`/`vitest`
+  (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed,
+  republished.
