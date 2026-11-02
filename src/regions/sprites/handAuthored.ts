@@ -1175,13 +1175,19 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
   // straight repeat — the column directly under the head stays solid, matching the
   // template's own solid neck-to-shoulder join, so the head doesn't float disconnected from
   // the body the way the first stripe attempt did.
+  // Round 19 follow-up: "where is its eyes" — the deer-modelled rebuild carried over the
+  // template's own eye-less convention (deer relies on highlight marks only), but a zebra's
+  // head needs a real eye dot to read as a face. Added on the head's own top row for the
+  // head-up pose; for the head-down pose (no separate head row — it merges into the front of
+  // the body row), recoloured the front-most stripe cell instead, since the alternating body
+  // pattern buries an eye placed anywhere flanked by two stripes of its own colour.
   'eastafrica:plains-zebra': {
-    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff' },
+    pal: { b: '#f0ece0', d: '#1a1814', l: '#ffffff', e: '#0a0806' },
     frames: [
       [
         '...........',
         '...........',
-        '.......bbb.',
+        '.......beb.',
         '.......bbbl',
         'lbdbdbdbb..',
         '.dbdbdbdb..',
@@ -1193,7 +1199,7 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
         '...........',
         '...........',
         '...........',
-        'lbdbdbdbd..',
+        'lbdbdbdbe..',
         '.bdbdbdbdb.',
         '.d.d..d.bbl',
         '.d.d..d.d..',
@@ -1201,13 +1207,13 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     ] as const,
     young: [
       [
-        '.......bbb.',
+        '.......beb.',
         'lbdbdbdbb..',
         '.dbdbdbdb..',
         '.d.d..d.d..',
       ],
       [
-        '.......bbb.',
+        '.......beb.',
         'lbdbdbdb...',
         '.dbdbdbdb..',
         '.d.d..d.d..',
@@ -1579,65 +1585,75 @@ export const HAND_SPRITES: Record<string, CreatureSprite> = {
     // penguin is 6), so a solid-black body that size reads as an oversized mass next to every
     // other creature rather than a swan. Same beak/curve/dome language from the reference,
     // scaled down to a 13-14-wide canvas in line with the rest of the bird roster.
-    pal: { b: '#1c1a20', o: '#d8814a' },
+    // Round 19c: "you can use multiple colours for shading to make the shape better, it needs
+    // legs for wandering and then another sprite for swimming" — this was still flat 2-colour
+    // (black body + beak) with no depth. Added a lighter highlight along the neck/back's outer
+    // curve, a darker shadow along the underside, and the white wing-flash black swans
+    // actually show at rest (the old baked sprite had this feature and lost it across
+    // redesigns). This is the WATER state — matches the species' own `zone: 'water'` and
+    // "glides slowly across open water" — so no legs here, same as the beaver's water pose.
+    // The legless-wandering half of the request is the `alt: { zone: 'ground', ... }` on the
+    // creature definition in `src/regions/australia/coastal.ts`, not here (same split as
+    // `canada:beaver`'s water/ground pair) — a real standing pose with visible legs.
+    pal: { b: '#1c1a20', l: '#3a3742', d: '#0e0d12', o: '#d8814a', w: '#e8e4dc' },
     frames: [
       [
         '......bb.....',
-        '.....bbbb....',
-        '....oobb.....',
+        '.....lbbb....',
+        '....oolb.....',
         '...ooo.bb....',
         '.......bb....',
-        '......bbb....',
-        '.....bbbbb...',
-        '....bbbbbbb..',
-        '...bbbbbbbbb.',
-        '..bbbbbbbbbb.',
-        '.bbbbbbbbbbb.',
-        'bbbbbbbbbbbb.',
-        'bbbbbbbbb.bbb',
+        '......lbb....',
+        '.....lbbbb...',
+        '....lbbbbbb..',
+        '...lbbbwwbb..',
+        '..lbbbwwwbb..',
+        '.lbbbbbbbbb..',
+        'lbbbbbbbbbd..',
+        'bbbbbbbdd.dd.',
       ],
       [
         '.....bb......',
-        '....bbbb.....',
-        '...oobb......',
+        '....lbbb.....',
+        '...oolb......',
         '..ooo.bb.....',
         '.......bb....',
-        '......bbb....',
-        '.....bbbbb...',
-        '....bbbbbbb..',
-        '...bbbbbbbbb.',
-        '..bbbbbbbbbb.',
-        '.bbbbbbbbbbb.',
-        'bbbbbbbbbbbb.',
-        'bbbbbbbbb.bbb',
+        '......lbb....',
+        '.....lbbbb...',
+        '....lbbbbbb..',
+        '...lbbbwwbb..',
+        '..lbbbwwwbb..',
+        '.lbbbbbbbbb..',
+        'lbbbbbbbbbd..',
+        'bbbbbbbdd.dd.',
       ],
     ] as const,
     young: [
       [
         '....bb......',
-        '...bbbb.....',
-        '..oobb......',
+        '...lbbb.....',
+        '..oolb......',
         '.ooo.bb.....',
         '.....bb.....',
-        '....bbb.....',
-        '...bbbbb....',
-        '..bbbbbbb...',
-        '.bbbbbbbbb..',
-        'bbbbbbbbbb..',
-        'bbbbbbb.bbb.',
+        '....lbb.....',
+        '...lbbbb....',
+        '..lbbbbbb...',
+        '.lbbbbbbbb..',
+        'lbbbbbbbbb..',
+        'bbbbbbbdd.dd',
       ],
       [
         '...bb.......',
-        '..bbbb......',
-        '.oobb.......',
+        '..lbbb......',
+        '.oolb.......',
         'ooo.bb......',
         '.....bb.....',
-        '....bbb.....',
-        '...bbbbb....',
-        '..bbbbbbb...',
-        '.bbbbbbbbb..',
-        'bbbbbbbbbb..',
-        'bbbbbbb.bbb.',
+        '....lbb.....',
+        '...lbbbb....',
+        '..lbbbbbb...',
+        '.lbbbbbbbb..',
+        'lbbbbbbbbb..',
+        'bbbbbbbdd.dd',
       ],
     ] as const,
   },

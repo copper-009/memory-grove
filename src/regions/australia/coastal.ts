@@ -99,6 +99,17 @@ export const coastalHeath: Biome = {
       behaviour: 'Glides slowly across open water, dipping its long neck under.',
       body: { kind: 'swimmer', size: [10, 6], neck: 5, beak: 2 },
       palette: { b: '#1c1a20', d: '#0e0d12', l: '#3a3742', e: '#c0392b', w: '#e8e4dc' },
+      // Round 19: "it needs legs for wandering and then another sprite for swimming" — black
+      // swans do come up onto the bank to graze, and the water pose (in handAuthored.ts) has
+      // no legs at all, same reasoning as the beaver's water/ground pair. A genuine standing
+      // pose with two visible legs, not a recolour of the swimming body.
+      alt: { zone: 'ground', sprite: { pal: { b: '#1c1a20', l: '#3a3742', d: '#0e0d12', o: '#d8814a', w: '#e8e4dc' }, frames: [
+        ['......bb.....', '.....lbbb....', '....oolb.....', '...ooo.bb....', '.......bb....', '......lbb....', '.....lbbbb...', '....lbbbbbb..', '...lbbbwwbb..', '..lbbbwwwbb..', '.lbbbbbbbbb..', '...d.....d...', '...d.....d...'],
+        ['......bb.....', '.....lbbb....', '....oolb.....', '...ooo.bb....', '.......bb....', '......lbb....', '.....lbbbb...', '....lbbbbbb..', '...lbbbwwbb..', '..lbbbwwwbb..', '.lbbbbbbbbb..', '..d.....d....', '...d.....d...'],
+      ] as const, young: [
+        ['....bb......', '...lbbb.....', '..oolb......', '.ooo.bb.....', '.....bb.....', '....lbb.....', '...lbbbb....', '..lbbbbbb...', '.lbbbbbbbb..', 'lbbbbbbbbb..', '..d......d..'],
+        ['....bb......', '...lbbb.....', '..oolb......', '.ooo.bb.....', '.....bb.....', '....lbb.....', '...lbbbb....', '..lbbbbbb...', '.lbbbbbbbb..', 'lbbbbbbbbb..', '.d......d...'],
+      ] as const } },
     },
     {
       key: 'rainbow-bee-eater',

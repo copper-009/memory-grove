@@ -116,9 +116,9 @@ AF.drawPond = function (g, env, p) {
   };
   ellipseFill(g, cx, cy, w, h, (q, x, y) => {
     if (q > 0.8) return edge;
-    const refl = reflect(x, y), base = refl ? mix(refl, c0, 0.45) : c0;
+    const refl = reflect(x, y), base = refl ? mix(refl, c0, 0.22) : c0;
     const depth = Math.min(1, Math.max(0, (y - top) / h));
-    return mix(base, deep, 0.3 * depth);
+    return mix(base, deep, 0.15 * depth);
   });
   const R = rng(p.it.seed), reed = th.snow ? '#8a9a8a' : '#2f4a2a', tip = '#8a6a3a';
   for (let k = 0; k < POND_REEDS; k++) { const side = k % 2 ? 1 : -1, x = Math.round(cx + side * (w / 2 - 1 - R() * w * 0.15)), y = Math.round(cy + R() * h * 0.2), hh = 2 + (R() * 3 | 0);
