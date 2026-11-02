@@ -1228,3 +1228,23 @@ Judgment calls made while building Memory Garden, and why. Append to this; don't
   both the water/swimming pose (`handAuthored.ts`) and the ground/wandering `alt` pose
   (`coastal.ts`). `tsc`/`vitest` (153/153)/`lint` clean. Gallery rebuilt (130 creatures),
   committed to `vendor`, pushed, republished.
+- **Round 23 — restored the swan to the actual reference-image shape, downscaled instead of
+  redrawn.** "that is not the shape of the reference i gave you, try again please." Round 21's
+  full rebuild (a thin stalk neck, a diamond wing patch) had abandoned the reference image
+  from round 19 entirely in favour of a new invented shape — a real regression, not a further
+  refinement. Rather than draw a fourth version by hand and risk drifting again, went back to
+  the exact round-19a pixel data: that shape was built directly against the reference image
+  (a real triangular beak, a sweeping neck curve, a dome body that blooms quickly, a stepped
+  notch at the tail) and was never actually wrong — only its 19-wide/18-tall canvas was the
+  problem, which is what triggered "now its back to being a massive blob" two rounds later and
+  set off the redesigns that drifted away from the reference. Downscaled that original shape
+  algorithmically (box-sampled: any foreground pixel inside a box survives the resize) to
+  14 wide, in line with the rest of the bird roster, instead of redrawing freehand — faithful
+  to the shape actually built against the reference, not another hand pass that could drift
+  again. One small gap in the head-turn frame's beak (a box-sampling artifact where a single
+  source pixel fell on a box boundary) patched by hand for a clean connection. Verified against
+  the actual rendered gallery (the same Playwright-screenshot check introduced last round, not
+  skipped this time) before shipping. Applied to both the water/swimming pose
+  (`handAuthored.ts`) and the ground/wandering `alt` pose (`coastal.ts`). `tsc`/`vitest`
+  (153/153)/`lint` clean. Gallery rebuilt (130 creatures), committed to `vendor`, pushed,
+  republished.
