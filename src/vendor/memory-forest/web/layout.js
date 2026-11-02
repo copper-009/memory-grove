@@ -68,6 +68,7 @@ const SPARSE_ROW_BOOST = 1.8, SPARSE_ROW_MAX = 60, SPARSE_ROW_MAX_BIG = 90;
 /* ---------- layout: one slot per tree, oldest at the back ---------- */
 AF.layout = function (trees, opts) {
   const sparse = Boolean(opts && opts.sparse);
+  const needsPond = Boolean(opts && opts.needsPond);
   const sparseR = rng(0x5ea5e);
   const items = [];
   trees.forEach((t, i) => {
@@ -141,6 +142,24 @@ AF.layout = function (trees, opts) {
   }
   // any still waiting go past the last tree, where there is always room
   for (const unit of waiting) { cell = free(cell); while (!fits(cell, unit.length)) cell = free(cell + 1); unit.forEach(put); }
+  // Memory Garden change (Round 26, fix 5): a biome with a water/waterEdge creature but no
+  // real gap-pond from its own study history still needs somewhere wet for that creature to
+  // be (`visitors.js`'s `chooseHosts` only ever sends one to a pond, never bare ground). This
+  // one isn't a real break — `ambient: true` keeps `tooltips.js`'s `pondHtml` from claiming a
+  // day count that doesn't exist. Added after every real item has a cell, so it lands in the
+  // very last row: "at the front", same as the user's own wording asked for.
+  if (needsPond && !water.size) {
+    const slots = POND_SLOTS[0];
+    const ambientUnit = [];
+    for (let k = 0; k < slots; k++) {
+      const it = { pond: true, ambient: true, group: -1, days: 0, slots, first: k === 0, seed: (0x5ea5e ^ (k * 7919 + 17)) >>> 0 };
+      items.push(it);
+      ambientUnit.push(it);
+    }
+    cell = free(cell);
+    while (!fits(cell, slots)) cell = free(cell + 1);
+    ambientUnit.forEach(put);
+  }
   const rows = Math.max(1, Math.ceil(cell / perRow)), single = rows === 1;
   items.forEach((it, i) => {
     const row = Math.floor(it.cell / perRow), col = it.cell % perRow, r = rng(it.seed || i + 1);

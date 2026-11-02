@@ -56,8 +56,21 @@ AF.mount = function (root, data, opts) {
   }
   hookCog(root, data);
 
+  // Memory Garden change (Round 26, fix 5): "water animals should be able to be in the water
+  // at the front of the applicable regions, and in those that do not, there needs to be
+  // ponds to accommodate this." A pond only ever came from a real gap in the grove's own
+  // study history (layout.js's `t.gap`) — a water/waterEdge region creature with no such gap
+  // yet had nowhere wet to be and fell back to the generic front-of-scene walk, the same
+  // pose a ground animal gets. `needsPond` tells `AF.layout` to plant one anyway when that's
+  // the case — but only for a biome with no real water of its own: a lake/river landscape
+  // (`mfLandscape.ts`'s `landscapeForBiome`) already draws water across the whole front of
+  // the scene, and the front-roaming walk this creature falls back to already happens right
+  // at that shoreline (`visitors.js`'s `frontY`/`env.visitorY`) — a second, separate puddle
+  // in front of an actual lake would just look like a mistake, not a second home for it.
+  const hasLandscapeWater = data.mood && (data.mood.landscape === 'lake' || data.mood.landscape === 'river');
+  const needsPond = !hasLandscapeWater && (data.visitors || []).some((v) => v.zone === 'water' || v.zone === 'waterEdge');
   // the whole forest's layout, and the one being drawn: it, or a visit's close-up (web/visit.js)
-  const base = AF.layout(data.trees, { sparse: data.sparse });
+  const base = AF.layout(data.trees, { sparse: data.sparse, needsPond });
   let layout = base;
   // with animations off the forest is one still moment: every redraw uses this time
   const stillAt = performance.now();

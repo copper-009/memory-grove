@@ -45,7 +45,10 @@ function pondWhen(p) {
   if (a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()) return `, in ${month(b, true)}`;
   return `, from ${month(a, a.getFullYear() !== b.getFullYear())} to ${month(b, true)}`;
 }
-function pondHtml(p) { return `<b>A quiet pond</b><br>${p.days} days without reviews${esc(pondWhen(p))}`; }
+// Memory Garden change (Round 26, fix 5): an ambient pond (layout.js's `needsPond`) carries
+// no real gap behind it — just somewhere for a water-dwelling region creature to be — so its
+// tooltip says that honestly instead of claiming a day count that never happened.
+function pondHtml(p) { return p.ambient ? '<b>A watering hole</b><br>Shelter for the local wildlife' : `<b>A quiet pond</b><br>${p.days} days without reviews${esc(pondWhen(p))}`; }
 function deepHtml(m, words) {
   const lines = [`<b>${esc(cap(words.deep))}</b>`,
     `${m.count.toLocaleString('en')} older ${esc(words.many)} · ${m.cards.toLocaleString('en')} cards`,
