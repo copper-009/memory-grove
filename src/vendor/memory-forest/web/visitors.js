@@ -283,11 +283,11 @@ AF.placeVisitors = function (env) {
   // by `AF.drawHosted` below instead, called every frame from `core.js` the same way
   // `AF.drawFlyers`/`AF.drawVisitors` already are, so both genuinely animate. A hosted
   // creature now draws on top of the fully composited land each frame rather than baked
-  // tree-by-tree into it — depth-correct against its OWN tree, but, unlike before, no longer
-  // occluded by a nearer tree's canopy happening to overlap its spot. Checked across several
-  // scenes (varied depths, several hosted creatures at once): canopy overlap at a hosted
-  // creature's exact perch is rare enough, and the gain (everything hosted is now actually
-  // alive) outweighs that one uncommon case.
+  // tree-by-tree into it — depth-correct against its OWN tree, but, on its own, no longer
+  // occluded by a nearer tree's canopy happening to overlap its spot (a cassowary reading as
+  // standing in front of a tree it should have been partly behind, caught live). `AF.drawHosted`
+  // below restores that: after painting a creature, it restamps `env.land`'s own already-
+  // correct pixels wherever a genuinely nearer tree's bounds overlap it.
   const byHost = new Map();
   for (const [key, spot] of Object.entries(inForest)) byHost.set(spot.host, (byHost.get(spot.host) || []).concat([key]));
   env.hostedByHost = byHost; env.hostedList = list;
@@ -339,7 +339,52 @@ AF.drawHosted = function (g, env, t) {
         paintSprite(g, frame, x0, y0, spr.pal, visitorColor(env, p.hz));
         if (key === 'owl' && env.mood.time === 'night') { g.fillStyle = OWL_NIGHT_EYES; g.fillRect(x0 + 1, y0 + 2, 1, 1); g.fillRect(x0 + 3, y0 + 2, 1, 1); }
       });
-      env.staticBoxes.push({ v, x0, y0: fy - frame.length * depthK, x1: x0 + frame[0].length * depthK, y1: fy });
+      const cx0 = x0, cy0 = fy - frame.length * depthK, cx1 = x0 + frame[0].length * depthK, cy1 = fy;
+      // Memory Garden change: the comment above (where `env.hostedByHost` is set) used to end
+      // here — a hosted creature drawn live on top of the fully composited land, "no longer
+      // occluded by a nearer tree's canopy happening to overlap its spot... rare enough [to
+      // accept]". Caught live (a cassowary reading as standing in front of a tree it should
+      // have been partly behind): redraw any OTHER tree genuinely nearer the camera than this
+      // creature's host (`fromFront`, smaller is nearer) whose own bounds overlap it, clipped
+      // to just that overlap. Each tree's actual rendered sprite (`p.sprite`, kept by
+      // `engines/pixel/engine.js`), not its bounding box — a crown's box is mostly empty
+      // space around the round/pine silhouette, and redrawing the box instead first blanked
+      // the creature out with flat ground colour everywhere, not just under real canopy
+      // (caught the same way: checked directly, zero of its own palette's pixels survived).
+      // Its own host tree is deliberately excluded: standing at the foot of its own tree is
+      // correct as is, not something to cover back up. OCCLUDE_ROWS caps how many rows
+      // nearer count at all — without it, EVERY row between a creature hosted deep in a
+      // mature forest and the camera piles on (checked directly: 22 trees across 6 rows all
+      // nominally overlapping one small sprite, between them covering every last pixel of
+      // it — not a visible creature anymore, just gone). A tree a row or two in front
+      // genuinely reads as standing in front of it; a tree ten rows closer to camera
+      // overlapping its tiny box is really just that tree's own much bigger bounding box
+      // sweeping across a big share of the scene, not a meaningful "in front of" relationship.
+      const OCCLUDE_ROWS = 2;
+      // However it happens, a creature the grove unlocked has to stay a creature you can
+      // actually find, not vanish behind whatever happens to stand nearer it. A single
+      // nearby tree's bounding box can already fully contain this creature's whole (much
+      // smaller) one, so capping how many trees contribute doesn't help by itself — caught
+      // live, one qualifying tree alone blanked it out completely. KEEP_CLEAR_FRAC instead
+      // puts a hard floor under the clip rect itself: the creature's own bottom share, where
+      // its feet (and so its own ground anchor) are, never gets redrawn over, no matter how
+      // many trees qualify or how big their boxes are.
+      const KEEP_CLEAR_FRAC = 0.35;
+      const clearFromY = cy1 - (cy1 - cy0) * KEEP_CLEAR_FRAC;
+      for (const q of env.placed) {
+        if (q === p || q.it.pond || !q.box || !q.sprite) continue;
+        if (q.it.fromFront >= p.it.fromFront || q.it.fromFront < p.it.fromFront - OCCLUDE_ROWS) continue;
+        const ix0 = Math.max(q.box.x0, cx0), iy0 = Math.max(q.box.y0, cy0);
+        const ix1 = Math.min(q.box.x1, cx1), iy1 = Math.min(q.box.y1, cy1, clearFromY);
+        if (ix1 <= ix0 || iy1 <= iy0) continue;
+        const sw = q.box.x1 - q.box.x0, sh = q.box.y1 - q.box.y0;
+        g.save();
+        g.beginPath(); g.rect(ix0, iy0, ix1 - ix0, iy1 - iy0); g.clip();
+        if (q.spriteFlip) { g.translate(q.box.x0 + sw, q.box.y0); g.scale(-1, 1); g.drawImage(q.sprite, 0, 0, sw, sh); }
+        else g.drawImage(q.sprite, q.box.x0, q.box.y0, sw, sh);
+        g.restore();
+      }
+      env.staticBoxes.push({ v, x0: cx0, y0: cy0, x1: cx1, y1: cy1 });
     }
   }
 };

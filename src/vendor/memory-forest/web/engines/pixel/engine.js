@@ -73,6 +73,15 @@ AF.engines.pixel = {
         const sw = Math.round(spr.width * k), sh = Math.round(spr.height * k);
         groundDetails(env, lg, p, sw - 4);
         const x0 = Math.round(p.x - sw / 2), y0 = Math.round(p.y - sh + 1);
+        // Memory Garden change: this tree's own screen bounds and its actual rendered
+        // sprite (with its real alpha channel — a crown's bounding box is mostly empty
+        // space around the round/pine silhouette, not opaque the whole rectangle through),
+        // kept on the placed item itself so `AF.drawHosted` (web/visitors.js) can redraw
+        // this tree's genuine canopy pixels — never its empty box, which would otherwise
+        // paint flat ground colour over a creature standing in a gap the tree never
+        // actually covers — on top of a hosted creature a nearer tree should be covering.
+        p.box = { x0, y0, x1: x0 + sw, y1: y0 + sh };
+        p.sprite = spr; p.spriteK = k; p.spriteFlip = !!env.flipLight;
         const fade = p.it.view && p.it.view.alpha < 1;  // a visit's tree being walked past (web/visit.js)
         if (fade) lg.globalAlpha = p.it.view.alpha;
         if (k !== 1) lg.imageSmoothingEnabled = false;  // (scaled, its pixels stay hard; back on for what follows)
