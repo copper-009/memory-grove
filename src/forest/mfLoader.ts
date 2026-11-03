@@ -87,8 +87,19 @@ export function loadMfStyles(): void {
  * `null` for an ES module (webpack's sandbox output, which is how every widget here loads —
  * see `webpack.config.js`'s `HtmlWebpackPlugin` template), so the real path is the second
  * branch: RemNote serves the widget's own `index.html` from the same directory `vendor/`
- * sits in, so the page's own URL is the right base to resolve `vendor/...` against. */
+ * sits in, so the page's own URL is the right base to resolve `vendor/...` against.
+ *
+ * `window.__mfVendorBase`, checked first, is an escape hatch for a host where
+ * `document.currentScript` genuinely can't be trusted — caught live in the Anki add-on:
+ * Anki's own deck-browser refresh inserts this panel's HTML into an already-loaded page
+ * (not a fresh navigation), and by the time this engine's own async loading chain reaches
+ * `vendorBase()`, `document.currentScript` no longer reliably points back to bundle.js's own
+ * `<script>` tag, resolving everything against the page's own URL instead. Nothing sets this
+ * global except that one host — RemNote's widget and the Tauri app's `mount.ts` never touch
+ * it, so they fall through to the two branches below exactly as before. */
 function vendorBase(): string {
+  const override = (window as unknown as { __mfVendorBase?: string }).__mfVendorBase;
+  if (override) return override;
   const current = document.currentScript as HTMLScriptElement | null;
   if (current?.src) return new URL('.', current.src).toString();
   return new URL('.', window.location.href).toString();
